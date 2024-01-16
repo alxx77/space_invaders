@@ -14,7 +14,13 @@ export class Layout extends Container {
 
   updateLayout(width: number, height: number) {
     components.background.updateLayout(width,height)
-    components.player.updateLayout(width,height)
+    if(components.player){
+      components.player.updateLayout(width,height)
+    }
+    if(components.invaders){
+      components.invaders.updateLayout(width,height)
+    }
+    components.foreground.updateLayout(width,height)
     state.projectiles.forEach(el => el.updateLayout(width,height))
   }
 }

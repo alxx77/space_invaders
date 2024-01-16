@@ -13,11 +13,11 @@ async function loadAssets() {
         ],
       },
       {
-        name: "enemies",
+        name: "invaders",
         assets: [
-          { alias: "enemy1", src: "assets/images/enemy1.png" },
-          { alias: "enemy2", src: "assets/images/enemy2.png" },
-          { alias: "enemy3", src: "assets/images/enemy3.png" },
+          { alias: "invader1", src: "assets/images/enemy1.png" },
+          { alias: "invader2", src: "assets/images/enemy2.png" },
+          { alias: "invader3", src: "assets/images/enemy3.png" },
 
         ],
       },
@@ -57,7 +57,7 @@ async function loadAssets() {
   // Load a bundle...
   await Assets.loadBundle("player")
 
-  await Assets.loadBundle("enemies")
+  await Assets.loadBundle("invaders")
 
   await Assets.loadBundle("fonts")
 }

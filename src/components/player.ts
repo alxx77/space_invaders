@@ -2,7 +2,8 @@ import { Sprite, utils, Ticker } from "pixi.js"
 import { components, state, PlayerDirection } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { reaction } from "mobx"
-import { playerSpeed } from "../settings"
+import { playerSpeed, projectileSpeed } from "../settings"
+import { Projectile } from "./projectile"
 
 //linear interpolation
 const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a
@@ -17,7 +18,7 @@ export class Player extends SmartContainer {
   isMoving: boolean
   positionCalculator: Generator<DeltaPosition, void, number> | undefined
   playerDirection: PlayerDirection
-  speed:number
+  speed: number
   constructor() {
     super()
     this.name = "Player"
@@ -28,6 +29,7 @@ export class Player extends SmartContainer {
     this.playerDirection = "none"
     this.speed = 0
 
+    //react to directions change
     reaction(
       () => state.getPlayerDirection,
       (newVal) => {
@@ -35,10 +37,45 @@ export class Player extends SmartContainer {
       }
     )
 
+    //shoot
+    reaction(
+      () => state.SpaceBar_keyPressed,
+      (newVal, oldVal) => {
+        if (newVal === true && oldVal === false) {
+          const projectile = new Projectile(
+            {
+              x:
+                (this.x + components.player.width / 2) *
+                (1 / components.background.scale.x),
+              y: this.y * 0.95 * (1 / components.background.scale.y),
+            },
+            projectileSpeed * components.background.scale.x
+          )
+          projectile.scale.x = components.background.scale.x
+          projectile.scale.y = components.background.scale.y
+
+          components.foreground.addChild(projectile)
+          state.addProjectile(projectile)
+          projectile.moveTo(
+            (this.x + components.player.width / 2) *
+              (1 / components.background.scale.x),
+            -50 * (1 / components.background.scale.y),
+            projectile.speed,
+            () => {
+              const i = state.projectiles.findIndex((el) => el === projectile)
+              state.removeProjectile(i)
+              projectile.destroy()
+            }
+          )
+        }
+      }
+    )
+
+    //create position calculator
     this.positionCalculator = this.getPositionDelta(this)
   }
 
-  updatePosition() {
+  start() {
     let step: IteratorResult<DeltaPosition, void>
     let ticker = new Ticker()
     let self = this
@@ -158,10 +195,9 @@ export class Player extends SmartContainer {
     this.scale.x = components.background.scale.x
     this.scale.y = components.background.scale.y
 
-    this.x = this.x * components.background.scale.x/oldScaleX
-    this.y = this.y * components.background.scale.y/oldScaleY
+    this.x = (this.x * components.background.scale.x) / oldScaleX
+    this.y = (this.y * components.background.scale.y) / oldScaleY
 
     this.speed = playerSpeed * components.background.scale.x
-
   }
 }

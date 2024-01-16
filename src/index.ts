@@ -8,7 +8,10 @@ import "../styles/main.scss"
   //initialize
   const data = await initGame()
 
-  //an instance of slot machine can be created
-  //and is taking over control & loop
+  //create an instance of game
   components.game = new Game()
+
+  //start
+  components.game.play()
+
 })()

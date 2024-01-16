@@ -1,7 +1,7 @@
 import { Container, Sprite, utils, Texture } from "pixi.js"
 
 export class Background extends Container {
-  private container: Container
+  container: Container
   private backgroundSprite: Sprite
   constructor() {
     super()

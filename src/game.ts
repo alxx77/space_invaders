@@ -1,31 +1,28 @@
-import { reaction } from "mobx"
+import { reaction, autorun } from "mobx"
 import { components, state } from "./state"
 import { Player } from "./components/player"
 import { Background } from "./components/background"
 import { Projectile } from "./components/projectile"
 import { projectileSpeed } from "./settings"
+import { Invaders } from "./components/invaders"
+import { Foreground } from "./components/foreground"
 
 //high level game logic
 export class Game {
-  player: Player
   background: Background
+  foreground: Foreground
   constructor() {
     //initialize components
-
     this.background = new Background()
-    this.player = new Player()
-    
+    this.foreground = new Foreground()
+
     //save component references
     components.game = this
     components.background = this.background
-    components.player = this.player
-    const componentList: any = [this.background, this.player]
+    components.foreground = this.foreground
 
     //add to root container
-    components.layout.addChild(...componentList)
-
-    this.player.x = components.background.width/2 - this.player.width/2
-    this.player.y = components.background.height *0.85
+    components.layout.addChild(this.background,this.foreground)
 
     //prevent this rebinding
     const updateView = this.updateView
@@ -103,31 +100,38 @@ export class Game {
     })
 
     this.updateView()
+  }
 
-    this.player.updatePosition()
+  async play() {
+    for (const level of [1]) {
+      await this.playLevel()
+    }
+  }
 
-    reaction(
-      () => state.SpaceBar_keyPressed,
-      (newVal, oldVal) => {
-        if (newVal === true && oldVal === false) {
-          const position = components.player.getGlobalPosition()
-          const projectile = new Projectile(
-            { x: position.x + components.player.width / 2, y: position.y * 0.95 },
-            projectileSpeed * components.background.scale.x
-          )
-          projectile.scale.x = components.background.scale.x
-          projectile.scale.y = components.background.scale.y
+  async playLevel() {
+    const player = new Player()
 
-          components.layout.addChild(projectile)
-          state.projectiles.push(projectile)
-          projectile.moveTo(position.x, -50, projectile.speed, () => {
-            const i = state.projectiles.findIndex((el) => el === projectile)
-            state.projectiles.splice(i, 1)
-            projectile.destroy()
-          })
-        }
-      }
-    )
+    components.player = player
+    components.layout.addChild(player)
+
+    const invaders = new Invaders()
+    components.invaders = invaders
+    invaders.createInvaders()
+    components.layout.addChild(components.invaders)
+
+    this.updateView()
+
+    player.x = components.background.width / 2 - player.width / 2
+    player.y = components.background.height * 0.85
+
+
+    invaders.x = components.background.width / 2 - invaders.width / 2
+    invaders.y = components.background.height * 0.15
+
+    invaders.startMove()
+
+    player.start()
+
   }
 
   //recalc view

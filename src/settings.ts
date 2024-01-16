@@ -7,7 +7,13 @@ export const sound = {
 
 export const playerSpeed = 5
 
-export const projectileSpeed = 20
+export const projectileSpeed = 5
+
+export const invaderHeight = 32
+export const invaderWidth = 44
+
+export const invaderXMargin = 10 
+export const invaderYMargin = 10  
 
 
 //font styles

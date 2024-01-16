@@ -7,6 +7,7 @@ export class SmartContainer extends Container {
   private finalPosition: FinalPosition
   private tween: TWEEN.Tween<this>
   public skipFeatureRequested: boolean
+  public cbOnTweenUpdate: Function | undefined
   constructor() {
     super()
     this.finalPosition = {} as FinalPosition
@@ -19,6 +20,8 @@ export class SmartContainer extends Container {
     // x&y distances
     let xDist = xPos - this.position.x
     let yDist = yPos - this.position.y
+
+    const self = this
 
     //total distance traveled
     let totalDist = Math.sqrt(xDist ** 2 + yDist ** 2)
@@ -38,18 +41,27 @@ export class SmartContainer extends Container {
         .to(this.finalPosition, totalTime)
         //.easing(TWEEN.Easing.Quadratic.InOut)
         .dynamic(true) //allow dynamic tween
+        .onUpdate(function(){
+          if(self.cbOnTweenUpdate){
+            self.cbOnTweenUpdate(self)
+          }
+        })
         .onComplete(() => {
           (onFinished) ? onFinished() : undefined
           resolve()
-          this.visible = false
+          //this.visible = false
         })
         .onStop(() => {
           (onFinished) ? onFinished() : undefined
           resolve()
-          this.visible = false
+          //this.visible = false
         })
         .start()
     })
+  }
+
+  stopTween(){
+    this.tween.stop()
   }
 
   goToFinalPosition() {

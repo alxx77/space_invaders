@@ -5,6 +5,9 @@ import { Game } from "./game"
 import { Player } from "./components/player"
 import { Background } from "./components/background"
 import { Projectile } from "./components/projectile"
+import { Invaders } from "./components/invaders"
+import { Invader } from "./components/invader"
+import { Foreground } from "./components/foreground"
 
 export type PlayerDirection = "none" | "up" | "down" | "left" | "right"
 
@@ -16,6 +19,8 @@ class Store {
   _SpaceBar_keyPressed: boolean
   _lastKeyPressed: string
   _projectiles: Projectile[]
+  _invaders: Invader[]
+  _gameLevel:number
 
   constructor() {
     this._A_keyPressed = false
@@ -25,6 +30,8 @@ class Store {
     this._SpaceBar_keyPressed = false
     this._lastKeyPressed = ""
     this._projectiles = []
+    this._invaders = []
+    this._gameLevel = 1
     makeAutoObservable(this)
   }
 
@@ -139,9 +146,39 @@ class Store {
     return "none"
   }
 
+  @action
+  addProjectile(projectile: Projectile) {
+    this._projectiles.push(projectile)
+  }
+
+  @action
+  removeProjectile(index:number) {
+    this._projectiles.splice(index,1)
+  }
+
   @computed
   get projectiles() {
     return this._projectiles
+  }
+
+  @action
+  addInvader(invader: Invader) {
+    this._invaders.push(invader)
+  }
+
+  @action
+  removeInvader(index:number) {
+    this._invaders.splice(index,1)
+  }
+
+  @computed
+  get invaders() {
+    return this._invaders
+  }
+
+  @computed
+  get gameLevel() {
+    return this._gameLevel	
   }
 }
 
@@ -153,6 +190,8 @@ type Components = {
   game: Game
   player: Player
   background: Background
+  foreground: Foreground
+  invaders:Invaders
 }
 
 export const components = {} as Components
