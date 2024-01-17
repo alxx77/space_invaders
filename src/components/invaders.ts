@@ -8,12 +8,16 @@ import {
   invaderXMargin,
   invaderYMargin,
 } from "../settings"
+import { reaction } from "mobx"
+import * as TWEEN from "@tweenjs/tween.js"
 
 type InvaderData = {
   x: number
   y: number
   variety: number
 }
+
+type MoveSequenceParams = [x: number, y: number, s: number]
 
 //root container
 export class Invaders extends SmartContainer {
@@ -26,18 +30,52 @@ export class Invaders extends SmartContainer {
     //container
     this.container = new Container()
     this.addChild(this.container)
+    this.cbOnTweenUpdate = this.collisionTestwithPlayer
+
+    //when all invaders are destroyed
+    reaction(
+      () => state.allInvadersDestroyed,
+      (newVal, oldVal) => {
+        if (newVal === true && oldVal === false) {
+          this.stopTween()
+          //reset trigger
+          console.log("level completed")
+        }
+      }
+    )
+
+    //when invaders should stop
+    reaction(
+      () => state.invadersActive,
+      (newVal, oldVal) => {
+        if (newVal === false && oldVal === true) {
+          this.stopTween()
+        }
+      }
+    )
   }
 
   async startMove() {
-    const leftTarget = components.background.width-this.width
-    console.log(leftTarget)
-    await this.moveTo(leftTarget, this.y, 1)
-    await this.moveTo(this.x, this.y + 50, 0.5)
-    await this.moveTo(0, this.y, 1)
-    await this.moveTo(this.x, this.y + 50, 0.5)
-    await this.moveTo(components.background.width-this.width, this.y, 1)
-    await this.moveTo(this.x, this.y + 50, 0.5)
-    await this.moveTo(0, this.y, 1)
+    let g = this.movesGenerator(this)
+    for await (const nextMove of g) {
+      if (state.invadersActive === false) break
+    }
+  }
+
+  movesGenerator = function* (self: Invaders) {
+    function* innerG(): Generator<MoveSequenceParams, void, void> {
+      yield [components.background.width - self.width, self.y, 1]
+      yield [self.x, self.y + 50, 0.5]
+      yield [0, self.y, 1]
+      yield [self.x, self.y + 50, 0.5]
+    }
+
+    for (const i of [1, 2, 3, 4, 5, 6]) {
+      const ig = innerG()
+      for (const targetData of ig) {
+        yield self.moveTo(...targetData)
+      }
+    }
   }
 
   createInvaders() {
@@ -74,6 +112,27 @@ export class Invaders extends SmartContainer {
 
       default:
         break
+    }
+  }
+
+  collisionTestwithPlayer(c: SmartContainer) {
+    if (state.invadersActive === false) return
+    const bounds1 = components.player.getBounds()
+    for (const invader of state.invaders) {
+      const bounds2 = invader.sprite.getBounds()
+      // Check for collision using bounds
+      if (
+        bounds1.x < bounds2.x + bounds2.width &&
+        bounds1.x + bounds1.width > bounds2.x &&
+        bounds1.y < bounds2.y + bounds2.height &&
+        bounds1.y + bounds1.height > bounds2.y
+      ) {
+        // Collision detected
+        state.setInvadersActive(false)
+        state.setPlayerDestroyed(true)
+        components.invaders.removeInvader(invader)
+        return
+      }
     }
   }
 

@@ -7,7 +7,7 @@ export const sound = {
 
 export const playerSpeed = 5
 
-export const projectileSpeed = 5
+export const projectileSpeed = 10
 
 export const invaderHeight = 32
 export const invaderWidth = 44

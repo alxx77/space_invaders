@@ -19,6 +19,7 @@ export class Player extends SmartContainer {
   positionCalculator: Generator<DeltaPosition, void, number> | undefined
   playerDirection: PlayerDirection
   speed: number
+  ticker: Ticker | undefined
   constructor() {
     super()
     this.name = "Player"
@@ -41,6 +42,10 @@ export class Player extends SmartContainer {
     reaction(
       () => state.SpaceBar_keyPressed,
       (newVal, oldVal) => {
+        //first check if player is not destroyed
+        if(state.playerDestroyed) return
+
+        //if spacebar is pressed fire a projectile
         if (newVal === true && oldVal === false) {
           const projectile = new Projectile(
             {
@@ -67,6 +72,17 @@ export class Player extends SmartContainer {
               projectile.destroy()
             }
           )
+        }
+      }
+    )
+
+    //player destruction
+    reaction(
+      ()=> state.playerDestroyed,
+      (newVal,oldVal)=>{
+        if(newVal === true && oldVal === false){
+          this.stop()
+          this.visible = false
         }
       }
     )
@@ -186,6 +202,14 @@ export class Player extends SmartContainer {
       //return value & get new input data
       delta = yield { dx: actualDX, dy: actualDY }
     }
+  }
+
+  stop(){
+    if(this.ticker){
+      this.ticker.stop()
+      this.ticker.destroy()
+    }
+    this.positionCalculator = undefined
   }
 
   updateLayout(width: number, height: number) {

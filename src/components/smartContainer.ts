@@ -37,8 +37,8 @@ export class SmartContainer extends Container {
     // new instances of target object should not be used 
     //once tween starts  
     return new Promise<void>((resolve) => {
-      this.tween = new TWEEN.Tween(this)
-        .to(this.finalPosition, totalTime)
+      this.tween = new TWEEN.Tween(self)
+        .to(self.finalPosition, totalTime)
         //.easing(TWEEN.Easing.Quadratic.InOut)
         .dynamic(true) //allow dynamic tween
         .onUpdate(function(){
@@ -50,6 +50,7 @@ export class SmartContainer extends Container {
           (onFinished) ? onFinished() : undefined
           resolve()
           //this.visible = false
+          console.log('tween complete')
         })
         .onStop(() => {
           (onFinished) ? onFinished() : undefined

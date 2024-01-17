@@ -15,12 +15,12 @@ export class Projectile extends SmartContainer {
     this.x = position.x
     this.y = position.y
 
-    this.cbOnTweenUpdate = this.collisionTest
+    this.cbOnTweenUpdate = this.collisionTestWithInvaders
   }
 
-  collisionTest(c: SmartContainer) {
+  collisionTestWithInvaders(c: SmartContainer) {
+    const bounds1 = this.sprite.getBounds()
     for (const invader of state.invaders) {
-      const bounds1 = this.sprite.getBounds()
       const bounds2 = invader.sprite.getBounds()
       // Check for collision using bounds
       if (

@@ -20,7 +20,10 @@ class Store {
   _lastKeyPressed: string
   _projectiles: Projectile[]
   _invaders: Invader[]
-  _gameLevel:number
+  _gameLevel: number
+  _allInvadersDestroyed: boolean
+  _playerDestroyed: boolean
+  _invandersActive:boolean
 
   constructor() {
     this._A_keyPressed = false
@@ -32,7 +35,11 @@ class Store {
     this._projectiles = []
     this._invaders = []
     this._gameLevel = 1
-    makeAutoObservable(this)
+    this._allInvadersDestroyed = false
+    this._playerDestroyed = false
+    this._invandersActive = true
+
+    makeAutoObservable(this, {}, { autoBind: true })
   }
 
   //A key
@@ -152,8 +159,8 @@ class Store {
   }
 
   @action
-  removeProjectile(index:number) {
-    this._projectiles.splice(index,1)
+  removeProjectile(index: number) {
+    this._projectiles.splice(index, 1)
   }
 
   @computed
@@ -167,8 +174,11 @@ class Store {
   }
 
   @action
-  removeInvader(index:number) {
-    this._invaders.splice(index,1)
+  removeInvader(index: number) {
+    this._invaders.splice(index, 1)
+    if (this._invaders.length === 0) {
+      this.setAllInvadersDestroyed(true)
+    }
   }
 
   @computed
@@ -176,9 +186,39 @@ class Store {
     return this._invaders
   }
 
+  @action
+  setAllInvadersDestroyed(value: boolean) {
+    this._allInvadersDestroyed = value
+  }
+
+  @computed
+  get allInvadersDestroyed() {
+    return this._allInvadersDestroyed
+  }
+
+  @action
+  setPlayerDestroyed(value: boolean) {
+    this._playerDestroyed = value
+  }
+
+  @computed
+  get playerDestroyed() {
+    return this._playerDestroyed
+  }
+
+  @action
+  setInvadersActive(value: boolean) {
+    this._invandersActive = value
+  }
+
+  @computed
+  get invadersActive() {
+    return this._invandersActive
+  }
+
   @computed
   get gameLevel() {
-    return this._gameLevel	
+    return this._gameLevel
   }
 }
 
@@ -191,7 +231,7 @@ type Components = {
   player: Player
   background: Background
   foreground: Foreground
-  invaders:Invaders
+  invaders: Invaders
 }
 
 export const components = {} as Components

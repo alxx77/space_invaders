@@ -34,11 +34,14 @@ export async function initGame() {
 
   //add stage & TWEEN to main ticker
   const ticker = new Ticker()
-  ticker.add(() => {
+  ticker.start()
+
+  const cb = function () {
     renderer.render(layout)
     TWEEN.update()
-  })
-  ticker.start()
+  }
+
+  ticker.add(cb)
 
   //init assets
   await initAssets()

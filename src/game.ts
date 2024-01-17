@@ -22,7 +22,7 @@ export class Game {
     components.foreground = this.foreground
 
     //add to root container
-    components.layout.addChild(this.background,this.foreground)
+    components.layout.addChild(this.background, this.foreground)
 
     //prevent this rebinding
     const updateView = this.updateView
@@ -103,9 +103,7 @@ export class Game {
   }
 
   async play() {
-    for (const level of [1]) {
       await this.playLevel()
-    }
   }
 
   async playLevel() {
@@ -123,7 +121,6 @@ export class Game {
 
     player.x = components.background.width / 2 - player.width / 2
     player.y = components.background.height * 0.85
-
 
     invaders.x = components.background.width / 2 - invaders.width / 2
     invaders.y = components.background.height * 0.15
