@@ -16,8 +16,6 @@ export class Background extends Container {
     this.backgroundSprite.width = stageWidth
     this.backgroundSprite.height = stageHeight
     this.container.addChild(this.backgroundSprite)
-
-    //athis.backgroundSprite.tint = '#111111'
   }
 
   updateLayout(width: number, height: number) {

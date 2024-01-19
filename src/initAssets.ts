@@ -19,6 +19,7 @@ async function loadAssets() {
           { alias: "invader2", src: "assets/images/enemy2.png" },
           { alias: "invader3", src: "assets/images/enemy3.png" },
           { alias: "invader_projectile", src: "assets/images/invader_projectile.png" },
+          { alias: "invader_explosion", src: "assets/images/explosion_invader.json" },
         ],
       },
       // {

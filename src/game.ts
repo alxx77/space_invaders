@@ -37,25 +37,29 @@ export class Game {
       switch (event.key) {
         case "A":
         case "a":
-          state.set_A_keyPressed(true)
+        case "ArrowLeft":
+          state.set_LEFT_keyPressed(true)
           state.setLastKeyPressed("A")
           break
 
         case "S":
         case "s":
-          state.set_S_keyPressed(true)
+        case "ArrowDown":
+          state.set_DOWN_keyPressed(true)
           state.setLastKeyPressed("S")
           break
 
         case "D":
         case "d":
-          state.set_D_keyPressed(true)
+        case "ArrowRight":
+          state.set_RIGHT_keyPressed(true)
           state.setLastKeyPressed("D")
           break
 
         case "W":
         case "w":
-          state.set_W_keyPressed(true)
+        case "ArrowUp":
+          state.set_UP_keyPressed(true)
           state.setLastKeyPressed("W")
           break
 
@@ -72,22 +76,26 @@ export class Game {
       switch (event.key) {
         case "A":
         case "a":
-          state.set_A_keyPressed(false)
+        case "ArrowLeft":
+          state.set_LEFT_keyPressed(false)
           break
 
         case "S":
         case "s":
-          state.set_S_keyPressed(false)
+        case "ArrowDown":
+          state.set_DOWN_keyPressed(false)
           break
 
         case "D":
         case "d":
-          state.set_D_keyPressed(false)
+        case "ArrowRight":
+          state.set_RIGHT_keyPressed(false)
           break
 
         case "W":
         case "w":
-          state.set_W_keyPressed(false)
+        case "ArrowUp":
+          state.set_UP_keyPressed(false)
           break
 
         case " ":
@@ -101,10 +109,10 @@ export class Game {
 
     //score
     reaction(
-      ()=> state.invaderDestroyed,
-      (newVal,oldVal)=> {
-        if(newVal === true && oldVal === false){
-          state.setScoreCounter(state.scoreCounter+100)
+      () => state.invaderDestroyed,
+      (newVal, oldVal) => {
+        if (newVal === true && oldVal === false) {
+          state.setScoreCounter(state.scoreCounter + 100)
         }
         state.setInvaderDestroyed(false)
       }
@@ -114,11 +122,8 @@ export class Game {
   }
 
   async play() {
-      state.setLivesCounter(3)
-      this.startLevel()
-
-      
-
+    state.setLivesCounter(3)
+    this.startLevel()
   }
 
   startLevel() {
@@ -145,7 +150,6 @@ export class Game {
     player.start()
 
     invaders.startShooting()
-
   }
 
   //recalc view

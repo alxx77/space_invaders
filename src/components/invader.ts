@@ -1,4 +1,4 @@
-import { Container, Sprite, utils } from "pixi.js"
+import { AnimatedSprite, Assets, Container, Resource, Sprite, Texture, utils } from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { InvaderProjectile } from "./invaderProjectile"
@@ -7,12 +7,28 @@ import { invaderWidth, invaderProjectileSpeed, stageHeight } from "../settings"
 //root container
 export class Invader extends SmartContainer {
   sprite: Sprite
+  explosionSprite: AnimatedSprite
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
     this.addChild(this.sprite)
     this.x = position.x
     this.y = position.y
+
+    const sheet = Assets.cache.get("invader_explosion")
+    const textures: Texture<Resource>[] = Object.values(sheet.textures)
+    this.explosionSprite = new AnimatedSprite(textures)
+    this.explosionSprite.visible = false
+    this.explosionSprite.loop = false
+    this.explosionSprite.onComplete = () => {
+      this.explosionSprite.visible = false
+    }
+    this.explosionSprite.x = this.width / 2
+    this.explosionSprite.y = this.height / 2
+    this.explosionSprite.scale.set(0.9)
+    this.explosionSprite.anchor.set(0.5)
+    this.explosionSprite.animationSpeed = 0.1
+    this.addChild(this.explosionSprite)
   }
 
   shoot() {

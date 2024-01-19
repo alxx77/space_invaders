@@ -13,10 +13,10 @@ import { InvaderProjectile } from "./components/invaderProjectile"
 export type PlayerDirection = "none" | "up" | "down" | "left" | "right"
 
 class Store {
-  _A_keyPressed: boolean
-  _S_keyPressed: boolean
-  _D_keyPressed: boolean
-  _W_keyPressed: boolean
+  _LEFT_keyPressed: boolean
+  _DOWN_keyPressed: boolean
+  _RIGHT_keyPressed: boolean
+  _UP_keyPressed: boolean
   _SpaceBar_keyPressed: boolean
   _lastKeyPressed: string
   _projectiles: Projectile[]
@@ -25,16 +25,16 @@ class Store {
   _gameLevel: number
   _allInvadersDestroyed: boolean
   _playerDestroyed: boolean
-  _invandersActive:boolean
-  _scoreCounter:number
-  _livesCounter:number
-  _invaderDestroyed:boolean
+  _invandersActive: boolean
+  _scoreCounter: number
+  _livesCounter: number
+  _invaderDestroyed: boolean
 
   constructor() {
-    this._A_keyPressed = false
-    this._S_keyPressed = false
-    this._D_keyPressed = false
-    this._W_keyPressed = false
+    this._LEFT_keyPressed = false
+    this._DOWN_keyPressed = false
+    this._RIGHT_keyPressed = false
+    this._UP_keyPressed = false
     this._SpaceBar_keyPressed = false
     this._lastKeyPressed = ""
     this._projectiles = []
@@ -53,42 +53,42 @@ class Store {
 
   //A key
   @action
-  set_A_keyPressed(value: boolean) {
-    this._A_keyPressed = value
+  set_LEFT_keyPressed(value: boolean) {
+    this._LEFT_keyPressed = value
   }
   @computed
-  get A_keyPressed() {
-    return this._A_keyPressed
+  get LEFT_keyPressed() {
+    return this._LEFT_keyPressed
   }
 
   //S key
   @action
-  set_S_keyPressed(value: boolean) {
-    this._S_keyPressed = value
+  set_DOWN_keyPressed(value: boolean) {
+    this._DOWN_keyPressed = value
   }
   @computed
-  get S_keyPressed() {
-    return this._S_keyPressed
+  get DOWN_keyPressed() {
+    return this._DOWN_keyPressed
   }
 
   //D key
   @action
-  set_D_keyPressed(value: boolean) {
-    this._D_keyPressed = value
+  set_RIGHT_keyPressed(value: boolean) {
+    this._RIGHT_keyPressed = value
   }
   @computed
-  get D_keyPressed() {
-    return this._D_keyPressed
+  get RIGHT_keyPressed() {
+    return this._RIGHT_keyPressed
   }
 
   //W key
   @action
-  set_W_keyPressed(value: boolean) {
-    this._W_keyPressed = value
+  set_UP_keyPressed(value: boolean) {
+    this._UP_keyPressed = value
   }
   @computed
-  get W_keyPressed() {
-    return this._W_keyPressed
+  get UP_keyPressed() {
+    return this._UP_keyPressed
   }
 
   //Ctrl key
@@ -113,27 +113,27 @@ class Store {
 
   @computed
   get getPlayerDirection(): PlayerDirection {
-    if (this.A_keyPressed && this.lastKeyPressed === "A") {
+    if (this.LEFT_keyPressed && (this.lastKeyPressed === "A" || this.lastKeyPressed === "ArrowLeft")) {
       return "left"
     }
 
-    if (this.S_keyPressed && this.lastKeyPressed === "S") {
+    if (this.DOWN_keyPressed && (this.lastKeyPressed === "S" || this.lastKeyPressed === "ArrowDown")) {
       return "down"
     }
 
-    if (this.D_keyPressed && this.lastKeyPressed === "D") {
+    if (this.RIGHT_keyPressed && (this.lastKeyPressed === "D" || this.lastKeyPressed === "ArrowRight")) {
       return "right"
     }
 
-    if (this.W_keyPressed && this.lastKeyPressed === "W") {
+    if (this.UP_keyPressed && (this.lastKeyPressed === "W" || this.lastKeyPressed === "ArrowUp")) {
       return "up"
     }
 
     const totalKeysPressed = [
-      this.A_keyPressed,
-      this.D_keyPressed,
-      this.W_keyPressed,
-      this.S_keyPressed,
+      this.LEFT_keyPressed,
+      this.RIGHT_keyPressed,
+      this.UP_keyPressed,
+      this.DOWN_keyPressed,
     ].reduce((acc, el) => {
       if (el === true) acc++
       return acc
@@ -143,19 +143,19 @@ class Store {
       return "none"
     }
 
-    if (this.A_keyPressed) {
+    if (this.LEFT_keyPressed) {
       return "left"
     }
 
-    if (this.S_keyPressed) {
+    if (this.DOWN_keyPressed) {
       return "down"
     }
 
-    if (this.D_keyPressed) {
+    if (this.RIGHT_keyPressed) {
       return "right"
     }
 
-    if (this.W_keyPressed) {
+    if (this.UP_keyPressed) {
       return "up"
     }
 
@@ -279,7 +279,6 @@ class Store {
   get invaderDestroyed() {
     return this._invaderDestroyed
   }
-
 }
 
 export const state = new Store()

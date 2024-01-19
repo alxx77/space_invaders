@@ -4,7 +4,6 @@ import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
 import {
   invaderHeight,
-  invaderProjectileSpeed,
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
@@ -12,7 +11,6 @@ import {
   stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
-import { InvaderProjectile } from "./invaderProjectile"
 
 type InvaderData = {
   x: number
@@ -80,7 +78,7 @@ export class Invaders extends SmartContainer {
       for (const iterator of [1, 2, 3, 4]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < (percentInvadersRemained * 0.4) + 0.1
+        const p = Math.random() < (percentInvadersRemained * 0.3) + 0.1
         if (p === true) {
           invader.shoot()
         }
@@ -120,7 +118,12 @@ export class Invaders extends SmartContainer {
   removeInvader(invader: Invader) {
     const i = state.invaders.findIndex((el) => el === invader)
     state.removeInvader(i)
-    invader.destroy()
+    invader.sprite.visible = false
+    invader.explosionSprite.visible = true
+    invader.explosionSprite.play()
+    invader.explosionSprite.onComplete = () => {
+      invader.destroy()
+    }
   }
 
   getInvaders = function* (level: number): Generator<InvaderData, void, void> {
