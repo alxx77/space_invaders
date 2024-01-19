@@ -1,6 +1,4 @@
-import { Assets } from "pixi.js"
-
-
+import { Assets, BaseTexture } from "pixi.js"
 
 async function loadAssets() {
   const manifest = {
@@ -10,6 +8,8 @@ async function loadAssets() {
         assets: [
           { alias: "player", src: "assets/images/player.png" },
           { alias: "projectile", src: "assets/images/projectile.png" },
+          { alias: "space", src: "assets/images/space.png" },
+          { alias: "player_explosion", src: "assets/images/explosion.json" },
         ],
       },
       {
@@ -18,7 +18,7 @@ async function loadAssets() {
           { alias: "invader1", src: "assets/images/enemy1.png" },
           { alias: "invader2", src: "assets/images/enemy2.png" },
           { alias: "invader3", src: "assets/images/enemy3.png" },
-
+          { alias: "invader_projectile", src: "assets/images/invader_projectile.png" },
         ],
       },
       // {
@@ -60,6 +60,7 @@ async function loadAssets() {
   await Assets.loadBundle("invaders")
 
   await Assets.loadBundle("fonts")
+  
 }
 
 export async function initAssets() {
@@ -67,3 +68,4 @@ export async function initAssets() {
 
   console.log("assets loaded")
 }
+

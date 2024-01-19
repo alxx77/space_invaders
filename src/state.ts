@@ -8,6 +8,7 @@ import { Projectile } from "./components/projectile"
 import { Invaders } from "./components/invaders"
 import { Invader } from "./components/invader"
 import { Foreground } from "./components/foreground"
+import { InvaderProjectile } from "./components/invaderProjectile"
 
 export type PlayerDirection = "none" | "up" | "down" | "left" | "right"
 
@@ -19,11 +20,15 @@ class Store {
   _SpaceBar_keyPressed: boolean
   _lastKeyPressed: string
   _projectiles: Projectile[]
+  _invaderProjectiles: InvaderProjectile[]
   _invaders: Invader[]
   _gameLevel: number
   _allInvadersDestroyed: boolean
   _playerDestroyed: boolean
   _invandersActive:boolean
+  _scoreCounter:number
+  _livesCounter:number
+  _invaderDestroyed:boolean
 
   constructor() {
     this._A_keyPressed = false
@@ -33,11 +38,15 @@ class Store {
     this._SpaceBar_keyPressed = false
     this._lastKeyPressed = ""
     this._projectiles = []
+    this._invaderProjectiles = []
     this._invaders = []
     this._gameLevel = 1
     this._allInvadersDestroyed = false
     this._playerDestroyed = false
     this._invandersActive = true
+    this._scoreCounter = 0
+    this._livesCounter = 0
+    this._invaderDestroyed = false
 
     makeAutoObservable(this, {}, { autoBind: true })
   }
@@ -169,6 +178,21 @@ class Store {
   }
 
   @action
+  addInvaderProjectile(invaderProjectile: InvaderProjectile) {
+    this._invaderProjectiles.push(invaderProjectile)
+  }
+
+  @action
+  removeInvaderProjectile(index: number) {
+    this._invaderProjectiles.splice(index, 1)
+  }
+
+  @computed
+  get invaderProjectiles() {
+    return this._invaderProjectiles
+  }
+
+  @action
   addInvader(invader: Invader) {
     this._invaders.push(invader)
   }
@@ -216,10 +240,46 @@ class Store {
     return this._invandersActive
   }
 
+  @action
+  setScoreCounter(value: number) {
+    this._scoreCounter = value
+  }
+
+  @computed
+  get scoreCounter() {
+    return this._scoreCounter
+  }
+
+  @action
+  setLivesCounter(value: number) {
+    this._livesCounter = value
+  }
+
+  @computed
+  get livesCounter() {
+    return this._livesCounter
+  }
+
+  @action
+  setGameLevel(value: number) {
+    this._gameLevel = value
+  }
+
   @computed
   get gameLevel() {
     return this._gameLevel
   }
+
+  @action
+  setInvaderDestroyed(value: boolean) {
+    this._invaderDestroyed = value
+  }
+
+  @computed
+  get invaderDestroyed() {
+    return this._invaderDestroyed
+  }
+
 }
 
 export const state = new Store()

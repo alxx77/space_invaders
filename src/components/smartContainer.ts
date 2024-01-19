@@ -49,13 +49,10 @@ export class SmartContainer extends Container {
         .onComplete(() => {
           (onFinished) ? onFinished() : undefined
           resolve()
-          //this.visible = false
-          console.log('tween complete')
         })
         .onStop(() => {
           (onFinished) ? onFinished() : undefined
           resolve()
-          //this.visible = false
         })
         .start()
     })

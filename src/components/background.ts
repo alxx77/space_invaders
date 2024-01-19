@@ -1,4 +1,5 @@
 import { Container, Sprite, utils, Texture } from "pixi.js"
+import { stageHeight, stageWidth } from "../settings"
 
 export class Background extends Container {
   container: Container
@@ -11,12 +12,12 @@ export class Background extends Container {
     this.addChild(this.container)
 
     //sprite
-    this.backgroundSprite = new Sprite(Texture.WHITE)
-    this.backgroundSprite.width = 1280
-    this.backgroundSprite.height = 960
+    this.backgroundSprite = new Sprite(utils.TextureCache['space'])
+    this.backgroundSprite.width = stageWidth
+    this.backgroundSprite.height = stageHeight
     this.container.addChild(this.backgroundSprite)
 
-    this.backgroundSprite.tint = '#777777'
+    //athis.backgroundSprite.tint = '#111111'
   }
 
   updateLayout(width: number, height: number) {

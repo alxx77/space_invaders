@@ -4,12 +4,15 @@ import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
 import {
   invaderHeight,
+  invaderProjectileSpeed,
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
+  stageHeight,
+  stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
-import * as TWEEN from "@tweenjs/tween.js"
+import { InvaderProjectile } from "./invaderProjectile"
 
 type InvaderData = {
   x: number
@@ -23,6 +26,8 @@ type MoveSequenceParams = [x: number, y: number, s: number]
 export class Invaders extends SmartContainer {
   container: Container
   public name: string
+  private initialContainerWidth: number
+  interval: NodeJS.Timeout | undefined
   constructor() {
     super()
     this.name = "Invaders"
@@ -30,7 +35,8 @@ export class Invaders extends SmartContainer {
     //container
     this.container = new Container()
     this.addChild(this.container)
-    this.cbOnTweenUpdate = this.collisionTestwithPlayer
+    this.cbOnTweenUpdate = this.collisionTestWithPlayer
+    this.initialContainerWidth = 0
 
     //when all invaders are destroyed
     reaction(
@@ -38,6 +44,9 @@ export class Invaders extends SmartContainer {
       (newVal, oldVal) => {
         if (newVal === true && oldVal === false) {
           this.stopTween()
+          if (components.invaders.interval) {
+            clearInterval(components.invaders.interval)
+          }
           //reset trigger
           console.log("level completed")
         }
@@ -49,6 +58,9 @@ export class Invaders extends SmartContainer {
       () => state.invadersActive,
       (newVal, oldVal) => {
         if (newVal === false && oldVal === true) {
+          if(components.invaders.interval){
+            clearInterval(components.invaders.interval)
+          }
           this.stopTween()
         }
       }
@@ -62,9 +74,23 @@ export class Invaders extends SmartContainer {
     }
   }
 
+  startShooting() {
+    this.interval = setInterval(function () {
+      const percentInvadersRemained =  state.invaders.length / 33
+      for (const iterator of [1, 2, 3, 4]) {
+        let invader =
+          state.invaders[Math.floor(Math.random() * state.invaders.length)]
+        const p = Math.random() < (percentInvadersRemained * 0.4) + 0.1
+        if (p === true) {
+          invader.shoot()
+        }
+      }
+    }, 500)
+  }
+
   movesGenerator = function* (self: Invaders) {
     function* innerG(): Generator<MoveSequenceParams, void, void> {
-      yield [components.background.width - self.width, self.y, 1]
+      yield [stageWidth - self.initialContainerWidth, self.y, 1]
       yield [self.x, self.y + 50, 0.5]
       yield [0, self.y, 1]
       yield [self.x, self.y + 50, 0.5]
@@ -88,6 +114,7 @@ export class Invaders extends SmartContainer {
       state.addInvader(invader)
       this.container.addChild(invader)
     }
+    this.initialContainerWidth = this.container.width
   }
 
   removeInvader(invader: Invader) {
@@ -115,7 +142,7 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  collisionTestwithPlayer(c: SmartContainer) {
+  collisionTestWithPlayer(c: SmartContainer) {
     if (state.invadersActive === false) return
     const bounds1 = components.player.getBounds()
     for (const invader of state.invaders) {
@@ -136,14 +163,5 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  updateLayout(width: number, height: number) {
-    const oldScaleX = this.scale.x
-    const oldScaleY = this.scale.y
-
-    this.scale.x = components.background.scale.x
-    this.scale.y = components.background.scale.y
-
-    this.x = (this.x * components.background.scale.x) / oldScaleX
-    this.y = (this.y * components.background.scale.y) / oldScaleY
-  }
+  updateLayout(width: number, height: number) {}
 }

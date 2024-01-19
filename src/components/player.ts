@@ -1,12 +1,22 @@
-import { Sprite, utils, Ticker } from "pixi.js"
+import {
+  Sprite,
+  utils,
+  Ticker,
+  Texture,
+  AnimatedSprite,
+  Assets,
+  Resource,
+} from "pixi.js"
 import { components, state, PlayerDirection } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { reaction } from "mobx"
-import { playerSpeed, projectileSpeed } from "../settings"
+import {
+  playerSpeed,
+  projectileSpeed,
+  stageHeight,
+  stageWidth,
+} from "../settings"
 import { Projectile } from "./projectile"
-
-//linear interpolation
-const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a
 
 //single change of position
 type DeltaPosition = { dx: number; dy: number }
@@ -15,20 +25,32 @@ type DeltaPosition = { dx: number; dy: number }
 export class Player extends SmartContainer {
   public name: string
   sprite: Sprite
-  isMoving: boolean
+  explosionSprite: AnimatedSprite
   positionCalculator: Generator<DeltaPosition, void, number> | undefined
   playerDirection: PlayerDirection
-  speed: number
   ticker: Ticker | undefined
   constructor() {
     super()
     this.name = "Player"
     this.sprite = new Sprite(utils.TextureCache["player"])
     this.addChild(this.sprite)
-    this.isMoving = false
+
+    const sheet = Assets.cache.get("player_explosion")
+    const textures: Texture<Resource>[] = Object.values(sheet.textures)
+    this.explosionSprite = new AnimatedSprite(textures)
+    this.explosionSprite.visible = false
+    this.explosionSprite.loop = false
+    this.explosionSprite.onComplete = () => {
+      this.explosionSprite.visible = false
+    }
+    this.explosionSprite.x = this.width / 2
+    this.explosionSprite.y = this.height / 2
+    this.explosionSprite.anchor.set(0.5)
+    this.explosionSprite.animationSpeed = 0.1
+    this.addChild(this.explosionSprite)
+
     this.positionCalculator = undefined
     this.playerDirection = "none"
-    this.speed = 0
 
     //react to directions change
     reaction(
@@ -43,28 +65,22 @@ export class Player extends SmartContainer {
       () => state.SpaceBar_keyPressed,
       (newVal, oldVal) => {
         //first check if player is not destroyed
-        if(state.playerDestroyed) return
+        if (state.playerDestroyed) return
 
         //if spacebar is pressed fire a projectile
         if (newVal === true && oldVal === false) {
           const projectile = new Projectile(
             {
-              x:
-                (this.x + components.player.width / 2) *
-                (1 / components.background.scale.x),
-              y: this.y * 0.95 * (1 / components.background.scale.y),
+              x: this.x + components.player.width / 2,
+              y: this.y * 0.95,
             },
-            projectileSpeed * components.background.scale.x
+            projectileSpeed
           )
-          projectile.scale.x = components.background.scale.x
-          projectile.scale.y = components.background.scale.y
-
-          components.foreground.addChild(projectile)
+          components.foreground.container.addChild(projectile)
           state.addProjectile(projectile)
           projectile.moveTo(
-            (this.x + components.player.width / 2) *
-              (1 / components.background.scale.x),
-            -50 * (1 / components.background.scale.y),
+            this.x + components.player.width / 2,
+            -50,
             projectile.speed,
             () => {
               const i = state.projectiles.findIndex((el) => el === projectile)
@@ -78,11 +94,14 @@ export class Player extends SmartContainer {
 
     //player destruction
     reaction(
-      ()=> state.playerDestroyed,
-      (newVal,oldVal)=>{
-        if(newVal === true && oldVal === false){
+      () => state.playerDestroyed,
+      (newVal, oldVal) => {
+        if (newVal === true && oldVal === false) {
           this.stop()
-          this.visible = false
+          this.sprite.visible = false
+          this.explosionSprite.visible = true
+          this.explosionSprite.play()
+          state.setLivesCounter(state.livesCounter - 1)
         }
       }
     )
@@ -103,7 +122,7 @@ export class Player extends SmartContainer {
             //X-axis movement
             if (
               self.x >= 0 &&
-              self.x + step.value.dx + self.width < components.background.width
+              self.x + step.value.dx + self.width < stageWidth
             ) {
               //move player
               self.x = self.x + step.value.dx
@@ -113,24 +132,23 @@ export class Player extends SmartContainer {
               if (self.x < 0) {
                 self.x = 0
               }
-              if (self.x > components.background.width - self.width) {
-                self.x = components.background.width - self.width
+              if (self.x > stageWidth - self.width) {
+                self.x = stageWidth - self.width
               }
             }
 
             //Y axis movement
             if (
               self.y >= 0 &&
-              self.y + step.value.dy + self.height <
-                components.background.height
+              self.y + step.value.dy + self.height < stageHeight
             ) {
               self.y = self.y + step.value.dy
 
               if (self.y < 0) {
                 self.y = 0
               }
-              if (self.y > components.background.height - self.height) {
-                self.y = components.background.height - self.height
+              if (self.y > stageHeight - self.height) {
+                self.y = stageHeight - self.height
               }
             }
           }
@@ -163,23 +181,23 @@ export class Player extends SmartContainer {
     while (true) {
       switch (self.playerDirection) {
         case "up":
-          speedY = self.speed * -1
+          speedY = playerSpeed * -1
           speedX = 0
           break
 
         case "down":
-          speedY = self.speed * 1
+          speedY = playerSpeed * 1
           speedX = 0
           break
 
         case "left":
           speedY = 0
-          speedX = self.speed * -1
+          speedX = playerSpeed * -1
           break
 
         case "right":
           speedY = 0
-          speedX = self.speed * 1
+          speedX = playerSpeed * 1
           break
 
         case "none":
@@ -204,24 +222,13 @@ export class Player extends SmartContainer {
     }
   }
 
-  stop(){
-    if(this.ticker){
+  stop() {
+    if (this.ticker) {
       this.ticker.stop()
       this.ticker.destroy()
     }
     this.positionCalculator = undefined
   }
 
-  updateLayout(width: number, height: number) {
-    const oldScaleX = this.scale.x
-    const oldScaleY = this.scale.y
-
-    this.scale.x = components.background.scale.x
-    this.scale.y = components.background.scale.y
-
-    this.x = (this.x * components.background.scale.x) / oldScaleX
-    this.y = (this.y * components.background.scale.y) / oldScaleY
-
-    this.speed = playerSpeed * components.background.scale.x
-  }
+  updateLayout(width: number, height: number) {}
 }

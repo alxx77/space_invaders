@@ -8,6 +8,7 @@ export const sound = {
 export const playerSpeed = 5
 
 export const projectileSpeed = 10
+export const invaderProjectileSpeed = 3
 
 export const invaderHeight = 32
 export const invaderWidth = 44
@@ -15,12 +16,15 @@ export const invaderWidth = 44
 export const invaderXMargin = 10 
 export const invaderYMargin = 10  
 
+export const stageWidth = 1280
+export const stageHeight = 960
+
 
 //font styles
 export const fontStyles = {
   effectsFlyingMulti: new TextStyle({
     fontFamily: "Troika ",
-    fontSize: "64px",
+    fontSize: "32px",
     fill: "red",
   }),
   effectsFlyingMultiOutline: new TextStyle({
@@ -31,7 +35,7 @@ export const fontStyles = {
 
   gamePanelCredit: new TextStyle({
     fontFamily: "Troika ",
-    fontSize: "64px",
+    fontSize: "42px",
     fill: "#d69b33",
     dropShadow: true,
     dropShadowColor: "red",
@@ -39,7 +43,7 @@ export const fontStyles = {
   }),
   gamePanelWin: new TextStyle({
     fontFamily: "Troika ",
-    fontSize: "72px",
+    fontSize: "42px",
     fill: "white",
     dropShadow: true,
     dropShadowColor: "red",

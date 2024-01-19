@@ -34,12 +34,13 @@ export class Projectile extends SmartContainer {
         const i = state.projectiles.findIndex((el) => el === this)
         state.removeProjectile(i)
         c.stopTween()
+        state.setInvaderDestroyed(true)
         this.destroy()
       }
     }
   }
 
   updateLayout(width: number, height: number) {
-    this.speed = projectileSpeed * components.background.scale.x
+    //this.speed = projectileSpeed * components.background.scale.x
   }
 }

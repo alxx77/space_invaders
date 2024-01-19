@@ -99,35 +99,52 @@ export class Game {
       }
     })
 
+    //score
+    reaction(
+      ()=> state.invaderDestroyed,
+      (newVal,oldVal)=> {
+        if(newVal === true && oldVal === false){
+          state.setScoreCounter(state.scoreCounter+100)
+        }
+        state.setInvaderDestroyed(false)
+      }
+    )
+
     this.updateView()
   }
 
   async play() {
-      await this.playLevel()
+      state.setLivesCounter(3)
+      this.startLevel()
+
+      
+
   }
 
-  async playLevel() {
+  startLevel() {
     const player = new Player()
 
     components.player = player
-    components.layout.addChild(player)
+    components.foreground.container.addChild(player)
 
     const invaders = new Invaders()
     components.invaders = invaders
     invaders.createInvaders()
-    components.layout.addChild(components.invaders)
+    components.foreground.container.addChild(components.invaders)
 
     this.updateView()
 
-    player.x = components.background.width / 2 - player.width / 2
-    player.y = components.background.height * 0.85
+    player.x = components.foreground.container.width / 2 - player.width / 2
+    player.y = components.foreground.container.height * 0.85
 
-    invaders.x = components.background.width / 2 - invaders.width / 2
-    invaders.y = components.background.height * 0.15
+    invaders.x = components.foreground.container.width / 2 - invaders.width / 2
+    invaders.y = components.foreground.container.height * 0.15
 
     invaders.startMove()
 
     player.start()
+
+    invaders.startShooting()
 
   }
 
