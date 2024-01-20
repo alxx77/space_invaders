@@ -8,6 +8,7 @@ export class Foreground extends Container {
   private foregroundSprite: Sprite
   private scoreText: Text
   private livesText: Text
+  private startText: Text
   constructor() {
     super()
     //container
@@ -29,18 +30,27 @@ export class Foreground extends Container {
     this.mask = mask
 
     //score
-    this.scoreText = new Text(`Score: 0`, fontStyles.gamePanelCredit)
+    this.scoreText = new Text(`Score: 0`, fontStyles.scoreText)
     this.scoreText.x = 10
     this.scoreText.y = stageHeight * 0.95
 
     this.container.addChild(this.scoreText)
 
     //lives
-    this.livesText = new Text(`Credit: 0`, fontStyles.gamePanelWin)
+    this.livesText = new Text(`Credit: 0`, fontStyles.scoreText)
     this.livesText.x = 1095
     this.livesText.y = stageHeight * 0.95
 
     this.container.addChild(this.livesText)
+
+    //press space to play
+    this.startText = new Text(`Press Space to Start`, fontStyles.startText)
+    this.startText.anchor.set(0.5)
+    this.startText.x = stageWidth / 2
+    this.startText.y = stageHeight / 2
+    this.startText.visible = false
+
+    this.container.addChild(this.startText)
 
     reaction(
       () => state.scoreCounter,
@@ -63,6 +73,29 @@ export class Foreground extends Container {
 
   updateLivesText(lives: number) {
     this.livesText.text = `Credit: ${lives}`
+  }
+
+  async showStartText() {
+    const self = this
+    const i = setInterval(() => {
+      self.startText.visible = !self.startText.visible
+    }, 750)
+
+    return new Promise<void>((resolve) => {
+      const disposer = reaction(
+        //react on SPACEBAR keyup
+        () => state.SPACEBAR_keyPressed,
+        (newVal, oldVal) => {
+          if (newVal === false && oldVal === true) {
+            clearInterval(i)
+            self.startText.visible = false
+            state.setWaitingForGameStart(false)
+            resolve()
+            disposer()
+          }
+        }
+      )
+    })
   }
 
   updateLayout(width: number, height: number) {

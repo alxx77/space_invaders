@@ -11,3 +11,27 @@ export function shuffleArray(array: []) {
 //   }
 // }
 
+export function getRandomWebColor(): string {
+  // Convert hex color to RGB
+  const hexToRgb = (hex: string): number[] =>
+    hex
+      .replace(/^#/, '')
+      .match(/.{1,2}/g)!
+      .map((v) => parseInt(v, 16));
+
+  // Convert RGB to hex color
+  const rgbToHex = (r: number, g: number, b: number): string =>
+    `#${(1 << 24 | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+
+  // Generate random RGB values within the specified range
+  const minColor: number[] = hexToRgb('#222222');
+  const maxColor: number[] = hexToRgb('#FFFFFF');
+
+  const randomColor: number[] = minColor.map((min, index) =>
+    Math.floor(Math.random() * (maxColor[index] - min + 1)) + min
+  );
+
+  // Convert RGB values back to hex color
+  return rgbToHex(...(randomColor as [number,number,number]));
+}
+

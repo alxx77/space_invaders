@@ -10,7 +10,7 @@ export class Winfeedback extends Container {
   container: Container
   backgroundSprite: Sprite
   winText: Text
-  clickButtonSound: Howl
+  //clickButtonSound: Howl
   //showSound: Howl
   constructor() {
     super()
@@ -25,7 +25,7 @@ export class Winfeedback extends Container {
     this.container.addChild(this.backgroundSprite)
 
     //credit
-    this.winText = new Text(`You won 0$`, fontStyles.winFeedbackText)
+    this.winText = new Text(`You won 0$`, fontStyles.scoreText)
     this.winText.anchor.set(0.5)
     this.container.addChild(this.winText)
   
@@ -33,11 +33,11 @@ export class Winfeedback extends Container {
     this.container.scale.set(0)
 
     //sound
-    this.clickButtonSound = new Howl({
-      src: [soundSource.clickButton],
-      volume: 0.5,
-      loop: false,
-    })
+    // this.clickButtonSound = new Howl({
+    //   src: [soundSource.clickButton],
+    //   volume: 0.5,
+    //   loop: false,
+    // })
 
     // this.showSound = new Howl({
     //   src: [soundSource.accent],

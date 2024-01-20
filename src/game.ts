@@ -3,7 +3,7 @@ import { components, state } from "./state"
 import { Player } from "./components/player"
 import { Background } from "./components/background"
 import { Projectile } from "./components/projectile"
-import { projectileSpeed } from "./settings"
+import { projectileSpeed, stageHeight, stageWidth } from "./settings"
 import { Invaders } from "./components/invaders"
 import { Foreground } from "./components/foreground"
 
@@ -64,7 +64,7 @@ export class Game {
           break
 
         case " ":
-          state.set_SpaceBar_keyPressed(true)
+          state.set_SPACEBAR_keyPressed(true)
           break
 
         default:
@@ -99,7 +99,7 @@ export class Game {
           break
 
         case " ":
-          state.set_SpaceBar_keyPressed(false)
+          state.set_SPACEBAR_keyPressed(false)
           break
 
         default:
@@ -107,11 +107,11 @@ export class Game {
       }
     })
 
-    //score
+    //score count
     reaction(
       () => state.invaderDestroyed,
-      (newVal, oldVal) => {
-        if (newVal === true && oldVal === false) {
+      (newVal) => {
+        if (newVal === true) {
           state.setScoreCounter(state.scoreCounter + 100)
         }
         state.setInvaderDestroyed(false)
@@ -121,36 +121,80 @@ export class Game {
     this.updateView()
   }
 
-  async play() {
-    state.setLivesCounter(3)
-    this.startLevel()
+  //signal when level is finished in any way
+  //if current level is completed ( there i no more enemies) or
+  //player is destroyed and destruction is completed
+  async levelPlayingStopped() {
+    return new Promise<void>((resolve) => {
+      let disposer = reaction(
+        () => ({
+          currentLevelCompleted: state.currentLevelCompleted,
+          playerAlive: state.playerAlive,
+          playerDestructionCompletedTrigger:
+            state.playerDestructionCompletedTrigger,
+        }),
+        (newVal, oldVal) => {
+          if (
+            newVal.currentLevelCompleted === true ||
+            (newVal.playerAlive === false &&
+              newVal.playerDestructionCompletedTrigger !==
+                oldVal.playerDestructionCompletedTrigger)
+          ) {
+            resolve()
+            disposer()
+          }
+        }
+      )
+    })
   }
 
-  startLevel() {
-    const player = new Player()
+  async play() {
+    state.setWaitingForGameStart(true)
 
-    components.player = player
-    components.foreground.container.addChild(player)
-
-    const invaders = new Invaders()
-    components.invaders = invaders
-    invaders.createInvaders()
-    components.foreground.container.addChild(components.invaders)
+    components.player = new Player()
+ 
+    components.invaders = new Invaders()
+    components.invaders.createInvaders()
 
     this.updateView()
 
-    player.x = components.foreground.container.width / 2 - player.width / 2
-    player.y = components.foreground.container.height * 0.85
+    components.invaders.x = stageWidth / 2 - components.invaders.width / 2
+    components.invaders.y = stageHeight * 0.15
 
-    invaders.x = components.foreground.container.width / 2 - invaders.width / 2
-    invaders.y = components.foreground.container.height * 0.15
+    state.setLivesCounter(3)
+    components.player.slideIn()
+    await components.foreground.showStartText()
 
-    invaders.startMove()
+    components.player.start()
 
-    player.start()
+    while (state.livesCounter > 0) {
 
-    invaders.startShooting()
+      if(!state.playerAlive){
+        components.player = new Player()
+        await components.player.slideIn()
+        components.player.start()
+       }
+      
+      state.setInvadersActive(true)
+ 
+      //start playing
+      components.invaders.startMove()
+  
+      components.invaders.startShooting()
+
+      //wait until player dies or all enemies are destroyed
+      await this.levelPlayingStopped()
+
+      //check if level is completed
+      // if yes setup next level
+    }
+
+    //show game over message
+    
+
+    console.log("finished")
   }
+
 
   //recalc view
   updateView = () => {

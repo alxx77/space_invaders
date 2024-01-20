@@ -9,7 +9,7 @@ import {
 } from "pixi.js"
 import { components, state, PlayerDirection } from "../state"
 import { SmartContainer } from "./smartContainer"
-import { reaction } from "mobx"
+import { IReactionDisposer, reaction } from "mobx"
 import {
   playerSpeed,
   projectileSpeed,
@@ -29,11 +29,15 @@ export class Player extends SmartContainer {
   positionCalculator: Generator<DeltaPosition, void, number> | undefined
   playerDirection: PlayerDirection
   ticker: Ticker | undefined
+  disposerList: IReactionDisposer[]
   constructor() {
     super()
     this.name = "Player"
     this.sprite = new Sprite(utils.TextureCache["player"])
+    this.visible = false
     this.addChild(this.sprite)
+
+    components.foreground.container.addChild(this)
 
     const sheet = Assets.cache.get("player_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
@@ -52,23 +56,34 @@ export class Player extends SmartContainer {
     this.positionCalculator = undefined
     this.playerDirection = "none"
 
+    this.disposerList = []
+    let d
+
     //react to directions change
-    reaction(
+    d = reaction(
       () => state.getPlayerDirection,
       (newVal) => {
         this.playerDirection = newVal
       }
     )
 
+    this.disposerList.push(d)
+
     //shoot
-    reaction(
-      () => state.SpaceBar_keyPressed,
-      (newVal, oldVal) => {
-        //first check if player is not destroyed
-        if (state.playerDestroyed) return
+    d = reaction(
+      () => ({
+        SpaceBar_keyPressed: state.SPACEBAR_keyPressed,
+        WaitingForGameStart: state.WaitingForGameStart,
+      }),
+      (newVal) => {
+        //first check if player is alive
+        if (!state.playerAlive) return
 
         //if spacebar is pressed fire a projectile
-        if (newVal === true && oldVal === false) {
+        if (
+          newVal.SpaceBar_keyPressed === true &&
+          newVal.WaitingForGameStart === false
+        ) {
           const projectile = new Projectile(
             {
               x: this.x + components.player.width / 2,
@@ -92,22 +107,44 @@ export class Player extends SmartContainer {
       }
     )
 
+    this.disposerList.push(d)
+
     //player destruction
-    reaction(
-      () => state.playerDestroyed,
-      (newVal, oldVal) => {
-        if (newVal === true && oldVal === false) {
+    d = reaction(
+      () => state.playerAlive,
+      (newVal) => {
+        if (newVal === false) {
           this.stop()
           this.sprite.visible = false
+          for (const disposer of this.disposerList) {
+            disposer()
+          }
           this.explosionSprite.visible = true
           this.explosionSprite.play()
           state.setLivesCounter(state.livesCounter - 1)
+          this.explosionSprite.onComplete = () => {
+            state.triggerPlayerDestructionCompleted()
+            this.visible = false
+            this.destroy()
+          }
         }
       }
     )
 
+    this.disposerList.push(d)
+
     //create position calculator
     this.positionCalculator = this.getPositionDelta(this)
+
+    //set player alive
+    state.setPlayerAlive(true)
+  }
+
+  async slideIn() {
+    this.x = -200
+    this.y = stageHeight * 0.85
+    this.visible = true
+    return this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.85, 3)
   }
 
   start() {

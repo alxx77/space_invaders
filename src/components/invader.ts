@@ -27,7 +27,7 @@ export class Invader extends SmartContainer {
     this.explosionSprite.y = this.height / 2
     this.explosionSprite.scale.set(0.9)
     this.explosionSprite.anchor.set(0.5)
-    this.explosionSprite.animationSpeed = 0.1
+    this.explosionSprite.animationSpeed = 0.3
     this.addChild(this.explosionSprite)
   }
 

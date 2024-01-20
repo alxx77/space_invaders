@@ -11,6 +11,7 @@ import {
   stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
+import { getRandomWebColor } from "../utils"
 
 type InvaderData = {
   x: number
@@ -33,20 +34,34 @@ export class Invaders extends SmartContainer {
     //container
     this.container = new Container()
     this.addChild(this.container)
+    components.foreground.container.addChild(this)
+
     this.cbOnTweenUpdate = this.collisionTestWithPlayer
     this.initialContainerWidth = 0
 
     //when all invaders are destroyed
     reaction(
-      () => state.allInvadersDestroyed,
-      (newVal, oldVal) => {
-        if (newVal === true && oldVal === false) {
+      () => ({
+        invadersLength: state.invaders.length,
+        invaderProjectiles: state.invaderProjectiles.length,
+      }),
+      (newVal) => {
+        if (
+          newVal.invadersLength === 0 &&
+          newVal.invaderProjectiles === 0
+        ) {
           this.stopTween()
+
+          //stop shooting
           if (components.invaders.interval) {
             clearInterval(components.invaders.interval)
           }
-          //reset trigger
-          console.log("level completed")
+
+          //check if player is alive
+          if (state.playerAlive) {
+            //if yes it means that level is completed
+            state.setCurrentLevelCompleted(true)
+          }
         }
       }
     )
@@ -54,12 +69,10 @@ export class Invaders extends SmartContainer {
     //when invaders should stop
     reaction(
       () => state.invadersActive,
-      (newVal, oldVal) => {
-        if (newVal === false && oldVal === true) {
-          if(components.invaders.interval){
-            clearInterval(components.invaders.interval)
-          }
-          this.stopTween()
+      (newVal) => {
+        if (newVal === false) {
+          this.stopMove()
+          this.stopShooting()
         }
       }
     )
@@ -72,13 +85,32 @@ export class Invaders extends SmartContainer {
     }
   }
 
+  stopMove(){
+    this.stopTween()
+  }
+
+  stopShooting(){
+    if (components.invaders.interval) {
+      clearInterval(components.invaders.interval)
+    }
+  }
+
+  fadeIn(){
+    
+  }
+
   startShooting() {
+    const self = this
     this.interval = setInterval(function () {
-      const percentInvadersRemained =  state.invaders.length / 33
+      if (state.invaders.length === 0) {
+        clearInterval(self.interval)
+        return
+      }
+      const percentInvadersRemained = state.invaders.length / 33
       for (const iterator of [1, 2, 3, 4]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < (percentInvadersRemained * 0.3) + 0.1
+        const p = Math.random() < percentInvadersRemained * 0.3 + 0.1
         if (p === true) {
           invader.shoot()
         }
@@ -119,6 +151,8 @@ export class Invaders extends SmartContainer {
     const i = state.invaders.findIndex((el) => el === invader)
     state.removeInvader(i)
     invader.sprite.visible = false
+    invader.explosionSprite.scale.set(0.5 + Math.random())
+    invader.explosionSprite.tint = getRandomWebColor()
     invader.explosionSprite.visible = true
     invader.explosionSprite.play()
     invader.explosionSprite.onComplete = () => {
@@ -159,7 +193,7 @@ export class Invaders extends SmartContainer {
       ) {
         // Collision detected
         state.setInvadersActive(false)
-        state.setPlayerDestroyed(true)
+        state.setPlayerAlive(false)
         components.invaders.removeInvader(invader)
         return
       }

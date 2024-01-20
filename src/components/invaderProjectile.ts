@@ -1,6 +1,6 @@
 import { Sprite, utils } from "pixi.js"
 import { SmartContainer } from "./smartContainer"
-import { components, state } from "../state";
+import { components, state } from "../state"
 
 //root container
 export class InvaderProjectile extends SmartContainer {
@@ -17,7 +17,7 @@ export class InvaderProjectile extends SmartContainer {
   }
 
   collisionTestPlayerWithInvaderProjectile(c: SmartContainer) {
-    if(state.playerDestroyed) return
+    if (!state.playerAlive) return
     const bounds1 = components.player.getBounds()
     for (const invaderProjectile of state.invaderProjectiles) {
       const bounds2 = invaderProjectile.sprite.getBounds()
@@ -31,7 +31,7 @@ export class InvaderProjectile extends SmartContainer {
         // Collision detected
         c.stopTween()
         state.setInvadersActive(false)
-        state.setPlayerDestroyed(true)
+        state.setPlayerAlive(false)
         const i = state.invaderProjectiles.findIndex(
           (el) => el === invaderProjectile
         )
@@ -42,6 +42,5 @@ export class InvaderProjectile extends SmartContainer {
     }
   }
 
-  updateLayout(width: number, height: number) {
-  }
+  updateLayout(width: number, height: number) {}
 }

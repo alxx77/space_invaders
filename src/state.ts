@@ -17,36 +17,40 @@ class Store {
   _DOWN_keyPressed: boolean
   _RIGHT_keyPressed: boolean
   _UP_keyPressed: boolean
-  _SpaceBar_keyPressed: boolean
+  _SPACEBAR_keyPressed: boolean
   _lastKeyPressed: string
   _projectiles: Projectile[]
   _invaderProjectiles: InvaderProjectile[]
   _invaders: Invader[]
   _gameLevel: number
-  _allInvadersDestroyed: boolean
-  _playerDestroyed: boolean
+  _playerAlive: boolean
+  _playerDestructionCompletedTrigger: number
   _invandersActive: boolean
   _scoreCounter: number
   _livesCounter: number
   _invaderDestroyed: boolean
+  _currentLevelCompleted: boolean
+  _waitingForGameStart: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
     this._DOWN_keyPressed = false
     this._RIGHT_keyPressed = false
     this._UP_keyPressed = false
-    this._SpaceBar_keyPressed = false
+    this._SPACEBAR_keyPressed = false
     this._lastKeyPressed = ""
     this._projectiles = []
     this._invaderProjectiles = []
     this._invaders = []
     this._gameLevel = 1
-    this._allInvadersDestroyed = false
-    this._playerDestroyed = false
-    this._invandersActive = true
+    this._playerAlive = false
+    this._invandersActive = false
     this._scoreCounter = 0
     this._livesCounter = 0
     this._invaderDestroyed = false
+    this._currentLevelCompleted = false
+    this._waitingForGameStart = false
+    this._playerDestructionCompletedTrigger = 0
 
     makeAutoObservable(this, {}, { autoBind: true })
   }
@@ -91,14 +95,14 @@ class Store {
     return this._UP_keyPressed
   }
 
-  //Ctrl key
+  //Status of Space bar
   @action
-  set_SpaceBar_keyPressed(value: boolean) {
-    this._SpaceBar_keyPressed = value
+  set_SPACEBAR_keyPressed(value: boolean) {
+    this._SPACEBAR_keyPressed = value
   }
   @computed
-  get SpaceBar_keyPressed() {
-    return this._SpaceBar_keyPressed
+  get SPACEBAR_keyPressed() {
+    return this._SPACEBAR_keyPressed
   }
 
   //last key that was pressed from A,S,D or W keys
@@ -113,19 +117,31 @@ class Store {
 
   @computed
   get getPlayerDirection(): PlayerDirection {
-    if (this.LEFT_keyPressed && (this.lastKeyPressed === "A" || this.lastKeyPressed === "ArrowLeft")) {
+    if (
+      this.LEFT_keyPressed &&
+      (this.lastKeyPressed === "A" || this.lastKeyPressed === "ArrowLeft")
+    ) {
       return "left"
     }
 
-    if (this.DOWN_keyPressed && (this.lastKeyPressed === "S" || this.lastKeyPressed === "ArrowDown")) {
+    if (
+      this.DOWN_keyPressed &&
+      (this.lastKeyPressed === "S" || this.lastKeyPressed === "ArrowDown")
+    ) {
       return "down"
     }
 
-    if (this.RIGHT_keyPressed && (this.lastKeyPressed === "D" || this.lastKeyPressed === "ArrowRight")) {
+    if (
+      this.RIGHT_keyPressed &&
+      (this.lastKeyPressed === "D" || this.lastKeyPressed === "ArrowRight")
+    ) {
       return "right"
     }
 
-    if (this.UP_keyPressed && (this.lastKeyPressed === "W" || this.lastKeyPressed === "ArrowUp")) {
+    if (
+      this.UP_keyPressed &&
+      (this.lastKeyPressed === "W" || this.lastKeyPressed === "ArrowUp")
+    ) {
       return "up"
     }
 
@@ -200,10 +216,7 @@ class Store {
   @action
   removeInvader(index: number) {
     this._invaders.splice(index, 1)
-    if (this._invaders.length === 0) {
-      this.setAllInvadersDestroyed(true)
-    }
-  }
+   }
 
   @computed
   get invaders() {
@@ -211,23 +224,13 @@ class Store {
   }
 
   @action
-  setAllInvadersDestroyed(value: boolean) {
-    this._allInvadersDestroyed = value
+  setPlayerAlive(value: boolean) {
+    this._playerAlive = value
   }
 
   @computed
-  get allInvadersDestroyed() {
-    return this._allInvadersDestroyed
-  }
-
-  @action
-  setPlayerDestroyed(value: boolean) {
-    this._playerDestroyed = value
-  }
-
-  @computed
-  get playerDestroyed() {
-    return this._playerDestroyed
+  get playerAlive() {
+    return this._playerAlive
   }
 
   @action
@@ -278,6 +281,36 @@ class Store {
   @computed
   get invaderDestroyed() {
     return this._invaderDestroyed
+  }
+
+  @action
+  setCurrentLevelCompleted(value: boolean) {
+    this._currentLevelCompleted = value
+  }
+
+  @computed
+  get currentLevelCompleted() {
+    return this._currentLevelCompleted
+  }
+
+  @action
+  setWaitingForGameStart(value: boolean) {
+    this._waitingForGameStart = value
+  }
+
+  @computed
+  get WaitingForGameStart() {
+    return this._waitingForGameStart
+  }
+
+  @action
+  triggerPlayerDestructionCompleted() {
+    this._playerDestructionCompletedTrigger++
+  }
+
+  @computed
+  get playerDestructionCompletedTrigger() {
+    return this._playerDestructionCompletedTrigger
   }
 }
 
