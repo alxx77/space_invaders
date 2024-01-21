@@ -16,11 +16,11 @@ export async function initGame() {
   //renderer
   const renderer = new Renderer({
     view: canvas1,
-    //autoResize: true,
     width: window.innerWidth,
     height: window.innerHeight,
     resolution: window.devicePixelRatio,
     autoDensity: true,
+    antialias: true
   })
 
   //save layout & renderer

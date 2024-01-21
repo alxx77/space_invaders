@@ -99,7 +99,8 @@ export class Foreground extends Container {
   }
 
   updateLayout(width: number, height: number) {
-    this.scale.x = components.background.scale.x
-    this.scale.y = components.background.scale.y
+    this.scale = components.background.scale
+    // this.x = components.background.x
+    // this.y = components.background.y
   }
 }

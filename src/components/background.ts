@@ -1,9 +1,11 @@
 import { Container, Sprite, utils, Texture } from "pixi.js"
 import { stageHeight, stageWidth } from "../settings"
+import * as TWEEN from "@tweenjs/tween.js"
 
 export class Background extends Container {
   container: Container
-  private backgroundSprite: Sprite
+  private backgroundSprite1: Sprite
+  private backgroundSprite2: Sprite
   constructor() {
     super()
     //container
@@ -11,42 +13,36 @@ export class Background extends Container {
     this.name = "background"
     this.addChild(this.container)
 
-    //sprite
-    this.backgroundSprite = new Sprite(utils.TextureCache['space'])
-    this.backgroundSprite.width = stageWidth
-    this.backgroundSprite.height = stageHeight
-    this.container.addChild(this.backgroundSprite)
+     //mask
+     const mask = new Sprite(Texture.WHITE)
+     mask.width = stageWidth
+     mask.height = stageHeight
+     this.addChild(mask)
+     this.mask = mask
+
+    //sprite 1
+    this.backgroundSprite1 = new Sprite(utils.TextureCache["space"])
+    this.backgroundSprite1.width = stageWidth
+    this.backgroundSprite1.height = stageHeight
+    this.container.addChild(this.backgroundSprite1)
+
+    //sprite 2
+    this.backgroundSprite2 = new Sprite(utils.TextureCache["space"])
+    this.backgroundSprite2.width = stageWidth
+    this.backgroundSprite2.height = stageHeight
+    this.backgroundSprite2.y = this.backgroundSprite2.height *-1
+    this.container.addChild(this.backgroundSprite2)
   }
 
-  updateLayout(width: number, height: number) {
-        // desired w/h ratio of grid
-        let backgroundRatio = 4/3
+  updateLayout(rendererWidth: number, rendererHeight: number) {
 
-        // parent
-        let layoutRatio = width / height
-    
-        // grid dimensions
-        let bgHeight = 0
-        let bgWidth = 0
-    
-        //if renderer aspect ratio is wider, game height is first calculated
-        if (layoutRatio > backgroundRatio) {
-          bgHeight = Math.max(height, 250)
-    
-          //recalculate width
-          bgWidth = bgHeight * backgroundRatio
-        } else {
-          //if renderer aspect ratio is more narrow
-          //means width is constraining factor and is calculated first
-          bgWidth = Math.max(Math.min(width, 1280), 480) 
-    
-          //recalculate height
-          bgHeight = bgWidth / backgroundRatio
-        }
-    
-        //set stage dimensions
-        this.width = bgWidth
-        this.height = bgHeight
+    const minHeight = 360
+    const minWidth = 480
 
+    // Calculate scale factors to preserve aspect ratio
+    const scaleFactorX =  Math.max(rendererWidth,minWidth) / stageWidth
+    const scaleFactorY = Math.max( rendererHeight,minHeight) / stageHeight
+    const scaleFactor = Math.min(scaleFactorX, scaleFactorY)
+    this.scale.set(scaleFactor)
   }
 }

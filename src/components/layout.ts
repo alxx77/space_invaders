@@ -12,15 +12,21 @@ export class Layout extends Container {
     this.height = document.documentElement.clientHeight
   }
 
-  updateLayout(width: number, height: number) {
-    components.background.updateLayout(width,height)
-    if(components.player){
-      components.player.updateLayout(width,height)
+  updateLayout(rendererWidth: number, rendererHeight: number) {
+    components.background.updateLayout(rendererWidth,rendererHeight)
+    components.foreground.updateLayout(rendererWidth,rendererHeight)
+
+    if(rendererWidth - components.background.width>=0){
+      this.x = (rendererWidth - components.background.width)/2
+    } else {
+      this.x = 0
     }
-    if(components.invaders){
-      components.invaders.updateLayout(width,height)
+
+    if((rendererHeight - components.background.height * components.background.scale.y)>0){
+      this.y = (rendererHeight - (components.background.height * components.background.scale.y)) *0.2
+    } else {
+      this.y = 0
     }
-    components.foreground.updateLayout(width,height)
-    state.projectiles.forEach(el => el.updateLayout(width,height))
+
   }
 }
