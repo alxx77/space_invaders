@@ -20,7 +20,7 @@ export async function initGame() {
     height: window.innerHeight,
     resolution: window.devicePixelRatio,
     autoDensity: true,
-    antialias: true
+    //antialias: true
   })
 
   //save layout & renderer

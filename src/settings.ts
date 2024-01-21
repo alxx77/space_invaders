@@ -19,6 +19,8 @@ export const invaderYMargin = 10
 export const stageWidth = 1280
 export const stageHeight = 960
 
+export const backgroundScrollTimePerSprite = 7000
+
 //font styles
 export const fontStyles = {
   scoreText: new TextStyle({
