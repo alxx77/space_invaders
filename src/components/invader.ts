@@ -2,12 +2,14 @@ import { AnimatedSprite, Assets, Container, Resource, Sprite, Texture, utils } f
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { InvaderProjectile } from "./invaderProjectile"
-import { invaderWidth, invaderProjectileSpeed, stageHeight } from "../settings"
+import { invaderWidth, invaderProjectileSpeed, stageHeight, soundSource } from "../settings"
+import { Howl } from "howler"
 
 //root container
 export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
+  explosionSound:Howl
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
@@ -29,6 +31,12 @@ export class Invader extends SmartContainer {
     this.explosionSprite.anchor.set(0.5)
     this.explosionSprite.animationSpeed = 0.3
     this.addChild(this.explosionSprite)
+
+    this.explosionSound = new Howl({
+      src: [soundSource.invaderExplosion],
+      volume: 0.5,
+      loop: false,
+    })
   }
 
   shoot() {
@@ -42,6 +50,7 @@ export class Invader extends SmartContainer {
     )
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)
+    projectile.shootSound.play()
     projectile.moveTo(
       projectile.x,
       stageHeight + 50,

@@ -31,6 +31,8 @@ class Store {
   _invaderDestroyed: boolean
   _currentLevelCompleted: boolean
   _waitingForGameStart: boolean
+  _waitingForLevelCompletedTextToClose: boolean
+  _playerActive: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -51,6 +53,8 @@ class Store {
     this._currentLevelCompleted = false
     this._waitingForGameStart = false
     this._playerDestructionCompletedTrigger = 0
+    this._waitingForLevelCompletedTextToClose = false
+    this._playerActive = false
 
     makeAutoObservable(this, {}, { autoBind: true })
   }
@@ -312,6 +316,27 @@ class Store {
   get playerDestructionCompletedTrigger() {
     return this._playerDestructionCompletedTrigger
   }
+
+  @action
+  setWaitingForLevelCompletedTextToClose(value: boolean) {
+    this._waitingForLevelCompletedTextToClose = value
+  }
+
+  @computed
+  get WaitingForLevelCompletedTextToClose() {
+    return this._waitingForLevelCompletedTextToClose
+  }
+
+  @action
+  setPlayerActive(value: boolean) {
+    this._playerActive = value
+  }
+
+  @computed
+  get playerActive() {
+    return this._playerActive
+  }
+  
 }
 
 export const state = new Store()

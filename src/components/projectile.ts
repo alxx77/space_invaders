@@ -1,12 +1,14 @@
 import { Point, Sprite, utils } from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
-import { projectileSpeed } from "../settings"
+import { Howl } from "howler"
+import { soundSource } from "../settings"
 
 //root container
 export class Projectile extends SmartContainer {
   sprite: Sprite
   speed: number
+  shootSound: Howl
   constructor(position: { x: number; y: number }, speed: number) {
     super()
     this.sprite = new Sprite(utils.TextureCache["projectile"])
@@ -16,6 +18,14 @@ export class Projectile extends SmartContainer {
     this.y = position.y
 
     this.cbOnTweenUpdate = this.collisionTestWithInvaders
+
+    this.shootSound = new Howl({
+      src: [soundSource.playerProjectile],
+      volume: 0.5,
+      loop: false,
+    })
+    this.shootSound.volume(0.2 + Math.random() * 0.4)
+    this.shootSound.play()
   }
 
   collisionTestWithInvaders(c: SmartContainer) {

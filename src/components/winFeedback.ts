@@ -3,7 +3,7 @@ import { components, state } from "../state"
 import * as TWEEN from "@tweenjs/tween.js"
 import { fontStyles, soundSource } from "../settings"
 import { Howl } from "howler"
-import Timeout, { TimeoutInstance } from "smart-timeout"
+//import Timeout, { TimeoutInstance } from "smart-timeout"
 
 export class Winfeedback extends Container {
   name: string

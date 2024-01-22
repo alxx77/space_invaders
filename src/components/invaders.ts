@@ -7,11 +7,13 @@ import {
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
+  soundSource,
   stageHeight,
   stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
 import { getRandomWebColor } from "../utils"
+
 
 type InvaderData = {
   x: number
@@ -46,22 +48,14 @@ export class Invaders extends SmartContainer {
         invaderProjectiles: state.invaderProjectiles.length,
       }),
       (newVal) => {
-        if (
-          newVal.invadersLength === 0 &&
-          newVal.invaderProjectiles === 0
-        ) {
-          this.stopTween()
+        if (newVal.invadersLength === 0 && newVal.invaderProjectiles === 0) {
+          
+          //stop moving & shooting
+          state.setInvadersActive(false)
 
-          //stop shooting
-          if (components.invaders.interval) {
-            clearInterval(components.invaders.interval)
-          }
-
-          //check if player is alive
-          if (state.playerAlive) {
-            //if yes it means that level is completed
-            state.setCurrentLevelCompleted(true)
-          }
+          //*** level can be completed even if player died ***
+          //if player & invader shoot each other at the same time
+          state.setCurrentLevelCompleted(true)
         }
       }
     )
@@ -85,18 +79,18 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  stopMove(){
+  stopMove() {
     this.stopTween()
   }
 
-  stopShooting(){
+  stopShooting() {
     if (components.invaders.interval) {
       clearInterval(components.invaders.interval)
     }
   }
 
-  fadeIn(){
-    
+  slideIn() {
+
   }
 
   startShooting() {
@@ -145,6 +139,12 @@ export class Invaders extends SmartContainer {
       this.container.addChild(invader)
     }
     this.initialContainerWidth = this.container.width
+    this.x = stageWidth / 2 - this.width / 2
+    this.y = stageHeight * 0.15
+  }
+
+  resetPosition(){
+    this.moveTo(stageWidth / 2 - this.width / 2,stageHeight * 0.15,2)
   }
 
   removeInvader(invader: Invader) {
@@ -155,6 +155,8 @@ export class Invaders extends SmartContainer {
     invader.explosionSprite.tint = getRandomWebColor()
     invader.explosionSprite.visible = true
     invader.explosionSprite.play()
+    invader.explosionSound.volume(0.2 + Math.random()*0.4)
+    invader.explosionSound.play()
     invader.explosionSprite.onComplete = () => {
       invader.destroy()
     }
@@ -169,6 +171,30 @@ export class Invaders extends SmartContainer {
               x: col * (invaderWidth + invaderXMargin),
               y: row * (invaderHeight + invaderYMargin),
               variety: row + 1,
+            }
+          }
+        }
+        break
+
+        case 2:
+        for (let row = 0; row < 2; row++) {
+          for (let col = 0; col < 15; col++) {
+            yield {
+              x: col * (invaderWidth + invaderXMargin),
+              y: row * (invaderHeight + invaderYMargin),
+              variety: (col%2) + 1,
+            }
+          }
+        }
+        break
+
+        case 3:
+        for (let row = 0; row < 5; row++) {
+          for (let col = 0; col < 5; col++) {
+            yield {
+              x: col * (invaderWidth + invaderXMargin),
+              y: row * (invaderHeight + invaderYMargin),
+              variety: 1,
             }
           }
         }

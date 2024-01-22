@@ -11,12 +11,15 @@ import { components, state, PlayerDirection } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { IReactionDisposer, reaction } from "mobx"
 import {
+  playerSlideInSpeed,
   playerSpeed,
   projectileSpeed,
+  soundSource,
   stageHeight,
   stageWidth,
 } from "../settings"
 import { Projectile } from "./projectile"
+import { Howl } from "howler"
 
 //single change of position
 type DeltaPosition = { dx: number; dy: number }
@@ -30,6 +33,7 @@ export class Player extends SmartContainer {
   playerDirection: PlayerDirection
   ticker: Ticker | undefined
   disposerList: IReactionDisposer[]
+  explosionSound: Howl
   constructor() {
     super()
     this.name = "Player"
@@ -73,16 +77,14 @@ export class Player extends SmartContainer {
     d = reaction(
       () => ({
         SpaceBar_keyPressed: state.SPACEBAR_keyPressed,
-        WaitingForGameStart: state.WaitingForGameStart,
       }),
       (newVal) => {
         //first check if player is alive
-        if (!state.playerAlive) return
-
+        if (!state.playerAlive || !state.playerActive) return
+        
         //if spacebar is pressed fire a projectile
         if (
-          newVal.SpaceBar_keyPressed === true &&
-          newVal.WaitingForGameStart === false
+          newVal.SpaceBar_keyPressed === true
         ) {
           const projectile = new Projectile(
             {
@@ -121,12 +123,14 @@ export class Player extends SmartContainer {
           }
           this.explosionSprite.visible = true
           this.explosionSprite.play()
+          this.explosionSound.play()
           state.setLivesCounter(state.livesCounter - 1)
           this.explosionSprite.onComplete = () => {
             state.triggerPlayerDestructionCompleted()
             this.visible = false
             this.destroy()
           }
+          state.setPlayerActive(false)
         }
       }
     )
@@ -136,15 +140,31 @@ export class Player extends SmartContainer {
     //create position calculator
     this.positionCalculator = this.getPositionDelta(this)
 
+
+    //start receiving commands
+    this.start()
+
     //set player alive
     state.setPlayerAlive(true)
+
+    this.explosionSound = new Howl({
+      src: [soundSource.playerExplosion],
+      volume: 0.5,
+      loop: false,
+    })
   }
 
   async slideIn() {
+    state.setPlayerActive(false)
     this.x = -200
     this.y = stageHeight * 0.85
     this.visible = true
-    return this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.85, 3)
+    return this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.85, playerSlideInSpeed,()=>{state.setPlayerActive(true)})
+  }
+
+  async slideOut(){
+    state.setPlayerActive(false)
+    return this.moveTo(-200, stageHeight * 0.85, playerSlideInSpeed)
   }
 
   start() {
@@ -152,6 +172,9 @@ export class Player extends SmartContainer {
     let ticker = new Ticker()
     let self = this
     ticker.add(function (delta) {
+      //if not active do not listen to commands
+      if(!state.playerActive) return
+
       if (self.positionCalculator) {
         step = self.positionCalculator.next(delta)
         if (step.done === false) {

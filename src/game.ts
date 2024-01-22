@@ -2,8 +2,6 @@ import { reaction, autorun } from "mobx"
 import { components, state } from "./state"
 import { Player } from "./components/player"
 import { Background } from "./components/background"
-import { Projectile } from "./components/projectile"
-import { projectileSpeed, stageHeight, stageWidth } from "./settings"
 import { Invaders } from "./components/invaders"
 import { Foreground } from "./components/foreground"
 
@@ -152,49 +150,71 @@ export class Game {
     state.setWaitingForGameStart(true)
 
     components.player = new Player()
- 
+
     components.invaders = new Invaders()
     components.invaders.createInvaders()
 
     this.updateView()
 
-    components.invaders.x = stageWidth / 2 - components.invaders.width / 2
-    components.invaders.y = stageHeight * 0.15
-
     state.setLivesCounter(3)
-    components.player.slideIn()
-    await components.foreground.showStartText()
+    await components.player.slideIn()
 
-    components.player.start()
+    document.body.style.cursor = 'none'
+
+    state.setPlayerActive(false)
+    await components.foreground.showPressSpaceToPlayText()
+    components.foreground.showLevelStartText()
+    state.setPlayerActive(true)
 
     while (state.livesCounter > 0) {
 
-      if(!state.playerAlive){
+      if (!state.playerAlive) {
         components.player = new Player()
         await components.player.slideIn()
-        components.player.start()
-       }
-      
+      }
+
       state.setInvadersActive(true)
- 
+
       //start playing
       components.invaders.startMove()
-  
+
       components.invaders.startShooting()
 
       //wait until player dies or all enemies are destroyed
       await this.levelPlayingStopped()
+      console.log("finished ")
 
       //check if level is completed
-      // if yes setup next level
+      if (state.currentLevelCompleted) {
+
+        //there is possibility that player is destroyed although level is completed
+        if(!state.playerAlive){
+          components.player = new Player()
+        }
+
+        state.setPlayerActive(false)
+        await components.foreground.showLevelCompletedText()
+        await components.player.slideOut()
+
+        state.setGameLevel(state.gameLevel+1)
+        state.setCurrentLevelCompleted(false)
+        //setup next level invaders
+        components.invaders.createInvaders()
+      
+
+        state.setPlayerActive(false)
+        await components.player.slideIn()
+        components.foreground.showLevelStartText()
+        state.setPlayerActive(true)
+      } else {
+        components.invaders.resetPosition()
+      }
     }
 
     //show game over message
-    
-
-    console.log("finished")
+    console.log("game over")
+    document.body.style.cursor = 'auto'
   }
-
 
   //recalc view
   updateView = () => {

@@ -1,5 +1,5 @@
 import { Container } from "pixi.js"
-import { components, state} from "../state"
+import { components} from "../state"
 
 //root container
 export class Layout extends Container {
