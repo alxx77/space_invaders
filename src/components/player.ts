@@ -34,6 +34,7 @@ export class Player extends SmartContainer {
   ticker: Ticker | undefined
   disposerList: IReactionDisposer[]
   explosionSound: Howl
+  engineSound:Howl
   constructor() {
     super()
     this.name = "Player"
@@ -118,6 +119,7 @@ export class Player extends SmartContainer {
         if (newVal === false) {
           this.stop()
           this.sprite.visible = false
+          this.engineSound.stop()
           for (const disposer of this.disposerList) {
             disposer()
           }
@@ -131,6 +133,20 @@ export class Player extends SmartContainer {
             this.destroy()
           }
           state.setPlayerActive(false)
+        }
+      }
+    )
+
+    this.disposerList.push(d)
+
+    //engine
+    d = reaction(
+      () => state.playerActive,
+      (newVal) => {
+        if (newVal === true) {
+          this.engineSound.play()
+        }else {
+          this.engineSound.stop()
         }
       }
     )
@@ -151,6 +167,12 @@ export class Player extends SmartContainer {
       src: [soundSource.playerExplosion],
       volume: 0.5,
       loop: false,
+    })
+
+    this.engineSound = new Howl({
+      src: [soundSource.playerEngine],
+      volume: 0.3,
+      loop: true,
     })
   }
 

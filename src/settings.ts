@@ -77,5 +77,6 @@ export const soundSource = {
     "assets/sounds/laserLarge_003.ogg",
     "assets/sounds/laserLarge_004.ogg",
   ],
-  levelCompleted: "assets/sounds/level_completed.mp3"
+  levelCompleted: "assets/sounds/level_completed.mp3",
+  playerEngine:"assets/sounds/engineSound.ogg"
 }
