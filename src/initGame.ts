@@ -43,6 +43,8 @@ export async function initGame() {
 
   ticker.add(cb)
 
+  Howler.autoUnlock = true
+
   //init assets
   await initAssets()
 }

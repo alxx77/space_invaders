@@ -10,6 +10,7 @@ async function loadAssets() {
           { alias: "projectile", src: "assets/images/projectile.png" },
           { alias: "space", src: "assets/images/space.png" },
           { alias: "player_explosion", src: "assets/images/explosion.json" },
+          { alias: "splash", src: "assets/images/space_splash.jpg" },
         ],
       },
       {
@@ -47,6 +48,10 @@ async function loadAssets() {
           {
             alias: "troika",
             src: "assets/troika.otf",
+          },
+          {
+            alias: "arcade",
+            src: "assets/ARCADE.TTF",
           },
         ],
       },

@@ -19,11 +19,11 @@ export class InvaderProjectile extends SmartContainer {
     this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile
    
     this.shootSound = new Howl({
-      src: [soundSource.invaderProjectiles[Math.floor(Math.random()*6)]],
+      src: [soundSource.invaderProjectile],
       volume: 0.5,
-      loop: false,
+      loop: false
     })
-    this.shootSound.volume(0.2 + Math.random() * 0.2)
+    this.shootSound.volume(0.1 + Math.random() * 0.1)
   }
 
   collisionTestPlayerWithInvaderProjectile(c: SmartContainer) {

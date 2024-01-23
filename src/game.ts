@@ -1,26 +1,37 @@
-import { reaction, autorun } from "mobx"
+import { reaction } from "mobx"
 import { components, state } from "./state"
 import { Player } from "./components/player"
 import { Background } from "./components/background"
 import { Invaders } from "./components/invaders"
 import { Foreground } from "./components/foreground"
+import { SplashScreen } from "./components/splashScreen"
 
 //high level game logic
 export class Game {
   background: Background
   foreground: Foreground
+  splashScreen: SplashScreen
   constructor() {
     //initialize components
     this.background = new Background()
     this.foreground = new Foreground()
+    this.splashScreen = new SplashScreen()
 
     //save component references
     components.game = this
     components.background = this.background
     components.foreground = this.foreground
+    components.splashScreen = this.splashScreen
+
+    components.background.visible = false
+    components.foreground.visible = false
 
     //add to root container
-    components.layout.addChild(this.background, this.foreground)
+    components.layout.addChild(
+      this.background,
+      this.foreground,
+      this.splashScreen
+    )
 
     //prevent this rebinding
     const updateView = this.updateView
@@ -159,7 +170,7 @@ export class Game {
     state.setLivesCounter(3)
     await components.player.slideIn()
 
-    document.body.style.cursor = 'none'
+    document.body.style.cursor = "none"
 
     state.setPlayerActive(false)
     await components.foreground.showPressSpaceToPlayText()
@@ -167,7 +178,6 @@ export class Game {
     state.setPlayerActive(true)
 
     while (state.livesCounter > 0) {
-
       if (!state.playerAlive) {
         components.player = new Player()
         await components.player.slideIn()
@@ -182,13 +192,11 @@ export class Game {
 
       //wait until player dies or all enemies are destroyed
       await this.levelPlayingStopped()
-      console.log("finished ")
 
       //check if level is completed
       if (state.currentLevelCompleted) {
-
         //there is possibility that player is destroyed although level is completed
-        if(!state.playerAlive){
+        if (!state.playerAlive) {
           components.player = new Player()
         }
 
@@ -196,11 +204,10 @@ export class Game {
         await components.foreground.showLevelCompletedText()
         await components.player.slideOut()
 
-        state.setGameLevel(state.gameLevel+1)
+        state.setGameLevel(state.gameLevel + 1)
         state.setCurrentLevelCompleted(false)
         //setup next level invaders
         components.invaders.createInvaders()
-      
 
         state.setPlayerActive(false)
         await components.player.slideIn()
@@ -212,8 +219,8 @@ export class Game {
     }
 
     //show game over message
-    console.log("game over")
-    document.body.style.cursor = 'auto'
+    await components.foreground.showGameOverText()
+    document.body.style.cursor = "auto"
   }
 
   //recalc view

@@ -8,7 +8,7 @@ export const sound = {
 export const playerSpeed = 5
 
 export const projectileSpeed = 8
-export const invaderProjectileSpeed = 3
+export const invaderProjectileSpeed = 2.5
 
 export const playerSlideInSpeed = 5
 
@@ -29,25 +29,24 @@ export const minWidth = 480
 //font styles
 export const fontStyles = {
   scoreText: new TextStyle({
-    fontFamily: "Troika ",
+    fontFamily: "Arcade",
     fontSize: "42px",
     fill: "#d69b33",
-    dropShadow: true,
+    dropShadow: false,
     dropShadowColor: "red",
     dropShadowDistance: 5,
   }),
   startText: new TextStyle({
-    fontFamily: "Troika ",
-    fontStyle: "italic",
-    fontSize: "64px",
+    fontFamily: "Arcade",
+    fontSize: "58px",
     fill: "white",
     dropShadow: true,
-    dropShadowColor: "red",
-    dropShadowDistance: 5,
+    dropShadowColor: "blue",
+    dropShadowDistance: 3,
   }),
 
   levelCompletedText: new TextStyle({
-    fontFamily: "Troika ",
+    fontFamily: "Troika",
     fontStyle: "italic",
     fontSize: "60px",
     fill: "blue",
@@ -56,7 +55,7 @@ export const fontStyles = {
     dropShadowDistance: 3,
   }),
   levelCompleted2Text: new TextStyle({
-    fontFamily: "Troika ",
+    fontFamily: "Troika",
     fontStyle: "italic",
     fontSize: "32px",
     fill: "gray",
@@ -64,19 +63,24 @@ export const fontStyles = {
     dropShadowColor: "blue",
     dropShadowDistance: 2,
   }),
+  splashText: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "96px",
+    fill: "white",
+    dropShadow: true,
+    dropShadowColor: "black",
+    dropShadowDistance: 3,
+  }),
 }
 
 export const soundSource = {
-  playerProjectile: "assets/sounds/player_projectile.ogg",
-  playerExplosion: "assets/sounds/player_explosion.ogg",
-  invaderExplosion: "assets/sounds/invader_explosion.ogg",
-  invaderProjectiles: [
-    "assets/sounds/laserLarge_000.ogg",
-    "assets/sounds/laserLarge_001.ogg",
-    "assets/sounds/laserLarge_002.ogg",
-    "assets/sounds/laserLarge_003.ogg",
-    "assets/sounds/laserLarge_004.ogg",
-  ],
+  playerProjectile: "assets/sounds/player_projectile.mp3",
+  playerExplosion: "assets/sounds/player_explosion.mp3",
+  invaderExplosion: "assets/sounds/invader_explosion.mp3",
+  invaderProjectile: "assets/sounds/invader_projectile.mp3",
   levelCompleted: "assets/sounds/level_completed.mp3",
-  playerEngine:"assets/sounds/engineSound.ogg"
+  playerEngine:"assets/sounds/engineSound.mp3",
+  startPlay:"assets/sounds/game_start.mp3",
+  gameOver:"assets/sounds/game_over.mp3",
+  gameTheme:"assets/sounds/theme.mp3"
 }

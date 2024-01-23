@@ -7,13 +7,12 @@ import {
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
-  soundSource,
   stageHeight,
   stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
 import { getRandomWebColor } from "../utils"
-
+import Timeout from "smart-timeout"
 
 type InvaderData = {
   x: number
@@ -29,6 +28,7 @@ export class Invaders extends SmartContainer {
   public name: string
   private initialContainerWidth: number
   interval: NodeJS.Timeout | undefined
+  private initialInvadersCount: number
   constructor() {
     super()
     this.name = "Invaders"
@@ -49,7 +49,6 @@ export class Invaders extends SmartContainer {
       }),
       (newVal) => {
         if (newVal.invadersLength === 0 && newVal.invaderProjectiles === 0) {
-          
           //stop moving & shooting
           state.setInvadersActive(false)
 
@@ -70,6 +69,8 @@ export class Invaders extends SmartContainer {
         }
       }
     )
+
+    this.initialInvadersCount = 0
   }
 
   async startMove() {
@@ -89,9 +90,7 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  slideIn() {
-
-  }
+  slideIn() {}
 
   startShooting() {
     const self = this
@@ -100,13 +99,18 @@ export class Invaders extends SmartContainer {
         clearInterval(self.interval)
         return
       }
-      const percentInvadersRemained = state.invaders.length / 33
+      const percentInvadersRemained =
+        state.invaders.length / self.initialInvadersCount
       for (const iterator of [1, 2, 3, 4]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < percentInvadersRemained * 0.3 + 0.1
+        const p = Math.random() < percentInvadersRemained * 0.3 + 0.2
         if (p === true) {
-          invader.shoot()
+          const timeout = Timeout.instantiate(
+            "shoot",
+            () => invader.shoot(),
+            Math.random() * 75
+          )
         }
       }
     }, 500)
@@ -141,10 +145,12 @@ export class Invaders extends SmartContainer {
     this.initialContainerWidth = this.container.width
     this.x = stageWidth / 2 - this.width / 2
     this.y = stageHeight * 0.15
+
+    this.initialInvadersCount = state.invaders.length
   }
 
-  resetPosition(){
-    this.moveTo(stageWidth / 2 - this.width / 2,stageHeight * 0.15,2)
+  resetPosition() {
+    this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.15, 2)
   }
 
   removeInvader(invader: Invader) {
@@ -155,7 +161,7 @@ export class Invaders extends SmartContainer {
     invader.explosionSprite.tint = getRandomWebColor()
     invader.explosionSprite.visible = true
     invader.explosionSprite.play()
-    invader.explosionSound.volume(0.2 + Math.random()*0.4)
+    invader.explosionSound.volume(0.05 + Math.random() * 0.1)
     invader.explosionSound.play()
     invader.explosionSprite.onComplete = () => {
       invader.destroy()
@@ -176,19 +182,19 @@ export class Invaders extends SmartContainer {
         }
         break
 
-        case 2:
+      case 2:
         for (let row = 0; row < 2; row++) {
           for (let col = 0; col < 15; col++) {
             yield {
               x: col * (invaderWidth + invaderXMargin),
               y: row * (invaderHeight + invaderYMargin),
-              variety: (col%2) + 1,
+              variety: (col % 2) + 1,
             }
           }
         }
         break
 
-        case 3:
+      case 3:
         for (let row = 0; row < 5; row++) {
           for (let col = 0; col < 5; col++) {
             yield {

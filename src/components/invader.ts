@@ -46,7 +46,7 @@ export class Invader extends SmartContainer {
         x: gp.x + invaderWidth / 2,
         y: gp.y * 1.05,
       },
-      invaderProjectileSpeed
+      invaderProjectileSpeed + Math.random()
     )
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)

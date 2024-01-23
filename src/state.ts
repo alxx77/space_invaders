@@ -9,6 +9,7 @@ import { Invaders } from "./components/invaders"
 import { Invader } from "./components/invader"
 import { Foreground } from "./components/foreground"
 import { InvaderProjectile } from "./components/invaderProjectile"
+import { SplashScreen } from "./components/splashScreen"
 
 export type PlayerDirection = "none" | "up" | "down" | "left" | "right"
 
@@ -33,6 +34,7 @@ class Store {
   _waitingForGameStart: boolean
   _waitingForLevelCompletedTextToClose: boolean
   _playerActive: boolean
+  _splashScreenVisible: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -55,7 +57,7 @@ class Store {
     this._playerDestructionCompletedTrigger = 0
     this._waitingForLevelCompletedTextToClose = false
     this._playerActive = false
-
+    this._splashScreenVisible = true
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
@@ -336,6 +338,16 @@ class Store {
   get playerActive() {
     return this._playerActive
   }
+
+  @action
+  setSplashScreenVisible(value: boolean) {
+    this._splashScreenVisible = value
+  }
+
+  @computed
+  get splashScreenVisible() {
+    return this._splashScreenVisible
+  }
   
 }
 
@@ -349,6 +361,7 @@ type Components = {
   background: Background
   foreground: Foreground
   invaders: Invaders
+  splashScreen: SplashScreen
 }
 
 export const components = {} as Components

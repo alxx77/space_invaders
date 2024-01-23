@@ -11,8 +11,12 @@ export class Foreground extends Container {
   private livesText: Text
   private startText: Text
   private levelCompletedText: Text
-  private levelCompletedPressSpaceToPlayText:Text
+  private smallPressSpaceToContinueText:Text
+  private gameOverText:Text
   private levelCompletedSound: Howl
+  private startSound: Howl
+  private gameOverSound: Howl
+  gameTheme: Howl
   constructor() {
     super()
     //container
@@ -34,23 +38,23 @@ export class Foreground extends Container {
     this.mask = mask
 
     //score
-    this.scoreText = new Text(`Score: 0`, fontStyles.scoreText)
+    this.scoreText = new Text(`SCORE: 0`, fontStyles.scoreText)
     this.scoreText.x = 10
     this.scoreText.y = stageHeight * 0.95
 
     this.container.addChild(this.scoreText)
 
     //lives
-    this.livesText = new Text(`Credit: 0`, fontStyles.scoreText)
+    this.livesText = new Text(`CREDIT: 0`, fontStyles.scoreText)
     this.livesText.x = 1095
     this.livesText.y = stageHeight * 0.95
 
     this.container.addChild(this.livesText)
 
     //press space to play
-    this.startText = new Text(` Press Space to Start `, fontStyles.startText)
+    this.startText = new Text(`Press SPACE to Start`, fontStyles.startText)
     this.startText.anchor.set(0.5)
-    this.startText.x = stageWidth / 2
+    this.startText.x = (stageWidth / 2) + 10 
     this.startText.y = stageHeight / 2
     this.startText.visible = false
 
@@ -65,13 +69,22 @@ export class Foreground extends Container {
 
     this.container.addChild(this.levelCompletedText)
 
-    this.levelCompletedPressSpaceToPlayText = new Text(` Press Space To Continue `, fontStyles.levelCompleted2Text)
-    this.levelCompletedPressSpaceToPlayText.anchor.set(0.5)
-    this.levelCompletedPressSpaceToPlayText.x = stageWidth / 2
-    this.levelCompletedPressSpaceToPlayText.y = this.levelCompletedText.y + this.levelCompletedText.height
-    this.levelCompletedPressSpaceToPlayText.visible = false
+    this.smallPressSpaceToContinueText = new Text(` PRESS SPACE TO CONTINUE `, fontStyles.levelCompleted2Text)
+    this.smallPressSpaceToContinueText.anchor.set(0.5)
+    this.smallPressSpaceToContinueText.x = stageWidth / 2
+    this.smallPressSpaceToContinueText.y = this.levelCompletedText.y + this.levelCompletedText.height
+    this.smallPressSpaceToContinueText.visible = false
 
-    this.container.addChild(this.levelCompletedPressSpaceToPlayText)
+    this.container.addChild(this.smallPressSpaceToContinueText)
+
+    //game over
+    this.gameOverText = new Text(`GAME OVER`, fontStyles.levelCompletedText)
+    this.gameOverText.anchor.set(0.5)
+    this.gameOverText.x = stageWidth / 2
+    this.gameOverText.y = stageHeight / 2
+    this.gameOverText.visible = false
+
+    this.container.addChild(this.gameOverText)
 
     reaction(
       () => state.scoreCounter,
@@ -87,20 +100,40 @@ export class Foreground extends Container {
       }
     )
 
+    const self = this
+
     this.levelCompletedSound = new Howl({
       src: [soundSource.levelCompleted],
+      volume: 1,
+      loop: false,
+      onend: ()=>{self.gameTheme.volume(0.7)}
+    })
+
+    this.startSound = new Howl({
+      src: [soundSource.startPlay],
       volume: 0.5,
       loop: false,
     })
 
+    this.gameOverSound = new Howl({
+      src: [soundSource.gameOver],
+      volume: 0.8,
+      loop: false,
+    })
+
+    this.gameTheme = new Howl({
+      src: [soundSource.gameTheme],
+      volume: 0.7,
+      loop: false,
+    })
   }
 
   updateScoreText(score: number) {
-    this.scoreText.text = `Score: ${score}`
+    this.scoreText.text = `SCORE: ${score}`
   }
 
   updateLivesText(lives: number) {
-    this.livesText.text = `Credit: ${lives}`
+    this.livesText.text = `CREDIT: ${lives}`
   }
 
   async showPressSpaceToPlayText() {
@@ -119,6 +152,8 @@ export class Foreground extends Container {
             clearInterval(i)
             self.startText.visible = false
             state.setWaitingForGameStart(false)
+            this.gameTheme.fade(0.7, 0.15, 1000)
+            this.startSound.play()
             resolve()
             disposer()
           }
@@ -129,7 +164,7 @@ export class Foreground extends Container {
 
   async showLevelStartText() {
     const self = this
-    this.levelCompletedText.text = ` Level ${state.gameLevel} `
+    this.levelCompletedText.text = ` LEVEL ${state.gameLevel} `
     self.levelCompletedText.visible = true
 
     return new Promise<void>((resolve) => {
@@ -142,13 +177,14 @@ export class Foreground extends Container {
 
   async showLevelCompletedText() {
     const self = this
-    this.levelCompletedText.text = ` Level ${state.gameLevel} completed `
+    this.levelCompletedText.text = ` LEVEL ${state.gameLevel} COMPLETED `
+    self.gameTheme.fade(0.7, 0, 10)
     this.levelCompletedSound.play()
     state.setWaitingForLevelCompletedTextToClose(true)
     self.levelCompletedText.visible = true
 
     const i = setInterval(() => {
-      self.levelCompletedPressSpaceToPlayText.visible = !self.levelCompletedPressSpaceToPlayText.visible
+      self.smallPressSpaceToContinueText.visible = !self.smallPressSpaceToContinueText.visible
     }, 550)
 
     const startTime = Date.now()
@@ -161,7 +197,38 @@ export class Foreground extends Container {
           if (newVal === false && oldVal === true && (Date.now() - startTime)>1500) {
             clearInterval(i)
             self.levelCompletedText.visible = false
-            self.levelCompletedPressSpaceToPlayText.visible = false
+            self.gameTheme.fade(0.7, 0.15, 1000)
+            self.smallPressSpaceToContinueText.visible = false
+            state.setWaitingForLevelCompletedTextToClose(false)
+            resolve()
+            disposer()
+          }
+        }
+      )
+    })
+  }
+
+  async showGameOverText() {
+    const self = this
+    this.gameOverSound.play()
+    state.setWaitingForLevelCompletedTextToClose(true)
+    self.gameOverText.visible = true
+
+    const i = setInterval(() => {
+      self.smallPressSpaceToContinueText.visible = !self.smallPressSpaceToContinueText.visible
+    }, 550)
+
+    const startTime = Date.now()
+
+    return new Promise<void>((resolve) => {
+      const disposer = reaction(
+        //react on SPACEBAR keyup
+        () => state.SPACEBAR_keyPressed,
+        (newVal, oldVal) => {
+          if (newVal === false && oldVal === true && (Date.now() - startTime)>1000) {
+            clearInterval(i)
+            self.gameOverText.visible = false
+            self.smallPressSpaceToContinueText.visible = false
             state.setWaitingForLevelCompletedTextToClose(false)
             resolve()
             disposer()

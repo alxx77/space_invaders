@@ -1,5 +1,5 @@
 import { Container } from "pixi.js"
-import { components} from "../state"
+import { components, state } from "../state"
 
 //root container
 export class Layout extends Container {
@@ -13,20 +13,29 @@ export class Layout extends Container {
   }
 
   updateLayout(rendererWidth: number, rendererHeight: number) {
-    components.background.updateLayout(rendererWidth,rendererHeight)
-    components.foreground.updateLayout(rendererWidth,rendererHeight)
+    components.background.updateLayout(rendererWidth, rendererHeight)
+    components.foreground.updateLayout(rendererWidth, rendererHeight)
+    components.splashScreen.updateLayout(rendererWidth, rendererHeight)
 
-    if(rendererWidth - components.background.width>=0){
-      this.x = (rendererWidth - components.background.width)/2
-    } else {
-      this.x = 0
+    if (!state.splashScreenVisible) {
+      if (rendererWidth - components.background.width >= 0) {
+        this.x = (rendererWidth - components.background.width) / 2
+      } else {
+        this.x = 0
+      }
+
+      if (
+        rendererHeight -
+          components.background.height * components.background.scale.y >
+        0
+      ) {
+        this.y =
+          (rendererHeight -
+            components.background.height * components.background.scale.y) *
+          0.2
+      } else {
+        this.y = 0
+      }
     }
-
-    if((rendererHeight - components.background.height * components.background.scale.y)>0){
-      this.y = (rendererHeight - (components.background.height * components.background.scale.y)) *0.2
-    } else {
-      this.y = 0
-    }
-
   }
 }
