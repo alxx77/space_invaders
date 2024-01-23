@@ -15170,7 +15170,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   SplashScreen: () => (/* binding */ SplashScreen)
 /* harmony export */ });
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/index.mjs");
-/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../state */ "./src/state.ts");
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
+
 
 
 //root container
@@ -15183,16 +15185,22 @@ class SplashScreen extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.name = "splash";
         this.addChild(this.container);
         //sprite
-        this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache['splash']);
+        this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["splash"]);
         this.container.addChild(this.sprite);
         //press space to play
-        this.startText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(` Press Space to Enter `, _settings__WEBPACK_IMPORTED_MODULE_1__.fontStyles.splashText);
+        this.startText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(` Press Space to Enter `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.splashText);
         this.startText.anchor.set(0.5);
         this.startText.scale.set(1.2);
         this.startText.x = this.width / 2;
         this.startText.y = this.height * 0.77;
         this.container.addChild(this.startText);
+        this.container.interactive = true;
+        this.container.on("pointertap", () => {
+            _state__WEBPACK_IMPORTED_MODULE_1__.state.set_SPACEBAR_keyPressed(true);
+            _state__WEBPACK_IMPORTED_MODULE_1__.state.set_SPACEBAR_keyPressed(false);
+        });
     }
+    onContainerTap() { }
     updateLayout(rendererWidth, rendererHeight) {
         const scaleFactorX = rendererWidth / 1920;
         const scaleFactorY = rendererHeight / 1080;
@@ -15593,8 +15601,8 @@ const invaderYMargin = 10;
 const stageWidth = 1280;
 const stageHeight = 960;
 const backgroundScrollTimePerSprite = 7000;
-const minHeight = 360;
-const minWidth = 480;
+const minHeight = 240;
+const minWidth = 320;
 //font styles
 const fontStyles = {
     scoreText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
@@ -48898,4 +48906,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle6ed8f6fc508219ed2635.js.map
+//# sourceMappingURL=bundle62b25ed800aaf549a3ea.js.map

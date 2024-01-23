@@ -23,8 +23,8 @@ export const stageHeight = 960
 
 export const backgroundScrollTimePerSprite = 7000
 
-export const minHeight = 360
-export const minWidth = 480
+export const minHeight = 240
+export const minWidth = 320
 
 //font styles
 export const fontStyles = {
