@@ -1,4 +1,4 @@
-import { Point, Sprite, utils } from "pixi.js"
+import { Sprite, utils } from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { Howl } from "howler"
@@ -12,6 +12,7 @@ export class Projectile extends SmartContainer {
   constructor(position: { x: number; y: number }, speed: number) {
     super()
     this.sprite = new Sprite(utils.TextureCache["projectile"])
+    this.sprite.scale.set(1.5)
     this.addChild(this.sprite)
     this.speed = speed
     this.x = position.x

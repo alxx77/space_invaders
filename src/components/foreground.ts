@@ -25,10 +25,12 @@ export class Foreground extends Container {
   private levelCompletedText: Text
   private smallPressSpaceToContinueText: Text
   private gameOverText: Text
+  private gameCompletedText: Text
   private levelCompletedSound: Howl
   private startSound: Howl
   private gameOverSound: Howl
   gameTheme: Howl
+  private gameCompletedSound: Howl
   constructor() {
     super()
     //container
@@ -51,6 +53,7 @@ export class Foreground extends Container {
 
     //score
     this.scoreText = new Text(`SCORE: 0`, fontStyles.scoreText)
+    this.scoreText.scale.set(2)
     this.scoreText.x = 10
     this.scoreText.y = stageHeight * 0.95
 
@@ -58,7 +61,8 @@ export class Foreground extends Container {
 
     //lives
     this.livesText = new Text(`CREDIT: 0`, fontStyles.scoreText)
-    this.livesText.x = stageWidth - 200
+    this.livesText.scale.set(2)
+    this.livesText.x = stageWidth - 370
     this.livesText.y = stageHeight * 0.95
 
     this.container.addChild(this.livesText)
@@ -68,6 +72,7 @@ export class Foreground extends Container {
       ? `Tap to Start`
       : `Press SPACE to Start`
     this.startText = new Text(startText, fontStyles.startText)
+    this.startText.scale.set(2)
     this.startText.anchor.set(0.5)
     this.startText.x = stageWidth / 2 + 10
     this.startText.y = stageHeight / 2
@@ -78,6 +83,7 @@ export class Foreground extends Container {
     //level completed
     this.levelCompletedText = new Text(``, fontStyles.levelCompletedText)
     this.levelCompletedText.anchor.set(0.5)
+    this.levelCompletedText.scale.set(2)
     this.levelCompletedText.x = stageWidth / 2
     this.levelCompletedText.y = stageHeight / 2
     this.levelCompletedText.visible = false
@@ -92,6 +98,7 @@ export class Foreground extends Container {
       fontStyles.levelCompleted2Text
     )
     this.smallPressSpaceToContinueText.anchor.set(0.5)
+    this.smallPressSpaceToContinueText.scale.set(2)
     this.smallPressSpaceToContinueText.x = stageWidth / 2
     this.smallPressSpaceToContinueText.y =
       this.levelCompletedText.y + this.levelCompletedText.height
@@ -102,11 +109,25 @@ export class Foreground extends Container {
     //game over
     this.gameOverText = new Text(`GAME OVER`, fontStyles.levelCompletedText)
     this.gameOverText.anchor.set(0.5)
+    this.gameOverText.scale.set(2)
     this.gameOverText.x = stageWidth / 2
     this.gameOverText.y = stageHeight / 2
     this.gameOverText.visible = false
 
     this.container.addChild(this.gameOverText)
+
+    //game completed text
+    this.gameCompletedText = new Text(
+      `GAME COMPLETED!`,
+      fontStyles.levelCompletedText
+    )
+    this.gameCompletedText.anchor.set(0.5)
+    this.gameCompletedText.scale.set(2)
+    this.gameCompletedText.x = stageWidth / 2
+    this.gameCompletedText.y = stageHeight / 2
+    this.gameCompletedText.visible = false
+
+    this.container.addChild(this.gameCompletedText)
 
     reaction(
       () => state.scoreCounter,
@@ -148,6 +169,12 @@ export class Foreground extends Container {
     this.gameTheme = new Howl({
       src: [soundSource.gameTheme],
       volume: sound.music.highVolume,
+      loop: false,
+    })
+
+    this.gameCompletedSound = new Howl({
+      src: [soundSource.gameCompleted],
+      volume: 0.7,
       loop: false,
     })
   }
@@ -270,6 +297,17 @@ export class Foreground extends Container {
         }
       )
     })
+  }
+
+  showGameCompletedText() {
+    const self = this
+    this.gameCompletedSound.play()
+    state.setWaitingForLevelCompletedTextToClose(true)
+    self.gameCompletedText.visible = true
+
+    const i = setInterval(() => {
+      self.gameCompletedText.visible = !self.gameCompletedText.visible
+    }, 650)
   }
 
   updateLayout(width: number, height: number) {

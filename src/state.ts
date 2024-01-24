@@ -47,7 +47,7 @@ class Store {
     this._projectiles = []
     this._invaderProjectiles = []
     this._invaders = []
-    this._gameLevel = 1
+    this._gameLevel = 0
     this._playerAlive = false
     this._invandersActive = false
     this._scoreCounter = 0
@@ -223,7 +223,7 @@ class Store {
 
   @action
   removeInvader(index: number) {
-    this._invaders.splice(index, 1)
+    return this._invaders.splice(index, 1)
   }
 
   @computed

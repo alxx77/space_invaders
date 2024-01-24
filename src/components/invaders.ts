@@ -13,6 +13,7 @@ import {
 import { reaction } from "mobx"
 import { getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
+import { InvaderProjectile } from "./invaderProjectile"
 
 type InvaderData = {
   x: number
@@ -35,6 +36,9 @@ export class Invaders extends SmartContainer {
     super()
     this.name = "Invaders"
 
+    //set static prop on invader projectile
+    InvaderProjectile.projectileCount = 1
+
     //container
     this.container = new Container()
     this.addChild(this.container)
@@ -44,12 +48,17 @@ export class Invaders extends SmartContainer {
     this.initialContainerWidth = 0
 
     //when all invaders are destroyed
+    //while player is active & alive
     reaction(
       () => ({
         invadersLength: state.invaders.length,
         invaderProjectiles: state.invaderProjectiles.length,
       }),
       (newVal) => {
+        //invaders must be active in order to call level completed
+        //because invaders can be cleared manually after game is over
+        //but that removal of invaders cannot be interpreted here as level completed
+        if (!state.invadersActive) return
         if (newVal.invadersLength === 0 && newVal.invaderProjectiles === 0) {
           //stop moving & shooting
           state.setInvadersActive(false)
@@ -103,10 +112,10 @@ export class Invaders extends SmartContainer {
       }
       const percentInvadersRemained =
         state.invaders.length / self.initialInvadersCount
-      for (const iterator of [1, 2, 3, 4]) {
+      for (const iterator of [1, 2, 3, 4, 5, 6]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < percentInvadersRemained * 0.3 + 0.2
+        const p = Math.random() < percentInvadersRemained * 0.4 + 0.3
         if (p === true) {
           const timeout = Timeout.instantiate(
             "shoot",
@@ -115,7 +124,7 @@ export class Invaders extends SmartContainer {
           )
         }
       }
-    }, 500)
+    }, 600 - 150 * state.gameLevel)
   }
 
   movesGenerator = function* (self: Invaders) {
@@ -126,7 +135,7 @@ export class Invaders extends SmartContainer {
       yield [self.x, self.y + 50, 0.5]
     }
 
-    for (const i of [1, 2, 3, 4, 5, 6]) {
+    for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
       const ig = innerG()
       for (const targetData of ig) {
         yield self.moveTo(...targetData)
@@ -135,6 +144,10 @@ export class Invaders extends SmartContainer {
   }
 
   createInvaders() {
+    //clear invaders first
+    //in case of playing game again
+    this.clearAllInvaders()
+
     const gen = this.getInvaders(state.gameLevel)
     for (const invaderData of gen) {
       const invader = new Invader(
@@ -152,7 +165,11 @@ export class Invaders extends SmartContainer {
   }
 
   resetPosition() {
-    return this.moveTo((stageWidth - this.initialContainerWidth) / 2, stageHeight * 0.15, 2)
+    return this.moveTo(
+      (stageWidth - this.initialContainerWidth) / 2,
+      stageHeight * 0.15,
+      2
+    )
   }
 
   clearProjectiles() {
@@ -160,6 +177,13 @@ export class Invaders extends SmartContainer {
       const projectile = state.removeInvaderProjectile(index)[0]
       projectile.stopTween()
       projectile.destroy()
+    }
+  }
+
+  clearAllInvaders() {
+    for (let index = state.invaders.length - 1; index >= 0; index--) {
+      const invader = state.removeInvader(index)[0]
+      invader.destroy()
     }
   }
 
@@ -193,24 +217,39 @@ export class Invaders extends SmartContainer {
         break
 
       case 2:
-        for (let row = 0; row < 2; row++) {
-          for (let col = 0; col < 15; col++) {
+        for (const col of [0, 1, 2, 3, 4, 5, 6]) {
+          yield {
+            x: col * (invaderWidth + invaderXMargin),
+            y: 0 * (invaderHeight + invaderYMargin),
+            variety: 3,
+          }
+        }
+        for (let row = 1; row < 4; row++) {
+          for (let col = 0; col < 7; col++) {
             yield {
               x: col * (invaderWidth + invaderXMargin),
               y: row * (invaderHeight + invaderYMargin),
               variety: (col % 2) + 1,
             }
           }
+
+          for (const col of [0, 1, 2, 3, 4, 5, 6]) {
+            yield {
+              x: col * (invaderWidth + invaderXMargin),
+              y: 4 * (invaderHeight + invaderYMargin),
+              variety: 3,
+            }
+          }
         }
         break
 
       case 3:
-        for (let row = 0; row < 5; row++) {
-          for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < 7; row++) {
+          for (let col = 0; col < 4; col++) {
             yield {
               x: col * (invaderWidth + invaderXMargin),
               y: row * (invaderHeight + invaderYMargin),
-              variety: 1,
+              variety: (col % 3) + 1,
             }
           }
         }

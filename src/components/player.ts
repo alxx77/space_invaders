@@ -40,6 +40,7 @@ export class Player extends SmartContainer {
     this.name = "Player"
     this.sprite = new Sprite(utils.TextureCache["player"])
     this.visible = false
+    this.sprite.scale.set(2)
     this.addChild(this.sprite)
 
     components.foreground.container.addChild(this)
@@ -47,6 +48,7 @@ export class Player extends SmartContainer {
     const sheet = Assets.cache.get("player_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
     this.explosionSprite = new AnimatedSprite(textures)
+    this.explosionSprite.scale.set(2)
     this.explosionSprite.visible = false
     this.explosionSprite.loop = false
     this.explosionSprite.onComplete = () => {
@@ -155,7 +157,7 @@ export class Player extends SmartContainer {
     })
   }
 
-  shoot(){
+  async shoot(){
     const projectile = new Projectile(
       {
         x: this.x + components.player.width / 2,
@@ -195,6 +197,12 @@ export class Player extends SmartContainer {
   async slideOut() {
     state.setPlayerActive(false)
     return this.moveTo(-200, stageHeight * 0.85, playerSlideInSpeed)
+  }
+
+  async slideToCenter() {
+    state.setPlayerActive(false)
+    const self = this
+    return this.moveTo(stageWidth / 2 - self.width / 2, stageHeight * 0.85, playerSlideInSpeed)
   }
 
   moveDelta(deltaX: number, deltaY: number) {

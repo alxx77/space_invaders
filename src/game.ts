@@ -6,6 +6,8 @@ import { Invaders } from "./components/invaders"
 import { Foreground } from "./components/foreground"
 import { SplashScreen } from "./components/splashScreen"
 import { IPointData, FederatedPointerEvent } from "pixi.js"
+import { finalLevel } from "./settings"
+import Timeout from "smart-timeout"
 
 //high level game logic
 export class Game {
@@ -122,7 +124,7 @@ export class Game {
     reaction(
       () => state.invaderDestroyed,
       (newVal, oldVal) => {
-        if (newVal>oldVal) {
+        if (newVal > oldVal) {
           state.setScoreCounter(state.scoreCounter + 100)
         }
       }
@@ -156,9 +158,14 @@ export class Game {
           initialTouch.x - components.player.width / 2,
           initialTouch.y - components.player.height / 2
         )
-        self.autofire = setInterval(() => {
+        self.autofire = setInterval(async () => {
           if (components.player && state.playerAlive && state.playerActive) {
-            components.player.shoot()
+            await new Promise<void>((resolve) => {
+              const t = Timeout.instantiate(() => {
+                components.player.shoot()
+                resolve()
+              }, Math.random() * 75)
+            })
           }
         }, 200)
       }
@@ -229,9 +236,15 @@ export class Game {
   async play() {
     state.setWaitingForGameStart(true)
 
+    state.setGameLevel(1)
+    state.setScoreCounter(0)
+
     components.player = new Player()
 
-    components.invaders = new Invaders()
+    if (!components.invaders) {
+      components.invaders = new Invaders()
+    }
+
     components.invaders.createInvaders()
 
     this.updateView()
@@ -270,27 +283,48 @@ export class Game {
         }
 
         state.setPlayerActive(false)
+        await components.player.slideToCenter()
         await components.foreground.showLevelCompletedText()
-        await components.player.slideOut()
 
         state.setGameLevel(state.gameLevel + 1)
+        if (state.gameLevel > finalLevel) {
+          break
+        }
         state.setCurrentLevelCompleted(false)
         //setup next level invaders
         components.invaders.createInvaders()
 
         state.setPlayerActive(false)
-        await components.player.slideIn()
         components.foreground.showLevelStartText()
         state.setPlayerActive(true)
       } else {
+        //here it is necessary to manually deactivate invaders
+        //so that invaders can be cleared without triggering
+        //level completed change
+        state.setInvadersActive(false)
         components.invaders.clearProjectiles()
         await components.invaders.resetPosition()
+        if(state.invaders.length === 0){
+          //edge case - where player dies while completing level
+
+          //level is repeated
+          components.invaders.createInvaders()
+        }
       }
+    }
+
+    //here it is either game over or game completed
+    if (state.gameLevel > finalLevel) {
+      components.foreground.showGameCompletedText()
+      document.body.style.cursor = "auto"
+      return
     }
 
     //show game over message
     await components.foreground.showGameOverText()
-    document.body.style.cursor = "auto"
+
+    //play again..!
+    this.play()
   }
 
   //recalc view

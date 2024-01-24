@@ -1,7 +1,7 @@
 import { TextStyle } from "pixi.js"
 
 export const sound = {
-  music: { play: false, highVolume: 0.7, lowVolume : 0.15 },
+  music: { play: true, highVolume: 0.7, lowVolume : 0.15 },
   soundFX: { play: true, volume: 0.1 },
 }
 
@@ -12,8 +12,8 @@ export const invaderProjectileSpeed = 2.5
 
 export const playerSlideInSpeed = 5
 
-export const invaderHeight = 32
-export const invaderWidth = 44
+export const invaderHeight = 32 * 1.5
+export const invaderWidth = 44 * 1.5 
 
 export const invaderXMargin = 10
 export const invaderYMargin = 10
@@ -25,6 +25,8 @@ export const backgroundScrollTimePerSprite = 7000
 
 export const minHeight = 240
 export const minWidth = 320
+
+export const finalLevel = 3
 
 
 
@@ -84,5 +86,6 @@ export const soundSource = {
   playerEngine:"assets/sounds/engineSound.mp3",
   startPlay:"assets/sounds/game_start.mp3",
   gameOver:"assets/sounds/game_over.mp3",
-  gameTheme:"assets/sounds/theme.mp3"
+  gameTheme:"assets/sounds/theme.mp3",
+  gameCompleted:"assets/sounds/game_completed.mp3"
 }

@@ -1,17 +1,29 @@
-import { Sprite, utils } from "pixi.js"
+import { Sprite, Texture, utils } from "pixi.js"
 import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
-import { soundSource } from "../settings"
+import { projectileSpeed, soundSource } from "../settings"
 
-//root container
 export class InvaderProjectile extends SmartContainer {
   sprite: Sprite
   speed: number
   shootSound: Howl
+  red:boolean
+  static projectileCount:number
   constructor(position: { x: number; y: number }, speed: number) {
     super()
-    this.sprite = new Sprite(utils.TextureCache["invader_projectile"])
+    this.red = false
+    let texture = utils.TextureCache["invader_projectile"]
+
+    if(InvaderProjectile.projectileCount%3 === 0){
+      texture = utils.TextureCache["invader_projectile_red"]
+      this.red = true
+    }
+
+    InvaderProjectile.projectileCount++ 
+    
+    this.sprite = new Sprite(texture)
+    this.scale.set(2)
     this.addChild(this.sprite)
     this.speed = speed
     this.x = position.x

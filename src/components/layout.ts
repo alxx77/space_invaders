@@ -24,15 +24,8 @@ export class Layout extends Container {
         this.x = 0
       }
 
-      if (
-        rendererHeight -
-          components.background.height * components.background.scale.y >
-        0
-      ) {
-        this.y =
-          (rendererHeight -
-            components.background.height * components.background.scale.y) *
-          0.2
+      if (rendererHeight - this.height > 0) {
+        this.y = (rendererHeight - this.height) * 0.2
       } else {
         this.y = 0
       }

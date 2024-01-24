@@ -14,11 +14,12 @@ export class Invader extends SmartContainer {
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
+    this.sprite.scale.set(1.5)
     this.addChild(this.sprite)
     this.x = position.x
     this.y = position.y
-    Invaders.shootCounter = 0
-    Invaders.shotsEnded = 0
+    // Invaders.shootCounter = 0
+    // Invaders.shotsEnded = 0
 
     const sheet = Assets.cache.get("invader_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
@@ -49,8 +50,13 @@ export class Invader extends SmartContainer {
         x: gp.x + invaderWidth / 2,
         y: gp.y * 1.05,
       },
-      invaderProjectileSpeed + Math.random()
+      invaderProjectileSpeed + Math.random() 
     )
+
+    if (projectile.red){
+      projectile.speed = projectile.speed * 3
+    }
+
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)
     // Invaders.shootCounter++
