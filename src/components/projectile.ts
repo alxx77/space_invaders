@@ -44,7 +44,7 @@ export class Projectile extends SmartContainer {
         const i = state.projectiles.findIndex((el) => el === this)
         state.removeProjectile(i)
         c.stopTween()
-        state.setInvaderDestroyed(true)
+        state.triggerInvaderDestroyed()
         this.destroy()
       }
     }

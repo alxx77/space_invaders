@@ -29,6 +29,8 @@ export class Invaders extends SmartContainer {
   private initialContainerWidth: number
   interval: NodeJS.Timeout | undefined
   private initialInvadersCount: number
+  static shootCounter: number
+  static shotsEnded: number
   constructor() {
     super()
     this.name = "Invaders"
@@ -150,7 +152,15 @@ export class Invaders extends SmartContainer {
   }
 
   resetPosition() {
-    this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.15, 2)
+    return this.moveTo((stageWidth - this.initialContainerWidth) / 2, stageHeight * 0.15, 2)
+  }
+
+  clearProjectiles() {
+    for (let index = state.invaderProjectiles.length - 1; index >= 0; index--) {
+      const projectile = state.removeInvaderProjectile(index)[0]
+      projectile.stopTween()
+      projectile.destroy()
+    }
   }
 
   removeInvader(invader: Invader) {
@@ -226,7 +236,7 @@ export class Invaders extends SmartContainer {
         // Collision detected
         state.setInvadersActive(false)
         state.setPlayerAlive(false)
-        components.invaders.removeInvader(invader)
+        this.removeInvader(invader)
         return
       }
     }

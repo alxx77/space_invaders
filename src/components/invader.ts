@@ -4,6 +4,7 @@ import { SmartContainer } from "./smartContainer"
 import { InvaderProjectile } from "./invaderProjectile"
 import { invaderWidth, invaderProjectileSpeed, stageHeight, soundSource } from "../settings"
 import { Howl } from "howler"
+import { Invaders } from "./invaders"
 
 //root container
 export class Invader extends SmartContainer {
@@ -16,6 +17,8 @@ export class Invader extends SmartContainer {
     this.addChild(this.sprite)
     this.x = position.x
     this.y = position.y
+    Invaders.shootCounter = 0
+    Invaders.shotsEnded = 0
 
     const sheet = Assets.cache.get("invader_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
@@ -50,6 +53,8 @@ export class Invader extends SmartContainer {
     )
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)
+    // Invaders.shootCounter++
+    // console.log('Total shots fired: ' + Invaders.shootCounter)
     projectile.shootSound.play()
     projectile.moveTo(
       projectile.x,
@@ -59,6 +64,10 @@ export class Invader extends SmartContainer {
         const i = state.invaderProjectiles.findIndex(
           (el) => el === projectile
         )
+        // Invaders.shotsEnded++
+        // console.log('Shots ended regularly: ' + Invaders.shotsEnded)
+        //if allready removed - return
+        if (i<0) return
         state.removeInvaderProjectile(i)
         projectile.destroy()
       }

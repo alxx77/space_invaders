@@ -22,14 +22,17 @@ export class SplashScreen extends Container {
     this.container.addChild(this.sprite)
 
     //press space to play
-    this.startText = new Text(` Press Space to Enter `, fontStyles.splashText)
+    const startText = state.mobileDevice
+      ? `Tap To Enter`
+      : `Press Space to Enter`
+    this.startText = new Text(startText, fontStyles.splashText)
     this.startText.anchor.set(0.5)
-    this.startText.scale.set(1.2)
+    this.startText.scale.set(2)
     this.startText.x = this.width / 2
     this.startText.y = this.height * 0.77
     this.container.addChild(this.startText)
 
-    this.container.interactive = true
+    this.container.eventMode = 'static'
     this.container.on("pointertap", () => {
       state.set_SPACEBAR_keyPressed(true)
       state.set_SPACEBAR_keyPressed(false)

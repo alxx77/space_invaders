@@ -5,12 +5,14 @@ import { Background } from "./components/background"
 import { Invaders } from "./components/invaders"
 import { Foreground } from "./components/foreground"
 import { SplashScreen } from "./components/splashScreen"
+import { IPointData, FederatedPointerEvent } from "pixi.js"
 
 //high level game logic
 export class Game {
   background: Background
   foreground: Foreground
   splashScreen: SplashScreen
+  autofire: NodeJS.Timeout | undefined
   constructor() {
     //initialize components
     this.background = new Background()
@@ -119,15 +121,82 @@ export class Game {
     //score count
     reaction(
       () => state.invaderDestroyed,
-      (newVal) => {
-        if (newVal === true) {
+      (newVal, oldVal) => {
+        if (newVal>oldVal) {
           state.setScoreCounter(state.scoreCounter + 100)
         }
-        state.setInvaderDestroyed(false)
       }
     )
 
     this.updateView()
+
+    components.layout.on("touchstart", onTouchStart)
+    components.layout.on("touchmove", onTouchMove)
+    components.layout.on("touchend", onTouchEnd)
+    components.layout.on("touchendoutside", onTouchEndOutside)
+
+    components.layout.eventMode = "static"
+
+    const self = this
+
+    // Store the initial touch position
+    let initialTouch: IPointData | undefined = undefined
+
+    // Define the touchstart event handler function
+    function onTouchStart(event: FederatedPointerEvent) {
+      state.set_SPACEBAR_keyPressed(true)
+      initialTouch = event.getLocalPosition(components.foreground.container)
+      if (
+        components.player &&
+        initialTouch &&
+        state.playerAlive &&
+        state.playerActive
+      ) {
+        components.player.moveToPosition(
+          initialTouch.x - components.player.width / 2,
+          initialTouch.y - components.player.height / 2
+        )
+        self.autofire = setInterval(() => {
+          if (components.player && state.playerAlive && state.playerActive) {
+            components.player.shoot()
+          }
+        }, 200)
+      }
+    }
+
+    // Define the touchmove event handler function
+    function onTouchMove(event: FederatedPointerEvent) {
+      if (initialTouch) {
+        const newPosition = event.getLocalPosition(
+          components.foreground.container
+        )
+
+        // Calculate the distance dragged
+        const deltaX = newPosition.x - initialTouch.x
+        const deltaY = newPosition.y - initialTouch.y
+
+        // Update the sprite position based on the drag distance
+        if (components.player) {
+          components.player.moveDelta(deltaX, deltaY)
+        }
+
+        // Update the initial touch position for the next move event
+        initialTouch = newPosition
+      }
+    }
+
+    // Define the touchend event handler function
+    function onTouchEnd() {
+      initialTouch = undefined
+      clearInterval(self.autofire)
+      state.set_SPACEBAR_keyPressed(false)
+    }
+
+    function onTouchEndOutside() {
+      initialTouch = undefined
+      clearInterval(self.autofire)
+      state.set_SPACEBAR_keyPressed(false)
+    }
   }
 
   //signal when level is finished in any way
@@ -214,7 +283,8 @@ export class Game {
         components.foreground.showLevelStartText()
         state.setPlayerActive(true)
       } else {
-        components.invaders.resetPosition()
+        components.invaders.clearProjectiles()
+        await components.invaders.resetPosition()
       }
     }
 

@@ -29,12 +29,13 @@ class Store {
   _invandersActive: boolean
   _scoreCounter: number
   _livesCounter: number
-  _invaderDestroyed: boolean
+  _invaderDestroyed: number
   _currentLevelCompleted: boolean
   _waitingForGameStart: boolean
   _waitingForLevelCompletedTextToClose: boolean
   _playerActive: boolean
   _splashScreenVisible: boolean
+  _mobileDevice: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -51,13 +52,14 @@ class Store {
     this._invandersActive = false
     this._scoreCounter = 0
     this._livesCounter = 0
-    this._invaderDestroyed = false
+    this._invaderDestroyed = 0
     this._currentLevelCompleted = false
     this._waitingForGameStart = false
     this._playerDestructionCompletedTrigger = 0
     this._waitingForLevelCompletedTextToClose = false
     this._playerActive = false
     this._splashScreenVisible = true
+    this._mobileDevice = false
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
@@ -206,7 +208,7 @@ class Store {
 
   @action
   removeInvaderProjectile(index: number) {
-    this._invaderProjectiles.splice(index, 1)
+    return this._invaderProjectiles.splice(index, 1)
   }
 
   @computed
@@ -222,7 +224,7 @@ class Store {
   @action
   removeInvader(index: number) {
     this._invaders.splice(index, 1)
-   }
+  }
 
   @computed
   get invaders() {
@@ -280,8 +282,8 @@ class Store {
   }
 
   @action
-  setInvaderDestroyed(value: boolean) {
-    this._invaderDestroyed = value
+  triggerInvaderDestroyed() {
+    this._invaderDestroyed++
   }
 
   @computed
@@ -348,7 +350,16 @@ class Store {
   get splashScreenVisible() {
     return this._splashScreenVisible
   }
-  
+
+  @action
+  setMobileDevice(value: boolean) {
+    this._mobileDevice = value
+  }
+
+  @computed
+  get mobileDevice() {
+    return this._mobileDevice
+  }
 }
 
 export const state = new Store()

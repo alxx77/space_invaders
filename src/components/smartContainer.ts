@@ -16,7 +16,7 @@ export class SmartContainer extends Container {
   }
 
   //perform move to given location
-  async moveTo(xPos: number, yPos: number, speed: number, onFinished? : Function) {
+  async moveTo(xPos: number, yPos: number, speed: number, onEnd? : Function) {
     // x&y distances
     let xDist = xPos - this.position.x
     let yDist = yPos - this.position.y
@@ -47,11 +47,10 @@ export class SmartContainer extends Container {
           }
         })
         .onComplete(() => {
-          (onFinished) ? onFinished() : undefined
+          (onEnd) ? onEnd() : undefined
           resolve()
         })
         .onStop(() => {
-          (onFinished) ? onFinished() : undefined
           resolve()
         })
         .start()
@@ -60,6 +59,10 @@ export class SmartContainer extends Container {
 
   stopTween(){
     this.tween.stop()
+  }
+
+  endTween(){
+    this.tween.end()
   }
 
   goToFinalPosition() {

@@ -3,6 +3,19 @@ import { Game } from "./game"
 import { components, state } from "./state"
 import "../styles/main.scss"
 import { reaction } from "mobx"
+import { sound } from "./settings"
+
+//check for mobile
+let hasTouchScreen = false
+
+if ("maxTouchPoints" in navigator) {
+    hasTouchScreen = navigator.maxTouchPoints > 0;
+} 
+
+if (hasTouchScreen) {
+    state.setMobileDevice(true)
+}
+
 
 const waitForSpacebarKeyPress = async () => {
   return new Promise<void>((resolve) => {
@@ -35,8 +48,10 @@ const waitForSpacebarKeyPress = async () => {
   components.splashScreen.visible = false
   state.setSplashScreenVisible(false)
 
-  //start theme
-  components.foreground.gameTheme.play()
+  //start music theme
+  if (sound.music.play) {
+    components.foreground.gameTheme.play()
+  }
 
   //start
   components.game.play()

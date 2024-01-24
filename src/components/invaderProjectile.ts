@@ -17,11 +17,11 @@ export class InvaderProjectile extends SmartContainer {
     this.x = position.x
     this.y = position.y
     this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile
-   
+
     this.shootSound = new Howl({
       src: [soundSource.invaderProjectile],
       volume: 0.5,
-      loop: false
+      loop: false,
     })
     this.shootSound.volume(0.1 + Math.random() * 0.1)
   }
@@ -45,8 +45,11 @@ export class InvaderProjectile extends SmartContainer {
         const i = state.invaderProjectiles.findIndex(
           (el) => el === invaderProjectile
         )
+        //console.log('player kill: ' + i )
         state.removeInvaderProjectile(i)
+        invaderProjectile.stopTween()
         invaderProjectile.visible = false
+        invaderProjectile.destroy()
         return
       }
     }

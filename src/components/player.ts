@@ -34,7 +34,7 @@ export class Player extends SmartContainer {
   ticker: Ticker | undefined
   disposerList: IReactionDisposer[]
   explosionSound: Howl
-  engineSound:Howl
+  engineSound: Howl
   constructor() {
     super()
     this.name = "Player"
@@ -82,30 +82,10 @@ export class Player extends SmartContainer {
       (newVal) => {
         //first check if player is alive
         if (!state.playerAlive || !state.playerActive) return
-        
+
         //if spacebar is pressed fire a projectile
-        if (
-          newVal.SpaceBar_keyPressed === true
-        ) {
-          const projectile = new Projectile(
-            {
-              x: this.x + components.player.width / 2,
-              y: this.y * 0.95,
-            },
-            projectileSpeed
-          )
-          components.foreground.container.addChild(projectile)
-          state.addProjectile(projectile)
-          projectile.moveTo(
-            this.x + components.player.width / 2,
-            -50,
-            projectile.speed,
-            () => {
-              const i = state.projectiles.findIndex((el) => el === projectile)
-              state.removeProjectile(i)
-              projectile.destroy()
-            }
-          )
+        if (newVal.SpaceBar_keyPressed === true) {
+          this.shoot()
         }
       }
     )
@@ -145,7 +125,7 @@ export class Player extends SmartContainer {
       (newVal) => {
         if (newVal === true) {
           this.engineSound.play()
-        }else {
+        } else {
           this.engineSound.stop()
         }
       }
@@ -155,7 +135,6 @@ export class Player extends SmartContainer {
 
     //create position calculator
     this.positionCalculator = this.getPositionDelta(this)
-
 
     //start receiving commands
     this.start()
@@ -176,26 +155,118 @@ export class Player extends SmartContainer {
     })
   }
 
+  shoot(){
+    const projectile = new Projectile(
+      {
+        x: this.x + components.player.width / 2,
+        y: this.y * 0.95,
+      },
+      projectileSpeed
+    )
+    components.foreground.container.addChild(projectile)
+    state.addProjectile(projectile)
+    projectile.moveTo(
+      this.x + components.player.width / 2,
+      -50,
+      projectile.speed,
+      () => {
+        const i = state.projectiles.findIndex((el) => el === projectile)
+        state.removeProjectile(i)
+        projectile.destroy()
+      }
+    )
+  }
+
   async slideIn() {
     state.setPlayerActive(false)
     this.x = -200
     this.y = stageHeight * 0.85
     this.visible = true
-    return this.moveTo(stageWidth / 2 - this.width / 2, stageHeight * 0.85, playerSlideInSpeed,()=>{state.setPlayerActive(true)})
+    return this.moveTo(
+      stageWidth / 2 - this.width / 2,
+      stageHeight * 0.85,
+      playerSlideInSpeed,
+      () => {
+        state.setPlayerActive(true)
+      }
+    )
   }
 
-  async slideOut(){
+  async slideOut() {
     state.setPlayerActive(false)
     return this.moveTo(-200, stageHeight * 0.85, playerSlideInSpeed)
   }
 
+  moveDelta(deltaX: number, deltaY: number) {
+    if(!state.playerActive) return
+    //X-axis movement
+    if (this.x >= 0 && this.x + deltaX + this.width < stageWidth) {
+      //move player
+      this.x += deltaX
+      //necessary to keep player inside playground
+      //because there might be pixel fractions
+      if (this.x < 0) {
+        this.x = 0
+      }
+      if (this.x > stageWidth - this.width) {
+        this.x = stageWidth - this.width
+      }
+    }
+
+    //Y-axis movement
+    if (this.y >= 0 && (this.y + deltaY + this.height < stageHeight)) {
+      //move player
+      this.y += deltaY
+      //necessary to keep player inside playground
+      //because there might be pixel fractions
+      if (this.y < 0) {
+        this.y = 0
+      }
+      if (this.y > stageHeight - this.height) {
+        this.y = stageHeight - this.height
+      }
+    }
+  }
+
+  moveToPosition(x: number, y: number) {
+    if(!state.playerActive) return
+    //X-axis movement
+    if (this.x >= 0 && this.x + x + this.width < stageWidth) {
+      //move player
+      this.x = x
+      //necessary to keep player inside playground
+      //because there might be pixel fractions
+      if (this.x < 0) {
+        this.x = 0
+      }
+      if (this.x > stageWidth - this.width) {
+        this.x = stageWidth - this.width
+      }
+    }
+
+    //Y-axis movement
+    if (this.y >= 0 && this.y + y + this.height < stageHeight) {
+      //move player
+      this.y = y
+      //necessary to keep player inside playground
+      //because there might be pixel fractions
+      if (this.y < 0) {
+        this.y = 0
+      }
+      if (this.y > stageHeight - this.height) {
+        this.y = stageHeight - this.height
+      }
+    }
+  }
+
   start() {
+    if (state.mobileDevice) return
     let step: IteratorResult<DeltaPosition, void>
     let ticker = new Ticker()
     let self = this
     ticker.add(function (delta) {
       //if not active do not listen to commands
-      if(!state.playerActive) return
+      if (!state.playerActive) return
 
       if (self.positionCalculator) {
         step = self.positionCalculator.next(delta)

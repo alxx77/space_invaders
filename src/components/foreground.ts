@@ -1,6 +1,18 @@
-import { Container, Sprite, utils, Texture, Text } from "pixi.js"
+import {
+  Container,
+  Sprite,
+  Texture,
+  Text,
+  FederatedPointerEvent,
+} from "pixi.js"
 import { components, state } from "../state"
-import { fontStyles, soundSource, stageHeight, stageWidth } from "../settings"
+import {
+  fontStyles,
+  soundSource,
+  stageHeight,
+  stageWidth,
+  sound,
+} from "../settings"
 import { reaction } from "mobx"
 import { Howl } from "howler"
 
@@ -11,8 +23,8 @@ export class Foreground extends Container {
   private livesText: Text
   private startText: Text
   private levelCompletedText: Text
-  private smallPressSpaceToContinueText:Text
-  private gameOverText:Text
+  private smallPressSpaceToContinueText: Text
+  private gameOverText: Text
   private levelCompletedSound: Howl
   private startSound: Howl
   private gameOverSound: Howl
@@ -46,15 +58,18 @@ export class Foreground extends Container {
 
     //lives
     this.livesText = new Text(`CREDIT: 0`, fontStyles.scoreText)
-    this.livesText.x = 1095
+    this.livesText.x = stageWidth - 200
     this.livesText.y = stageHeight * 0.95
 
     this.container.addChild(this.livesText)
 
     //press space to play
-    this.startText = new Text(`Press SPACE to Start`, fontStyles.startText)
+    const startText = state.mobileDevice
+      ? `Tap to Start`
+      : `Press SPACE to Start`
+    this.startText = new Text(startText, fontStyles.startText)
     this.startText.anchor.set(0.5)
-    this.startText.x = (stageWidth / 2) + 10 
+    this.startText.x = stageWidth / 2 + 10
     this.startText.y = stageHeight / 2
     this.startText.visible = false
 
@@ -69,10 +84,17 @@ export class Foreground extends Container {
 
     this.container.addChild(this.levelCompletedText)
 
-    this.smallPressSpaceToContinueText = new Text(` PRESS SPACE TO CONTINUE `, fontStyles.levelCompleted2Text)
+    const smallPressSpaceToContinueText = state.mobileDevice
+      ? `TAP TO CONTINUE`
+      : `Press SPACE to Start`
+    this.smallPressSpaceToContinueText = new Text(
+      smallPressSpaceToContinueText,
+      fontStyles.levelCompleted2Text
+    )
     this.smallPressSpaceToContinueText.anchor.set(0.5)
     this.smallPressSpaceToContinueText.x = stageWidth / 2
-    this.smallPressSpaceToContinueText.y = this.levelCompletedText.y + this.levelCompletedText.height
+    this.smallPressSpaceToContinueText.y =
+      this.levelCompletedText.y + this.levelCompletedText.height
     this.smallPressSpaceToContinueText.visible = false
 
     this.container.addChild(this.smallPressSpaceToContinueText)
@@ -106,7 +128,9 @@ export class Foreground extends Container {
       src: [soundSource.levelCompleted],
       volume: 1,
       loop: false,
-      onend: ()=>{self.gameTheme.volume(0.7)}
+      onend: () => {
+        self.gameTheme.volume(0.7)
+      },
     })
 
     this.startSound = new Howl({
@@ -123,7 +147,7 @@ export class Foreground extends Container {
 
     this.gameTheme = new Howl({
       src: [soundSource.gameTheme],
-      volume: 0.7,
+      volume: sound.music.highVolume,
       loop: false,
     })
   }
@@ -184,7 +208,8 @@ export class Foreground extends Container {
     self.levelCompletedText.visible = true
 
     const i = setInterval(() => {
-      self.smallPressSpaceToContinueText.visible = !self.smallPressSpaceToContinueText.visible
+      self.smallPressSpaceToContinueText.visible =
+        !self.smallPressSpaceToContinueText.visible
     }, 550)
 
     const startTime = Date.now()
@@ -194,7 +219,11 @@ export class Foreground extends Container {
         //react on SPACEBAR keyup
         () => state.SPACEBAR_keyPressed,
         (newVal, oldVal) => {
-          if (newVal === false && oldVal === true && (Date.now() - startTime)>1500) {
+          if (
+            newVal === false &&
+            oldVal === true &&
+            Date.now() - startTime > 1500
+          ) {
             clearInterval(i)
             self.levelCompletedText.visible = false
             self.gameTheme.fade(0.7, 0.15, 1000)
@@ -215,7 +244,8 @@ export class Foreground extends Container {
     self.gameOverText.visible = true
 
     const i = setInterval(() => {
-      self.smallPressSpaceToContinueText.visible = !self.smallPressSpaceToContinueText.visible
+      self.smallPressSpaceToContinueText.visible =
+        !self.smallPressSpaceToContinueText.visible
     }, 550)
 
     const startTime = Date.now()
@@ -225,7 +255,11 @@ export class Foreground extends Container {
         //react on SPACEBAR keyup
         () => state.SPACEBAR_keyPressed,
         (newVal, oldVal) => {
-          if (newVal === false && oldVal === true && (Date.now() - startTime)>1000) {
+          if (
+            newVal === false &&
+            oldVal === true &&
+            Date.now() - startTime > 1000
+          ) {
             clearInterval(i)
             self.gameOverText.visible = false
             self.smallPressSpaceToContinueText.visible = false

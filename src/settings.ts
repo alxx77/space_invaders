@@ -1,7 +1,7 @@
 import { TextStyle } from "pixi.js"
 
 export const sound = {
-  ambienceSound: { play: false, volume: 0.3 },
+  music: { play: false, highVolume: 0.7, lowVolume : 0.15 },
   soundFX: { play: true, volume: 0.1 },
 }
 
@@ -18,13 +18,15 @@ export const invaderWidth = 44
 export const invaderXMargin = 10
 export const invaderYMargin = 10
 
-export const stageWidth = 1280
-export const stageHeight = 960
+export const stageWidth = 1080
+export const stageHeight = 2340
 
 export const backgroundScrollTimePerSprite = 7000
 
 export const minHeight = 240
 export const minWidth = 320
+
+
 
 //font styles
 export const fontStyles = {
