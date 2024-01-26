@@ -11,8 +11,10 @@ export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
   explosionSound:Howl
+  variety:number
   constructor(position: { x: number; y: number }, variety: number) {
     super()
+    this.variety = variety
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
     this.sprite.scale.set(1.5)
     this.addChild(this.sprite)
@@ -53,9 +55,17 @@ export class Invader extends SmartContainer {
       invaderProjectileSpeed + Math.random() 
     )
 
-    if (projectile.red){
-      projectile.speed = projectile.speed * 3
+    let speed = projectile.speed
+
+    if (this.variety === 4){
+      speed = projectile.speed * 2
     }
+
+    if (projectile.red){
+      speed = projectile.speed * 3
+    }
+
+    projectile.speed = speed 
 
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)

@@ -46,6 +46,8 @@ export class Game {
     //change device orientation
     window.addEventListener("orientationchange", updateView)
 
+    this.updateView()
+
     window.addEventListener("keydown", function (event) {
       switch (event.key) {
         case "A":
@@ -129,8 +131,6 @@ export class Game {
         }
       }
     )
-
-    this.updateView()
 
     components.layout.on("touchstart", onTouchStart)
     components.layout.on("touchmove", onTouchMove)
@@ -304,7 +304,7 @@ export class Game {
         state.setInvadersActive(false)
         components.invaders.clearProjectiles()
         await components.invaders.resetPosition()
-        if(state.invaders.length === 0){
+        if (state.invaders.length === 0) {
           //edge case - where player dies while completing level
 
           //level is repeated

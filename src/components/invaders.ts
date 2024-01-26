@@ -1,4 +1,4 @@
-import { Container } from "pixi.js"
+import { Container, Prepare } from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
@@ -101,8 +101,6 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  slideIn() {}
-
   startShooting() {
     const self = this
     this.interval = setInterval(function () {
@@ -115,7 +113,7 @@ export class Invaders extends SmartContainer {
       for (const iterator of [1, 2, 3, 4, 5, 6]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < percentInvadersRemained * 0.4 + 0.3
+        const p = Math.random() < percentInvadersRemained * 0.3 + 0.2
         if (p === true) {
           const timeout = Timeout.instantiate(
             "shoot",
@@ -124,18 +122,18 @@ export class Invaders extends SmartContainer {
           )
         }
       }
-    }, 600 - 150 * state.gameLevel)
+    }, 600 - 75 * state.gameLevel)
   }
 
   movesGenerator = function* (self: Invaders) {
     function* innerG(): Generator<MoveSequenceParams, void, void> {
       yield [stageWidth - self.initialContainerWidth, self.y, 1]
-      yield [self.x, self.y + 50, 0.5]
+      yield [self.x, self.y + 100, 0.5 * 3]
       yield [0, self.y, 1]
-      yield [self.x, self.y + 50, 0.5]
+      yield [self.x, self.y + 100, 0.5 * 3]
     }
 
-    for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+    for (let index = 0; index < 40; index++) {
       const ig = innerG()
       for (const targetData of ig) {
         yield self.moveTo(...targetData)
@@ -148,7 +146,7 @@ export class Invaders extends SmartContainer {
     //in case of playing game again
     this.clearAllInvaders()
 
-    const gen = this.getInvaders(state.gameLevel)
+    const gen = this.getInvaders(state.gameLevel, this)
     for (const invaderData of gen) {
       const invader = new Invader(
         { x: invaderData.x, y: invaderData.y },
@@ -168,7 +166,7 @@ export class Invaders extends SmartContainer {
     return this.moveTo(
       (stageWidth - this.initialContainerWidth) / 2,
       stageHeight * 0.15,
-      2
+      5
     )
   }
 
@@ -202,57 +200,100 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  getInvaders = function* (level: number): Generator<InvaderData, void, void> {
+  getInvaders = function* (
+    level: number,
+    self: Invaders
+  ): Generator<InvaderData, void, void> {
+    let levelData = []
     switch (level) {
       case 1:
-        for (let row = 0; row < 3; row++) {
-          for (let col = 0; col < 11; col++) {
-            yield {
-              x: col * (invaderWidth + invaderXMargin),
-              y: row * (invaderHeight + invaderYMargin),
-              variety: row + 1,
-            }
-          }
-        }
+        levelData.push("1,1,1,0,0,0,0,0,1,1,1")
+        levelData.push("2,2,1,1,1,1,1,1,1,2,2")
+        levelData.push("3,2,2,2,2,2,2,2,2,2,3")
+        levelData.push("3,4,3,3,3,3,3,3,3,4,3")
+        levelData.push("0,0,0,3,3,3,3,3,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+
         break
 
       case 2:
-        for (const col of [0, 1, 2, 3, 4, 5, 6]) {
-          yield {
-            x: col * (invaderWidth + invaderXMargin),
-            y: 0 * (invaderHeight + invaderYMargin),
-            variety: 3,
-          }
-        }
-        for (let row = 1; row < 4; row++) {
-          for (let col = 0; col < 7; col++) {
-            yield {
-              x: col * (invaderWidth + invaderXMargin),
-              y: row * (invaderHeight + invaderYMargin),
-              variety: (col % 2) + 1,
-            }
-          }
+        levelData.push("4,4,0,0,0,0,0,4,4")
+        levelData.push("2,2,0,0,0,0,0,2,2")
+        levelData.push("0,2,2,2,2,2,2,2,0")
+        levelData.push("0,0,1,1,1,1,1,0,0")
+        levelData.push("0,2,2,2,2,2,2,2,0")
+        levelData.push("2,2,0,0,0,0,0,2,2")
+        levelData.push("4,4,0,0,0,0,0,4,4")
 
-          for (const col of [0, 1, 2, 3, 4, 5, 6]) {
-            yield {
-              x: col * (invaderWidth + invaderXMargin),
-              y: 4 * (invaderHeight + invaderYMargin),
-              variety: 3,
-            }
-          }
-        }
+        yield* self.prepareLevelData(levelData)
+
         break
 
       case 3:
-        for (let row = 0; row < 7; row++) {
-          for (let col = 0; col < 4; col++) {
-            yield {
-              x: col * (invaderWidth + invaderXMargin),
-              y: row * (invaderHeight + invaderYMargin),
-              variety: (col % 3) + 1,
-            }
-          }
-        }
+        levelData.push("0,0,0,0,2,0,0,0,0")
+        levelData.push("0,0,0,2,3,2,0,0,0")
+        levelData.push("0,0,2,3,0,3,2,0,0")
+        levelData.push("0,2,3,0,1,0,3,2,0")
+        levelData.push("2,3,0,1,0,1,0,3,2")
+        levelData.push("3,0,1,0,4,0,1,0,3")
+        levelData.push("0,3,0,1,0,1,0,3,0")
+        levelData.push("0,0,3,0,1,0,3,0,0")
+        levelData.push("0,0,0,3,0,3,0,0,0")
+        levelData.push("0,0,0,0,3,0,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+
+        break
+
+      case 4:
+        levelData.push("1,1,1,1,0,0,0,1,1,1,1")
+        levelData.push("2,2,2,2,2,0,2,2,2,2,2")
+        levelData.push("0,3,3,3,3,3,3,3,3,3,0")
+        levelData.push("0,0,0,0,0,4,0,0,0,0,0")
+        levelData.push("0,1,1,1,1,1,1,1,1,1,0")
+        levelData.push("2,2,2,2,2,0,2,2,2,2,2")
+        levelData.push("3,3,3,3,0,0,0,3,3,3,3")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 5:
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("0,2,2,2,2,0,2,2,2,2,0")
+        levelData.push("0,0,3,3,3,3,3,3,3,0,0")
+        levelData.push("0,0,0,2,2,2,2,2,0,0,0")
+        levelData.push("0,0,0,0,1,1,1,0,0,0,0")
+        levelData.push("0,0,0,0,0,1,0,0,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 6:
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("3,4,3,4,3,4,3,4,3,4,3")
+        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
+        levelData.push("1,3,1,3,1,3,1,3,1,3,1")
+        levelData.push("0,1,0,1,0,1,0,1,0,1,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 7:
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
+        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
+        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
+        levelData.push("2,2,2,2,2,2,2,2,2,2,2")
+        levelData.push("0,2,2,2,2,2,2,2,2,2,0")
+        levelData.push("0,0,1,1,1,1,1,1,1,0,0")
+        levelData.push("0,0,0,1,1,1,1,1,0,0,0")
+        levelData.push("0,0,0,0,4,4,4,0,0,0,0")
+        levelData.push("0,0,0,0,0,4,0,0,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
         break
 
       default:
@@ -260,8 +301,39 @@ export class Invaders extends SmartContainer {
     }
   }
 
+  prepareLevelData = function* (
+    levelData: string[]
+  ): Generator<InvaderData, void, void> {
+    let rowCounter = 0
+    for (const row of levelData) {
+      let col = 0
+      const columns = row.split(",")
+      for (const column of columns) {
+        //if there should be an invader
+        if (column !== "0") {
+          yield {
+            x: col * (invaderWidth + invaderXMargin),
+            y: rowCounter * (invaderHeight + invaderYMargin),
+            variety: Number.parseInt(column),
+          }
+        }
+        col++
+      }
+      rowCounter++
+    }
+  }
+
   collisionTestWithPlayer(c: SmartContainer) {
     if (state.invadersActive === false) return
+
+    //first check if invaders are out of screen
+    //if yes player dies
+    if (this.y > stageHeight && state.invaders.length>0) {
+      state.setPlayerAlive(false)
+      state.setInvadersActive(false)
+      return
+    }
+
     const bounds1 = components.player.getBounds()
     for (const invader of state.invaders) {
       const bounds2 = invader.sprite.getBounds()

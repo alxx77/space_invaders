@@ -249,7 +249,7 @@ export class Foreground extends Container {
           if (
             newVal === false &&
             oldVal === true &&
-            Date.now() - startTime > 1500
+            Date.now() - startTime > 2700
           ) {
             clearInterval(i)
             self.levelCompletedText.visible = false

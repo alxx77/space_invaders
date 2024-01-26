@@ -10,7 +10,7 @@ export const playerSpeed = 5
 export const projectileSpeed = 8
 export const invaderProjectileSpeed = 2.5
 
-export const playerSlideInSpeed = 5
+export const playerSlideInSpeed = 8
 
 export const invaderHeight = 32 * 1.5
 export const invaderWidth = 44 * 1.5 
@@ -26,7 +26,7 @@ export const backgroundScrollTimePerSprite = 7000
 export const minHeight = 240
 export const minWidth = 320
 
-export const finalLevel = 3
+export const finalLevel = 7
 
 
 

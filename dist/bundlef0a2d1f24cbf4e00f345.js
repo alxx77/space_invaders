@@ -14344,7 +14344,7 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
             () => _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed, (newVal, oldVal) => {
                 if (newVal === false &&
                     oldVal === true &&
-                    Date.now() - startTime > 1500) {
+                    Date.now() - startTime > 2700) {
                     clearInterval(i);
                     self.levelCompletedText.visible = false;
                     self.gameTheme.fade(0.7, 0.15, 1000);
@@ -14428,6 +14428,7 @@ __webpack_require__.r(__webpack_exports__);
 class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer {
     constructor(position, variety) {
         super();
+        this.variety = variety;
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader" + variety]);
         this.sprite.scale.set(1.5);
         this.addChild(this.sprite);
@@ -14461,9 +14462,14 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
             x: gp.x + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth / 2,
             y: gp.y * 1.05,
         }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed + Math.random());
-        if (projectile.red) {
-            projectile.speed = projectile.speed * 3;
+        let speed = projectile.speed;
+        if (this.variety === 4) {
+            speed = projectile.speed * 2;
         }
+        if (projectile.red) {
+            speed = projectile.speed * 3;
+        }
+        projectile.speed = speed;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
         _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvaderProjectile(projectile);
         // Invaders.shootCounter++
@@ -14613,68 +14619,114 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.movesGenerator = function* (self) {
             function* innerG() {
                 yield [_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - self.initialContainerWidth, self.y, 1];
-                yield [self.x, self.y + 50, 0.5];
+                yield [self.x, self.y + 100, 0.5 * 3];
                 yield [0, self.y, 1];
-                yield [self.x, self.y + 50, 0.5];
+                yield [self.x, self.y + 100, 0.5 * 3];
             }
-            for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+            for (let index = 0; index < 40; index++) {
                 const ig = innerG();
                 for (const targetData of ig) {
                     yield self.moveTo(...targetData);
                 }
             }
         };
-        this.getInvaders = function* (level) {
+        this.getInvaders = function* (level, self) {
+            let levelData = [];
             switch (level) {
                 case 1:
-                    for (let row = 0; row < 3; row++) {
-                        for (let col = 0; col < 11; col++) {
-                            yield {
-                                x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
-                                y: row * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
-                                variety: row + 1,
-                            };
-                        }
-                    }
+                    levelData.push("1,1,1,0,0,0,0,0,1,1,1");
+                    levelData.push("2,2,1,1,1,1,1,1,1,2,2");
+                    levelData.push("3,2,2,2,2,2,2,2,2,2,3");
+                    levelData.push("3,4,3,3,3,3,3,3,3,4,3");
+                    levelData.push("0,0,0,3,3,3,3,3,0,0,0");
+                    yield* self.prepareLevelData(levelData);
                     break;
                 case 2:
-                    for (const col of [0, 1, 2, 3, 4, 5, 6]) {
-                        yield {
-                            x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
-                            y: 0 * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
-                            variety: 3,
-                        };
-                    }
-                    for (let row = 1; row < 4; row++) {
-                        for (let col = 0; col < 7; col++) {
-                            yield {
-                                x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
-                                y: row * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
-                                variety: (col % 2) + 1,
-                            };
-                        }
-                        for (const col of [0, 1, 2, 3, 4, 5, 6]) {
-                            yield {
-                                x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
-                                y: 4 * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
-                                variety: 3,
-                            };
-                        }
-                    }
+                    levelData.push("4,4,0,0,0,0,0,4,4");
+                    levelData.push("2,2,0,0,0,0,0,2,2");
+                    levelData.push("0,2,2,2,2,2,2,2,0");
+                    levelData.push("0,0,1,1,1,1,1,0,0");
+                    levelData.push("0,2,2,2,2,2,2,2,0");
+                    levelData.push("2,2,0,0,0,0,0,2,2");
+                    levelData.push("4,4,0,0,0,0,0,4,4");
+                    yield* self.prepareLevelData(levelData);
                     break;
                 case 3:
-                    for (let row = 0; row < 7; row++) {
-                        for (let col = 0; col < 4; col++) {
-                            yield {
-                                x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
-                                y: row * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
-                                variety: (col % 3) + 1,
-                            };
-                        }
-                    }
+                    levelData.push("0,0,0,0,2,0,0,0,0");
+                    levelData.push("0,0,0,2,3,2,0,0,0");
+                    levelData.push("0,0,2,3,0,3,2,0,0");
+                    levelData.push("0,2,3,0,1,0,3,2,0");
+                    levelData.push("2,3,0,1,0,1,0,3,2");
+                    levelData.push("3,0,1,0,4,0,1,0,3");
+                    levelData.push("0,3,0,1,0,1,0,3,0");
+                    levelData.push("0,0,3,0,1,0,3,0,0");
+                    levelData.push("0,0,0,3,0,3,0,0,0");
+                    levelData.push("0,0,0,0,3,0,0,0,0");
+                    yield* self.prepareLevelData(levelData);
+                    break;
+                case 4:
+                    levelData.push("1,1,1,1,0,0,0,1,1,1,1");
+                    levelData.push("2,2,2,2,2,0,2,2,2,2,2");
+                    levelData.push("0,3,3,3,3,3,3,3,3,3,0");
+                    levelData.push("0,0,0,0,0,4,0,0,0,0,0");
+                    levelData.push("0,1,1,1,1,1,1,1,1,1,0");
+                    levelData.push("2,2,2,2,2,0,2,2,2,2,2");
+                    levelData.push("3,3,3,3,0,0,0,3,3,3,3");
+                    yield* self.prepareLevelData(levelData);
+                    break;
+                case 5:
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("0,2,2,2,2,0,2,2,2,2,0");
+                    levelData.push("0,0,3,3,3,3,3,3,3,0,0");
+                    levelData.push("0,0,0,2,2,2,2,2,0,0,0");
+                    levelData.push("0,0,0,0,1,1,1,0,0,0,0");
+                    levelData.push("0,0,0,0,0,1,0,0,0,0,0");
+                    yield* self.prepareLevelData(levelData);
+                    break;
+                case 6:
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("3,4,3,4,3,4,3,4,3,4,3");
+                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+                    levelData.push("1,3,1,3,1,3,1,3,1,3,1");
+                    levelData.push("0,1,0,1,0,1,0,1,0,1,0");
+                    yield* self.prepareLevelData(levelData);
+                    break;
+                case 7:
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+                    levelData.push("2,2,2,2,2,2,2,2,2,2,2");
+                    levelData.push("0,2,2,2,2,2,2,2,2,2,0");
+                    levelData.push("0,0,1,1,1,1,1,1,1,0,0");
+                    levelData.push("0,0,0,1,1,1,1,1,0,0,0");
+                    levelData.push("0,0,0,0,4,4,4,0,0,0,0");
+                    levelData.push("0,0,0,0,0,4,0,0,0,0,0");
+                    yield* self.prepareLevelData(levelData);
                     break;
                 default:
                     break;
+            }
+        };
+        this.prepareLevelData = function* (levelData) {
+            let rowCounter = 0;
+            for (const row of levelData) {
+                let col = 0;
+                const columns = row.split(",");
+                for (const column of columns) {
+                    //if there should be an invader
+                    if (column !== "0") {
+                        yield {
+                            x: col * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderXMargin),
+                            y: rowCounter * (_settings__WEBPACK_IMPORTED_MODULE_4__.invaderHeight + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderYMargin),
+                            variety: Number.parseInt(column),
+                        };
+                    }
+                    col++;
+                }
+                rowCounter++;
             }
         };
         this.name = "Invaders";
@@ -14729,7 +14781,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             clearInterval(_state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.interval);
         }
     }
-    slideIn() { }
     startShooting() {
         const self = this;
         this.interval = setInterval(function () {
@@ -14740,18 +14791,18 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             const percentInvadersRemained = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / self.initialInvadersCount;
             for (const iterator of [1, 2, 3, 4, 5, 6]) {
                 let invader = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders[Math.floor(Math.random() * _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length)];
-                const p = Math.random() < percentInvadersRemained * 0.4 + 0.3;
+                const p = Math.random() < percentInvadersRemained * 0.3 + 0.2;
                 if (p === true) {
                     const timeout = smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate("shoot", () => invader.shoot(), Math.random() * 75);
                 }
             }
-        }, 600 - 150 * _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel);
+        }, 600 - 75 * _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel);
     }
     createInvaders() {
         //clear invaders first
         //in case of playing game again
         this.clearAllInvaders();
-        const gen = this.getInvaders(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel);
+        const gen = this.getInvaders(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
         for (const invaderData of gen) {
             const invader = new _invader__WEBPACK_IMPORTED_MODULE_3__.Invader({ x: invaderData.x, y: invaderData.y }, invaderData.variety);
             _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvader(invader);
@@ -14763,7 +14814,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.initialInvadersCount = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length;
     }
     resetPosition() {
-        return this.moveTo((_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - this.initialContainerWidth) / 2, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15, 2);
+        return this.moveTo((_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - this.initialContainerWidth) / 2, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15, 5);
     }
     clearProjectiles() {
         for (let index = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.length - 1; index >= 0; index--) {
@@ -14795,6 +14846,13 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
     collisionTestWithPlayer(c) {
         if (_state__WEBPACK_IMPORTED_MODULE_1__.state.invadersActive === false)
             return;
+        //first check if invaders are out of screen
+        //if yes player dies
+        if (this.y > _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight && _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length > 0) {
+            _state__WEBPACK_IMPORTED_MODULE_1__.state.setPlayerAlive(false);
+            _state__WEBPACK_IMPORTED_MODULE_1__.state.setInvadersActive(false);
+            return;
+        }
         const bounds1 = _state__WEBPACK_IMPORTED_MODULE_1__.components.player.getBounds();
         for (const invader of _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders) {
             const bounds2 = invader.sprite.getBounds();
@@ -15358,12 +15416,16 @@ class SplashScreen extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
     constructor() {
         super();
         this.name = "Splash";
+        this.scaleFactor = _state__WEBPACK_IMPORTED_MODULE_1__.state.mobileDevice ? 3 : 2;
+        this.splashWidth = 1920 * this.scaleFactor;
+        this.splashHeight = 1080 * this.scaleFactor;
         //container
         this.container = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container();
         this.name = "splash";
         this.addChild(this.container);
         //sprite
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["splash"]);
+        this.sprite.anchor.set(0.5);
         this.container.addChild(this.sprite);
         //press space to play
         const startText = _state__WEBPACK_IMPORTED_MODULE_1__.state.mobileDevice
@@ -15371,24 +15433,27 @@ class SplashScreen extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
             : `Press Space to Enter`;
         this.startText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(startText, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.splashText);
         this.startText.anchor.set(0.5);
-        this.startText.scale.set(2);
-        this.startText.x = this.width / 2;
-        this.startText.y = this.height * 0.77;
         this.container.addChild(this.startText);
-        this.container.eventMode = 'static';
+        this.container.eventMode = "static";
         this.container.on("pointertap", () => {
             _state__WEBPACK_IMPORTED_MODULE_1__.state.set_SPACEBAR_keyPressed(true);
             _state__WEBPACK_IMPORTED_MODULE_1__.state.set_SPACEBAR_keyPressed(false);
         });
     }
-    onContainerTap() { }
     updateLayout(rendererWidth, rendererHeight) {
+        this.scaleFactor = _state__WEBPACK_IMPORTED_MODULE_1__.state.mobileDevice ? 3 : 2;
         const scaleFactorX = rendererWidth / 1920;
         const scaleFactorY = rendererHeight / 1080;
         const scaleFactor = Math.min(scaleFactorX, scaleFactorY);
         this.scale.set(scaleFactor);
-        this.x = (rendererWidth - this.width) / 2;
+        this.sprite.scale.set(this.scaleFactor);
+        this.sprite.x = this.splashWidth / 2;
+        this.sprite.y = this.splashHeight / 2;
+        this.startText.scale.set(this.scaleFactor);
+        this.startText.x = this.splashWidth / 2;
+        this.startText.y = this.splashHeight / 2;
         this.y = (rendererHeight - this.height) / 2;
+        this.x = (rendererWidth - this.width) / 2;
     }
 }
 
@@ -15456,6 +15521,7 @@ class Game {
         window.addEventListener("resize", updateView);
         //change device orientation
         window.addEventListener("orientationchange", updateView);
+        this.updateView();
         window.addEventListener("keydown", function (event) {
             switch (event.key) {
                 case "A":
@@ -15524,7 +15590,6 @@ class Game {
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 100);
             }
         });
-        this.updateView();
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchstart", onTouchStart);
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchmove", onTouchMove);
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchend", onTouchEnd);
@@ -15711,6 +15776,7 @@ async function loadAssets() {
                     { alias: "invader1", src: "assets/images/enemy1.png" },
                     { alias: "invader2", src: "assets/images/enemy2.png" },
                     { alias: "invader3", src: "assets/images/enemy3.png" },
+                    { alias: "invader4", src: "assets/images/enemy4.png" },
                     { alias: "invader_projectile", src: "assets/images/invader_projectile.png" },
                     { alias: "invader_projectile_red", src: "assets/images/invader_projectile_red.png" },
                     { alias: "invader_explosion", src: "assets/images/explosion_invader.json" },
@@ -15858,7 +15924,7 @@ const sound = {
 const playerSpeed = 5;
 const projectileSpeed = 8;
 const invaderProjectileSpeed = 2.5;
-const playerSlideInSpeed = 5;
+const playerSlideInSpeed = 8;
 const invaderHeight = 32 * 1.5;
 const invaderWidth = 44 * 1.5;
 const invaderXMargin = 10;
@@ -15868,7 +15934,7 @@ const stageHeight = 2340;
 const backgroundScrollTimePerSprite = 7000;
 const minHeight = 240;
 const minWidth = 320;
-const finalLevel = 3;
+const finalLevel = 7;
 //font styles
 const fontStyles = {
     scoreText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
@@ -49198,4 +49264,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlec2dc3cb702cf57c443f3.js.map
+//# sourceMappingURL=bundlef0a2d1f24cbf4e00f345.js.map
