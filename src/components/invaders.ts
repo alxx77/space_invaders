@@ -11,7 +11,7 @@ import {
   stageWidth,
 } from "../settings"
 import { reaction } from "mobx"
-import { getRandomWebColor } from "../utils"
+import { getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 import { InvaderProjectile } from "./invaderProjectile"
 
@@ -32,12 +32,15 @@ export class Invaders extends SmartContainer {
   private initialInvadersCount: number
   static shootCounter: number
   static shotsEnded: number
+  bonusCreatedForCurrentLevel: number[]
   constructor() {
     super()
     this.name = "Invaders"
 
     //set static prop on invader projectile
     InvaderProjectile.projectileCount = 1
+
+    this.bonusCreatedForCurrentLevel = []
 
     //container
     this.container = new Container()
@@ -110,7 +113,7 @@ export class Invaders extends SmartContainer {
       }
       const percentInvadersRemained =
         state.invaders.length / self.initialInvadersCount
-      for (const iterator of [1, 2, 3, 4, 5, 6]) {
+      for (const iterator of [1, 2, 3, 4]) {
         let invader =
           state.invaders[Math.floor(Math.random() * state.invaders.length)]
         const p = Math.random() < percentInvadersRemained * 0.3 + 0.2
@@ -141,12 +144,13 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  createInvaders() {
+  createInvadersForCurrentLevel() {
     //clear invaders first
     //in case of playing game again
     this.clearAllInvaders()
+    this.bonusCreatedForCurrentLevel = []
 
-    const gen = this.getInvaders(state.gameLevel, this)
+    const gen = this.getLevelData(state.gameLevel, this)
     for (const invaderData of gen) {
       const invader = new Invader(
         { x: invaderData.x, y: invaderData.y },
@@ -160,6 +164,10 @@ export class Invaders extends SmartContainer {
     this.y = stageHeight * 0.15
 
     this.initialInvadersCount = state.invaders.length
+  }
+
+  clearBonusWeapons() {
+    this.bonusCreatedForCurrentLevel = []
   }
 
   resetPosition() {
@@ -186,6 +194,33 @@ export class Invaders extends SmartContainer {
   }
 
   removeInvader(invader: Invader) {
+    //create bonus weapon
+    const percentageInvadersDestroyed =
+      1 - state.invaders.length / this.initialInvadersCount
+    const r = getRandomNumber()
+    if (
+      !this.bonusCreatedForCurrentLevel.includes(1) &&
+      components.player.weaponType < 1
+    ) {
+      if (r <= percentageInvadersDestroyed) {
+        if (getRandomNumber() < 0.15) {
+          invader.createBonusWeapon(1)
+          this.bonusCreatedForCurrentLevel.push(1)
+        }
+      }
+    } else if (
+      this.bonusCreatedForCurrentLevel.includes(1) &&
+      !this.bonusCreatedForCurrentLevel.includes(2) &&
+      components.player.weaponType < 2
+    ) {
+      if (r <= percentageInvadersDestroyed) {
+        if (getRandomNumber() < 0.05) {
+          invader.createBonusWeapon(2)
+          this.bonusCreatedForCurrentLevel.push(2)
+        }
+      }
+    }
+
     const i = state.invaders.findIndex((el) => el === invader)
     state.removeInvader(i)
     invader.sprite.visible = false
@@ -200,7 +235,7 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  getInvaders = function* (
+  getLevelData = function* (
     level: number,
     self: Invaders
   ): Generator<InvaderData, void, void> {
@@ -328,7 +363,7 @@ export class Invaders extends SmartContainer {
 
     //first check if invaders are out of screen
     //if yes player dies
-    if (this.y > stageHeight && state.invaders.length>0) {
+    if (this.y > stageHeight && state.invaders.length > 0) {
       state.setPlayerAlive(false)
       state.setInvadersActive(false)
       return

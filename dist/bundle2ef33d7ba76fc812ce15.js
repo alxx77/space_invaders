@@ -14153,6 +14153,78 @@ class Background extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
 
 /***/ }),
 
+/***/ "./src/components/bonusWeapon.ts":
+/*!***************************************!*\
+  !*** ./src/components/bonusWeapon.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   BonusWeapon: () => (/* binding */ BonusWeapon)
+/* harmony export */ });
+/* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/index.mjs");
+/* harmony import */ var _smartContainer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./smartContainer */ "./src/components/smartContainer.ts");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../state */ "./src/state.ts");
+/* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! howler */ "./node_modules/howler/dist/howler.js");
+/* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(howler__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
+
+
+
+
+
+class BonusWeapon extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContainer {
+    constructor(position, speed, weaponType) {
+        super();
+        this.weaponType = weaponType;
+        this.collected = false;
+        this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`axes_${this.weaponType}`]);
+        this.sprite.scale.set(1.5);
+        this.addChild(this.sprite);
+        this.speed = speed;
+        this.x = position.x;
+        this.y = position.y;
+        this.cbOnTweenUpdate = this.collisionTestPlayerWithBonusWeapon;
+        this.bonusCollectedSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
+            src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.bonusCollected],
+            volume: 0.5,
+            loop: false,
+        });
+        this.bonusCreatedSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
+            src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.bonusCreated],
+            volume: 0.5,
+            loop: false,
+        });
+    }
+    collisionTestPlayerWithBonusWeapon(c) {
+        //console.log(this.x,this.y)
+        if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
+            return;
+        const bounds1 = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.sprite.getBounds();
+        const bounds2 = this.sprite.getBounds();
+        // Check for collision using bounds
+        if (bounds1.x < bounds2.x + bounds2.width &&
+            bounds1.x + bounds1.width > bounds2.x &&
+            bounds1.y < bounds2.y + bounds2.height &&
+            bounds1.y + bounds1.height > bounds2.y) {
+            // Collision detected - player uses bonus weapon
+            if (_state__WEBPACK_IMPORTED_MODULE_2__.components.player.weaponType < this.weaponType) {
+                this.stopTween();
+                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.weaponType = this.weaponType;
+                this.bonusCollectedSound.play();
+                this.collected = true;
+                this.destroy();
+            }
+        }
+    }
+    updateLayout(width, height) { }
+}
+
+
+/***/ }),
+
 /***/ "./src/components/foreground.ts":
 /*!**************************************!*\
   !*** ./src/components/foreground.ts ***!
@@ -14418,6 +14490,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! howler */ "./node_modules/howler/dist/howler.js");
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(howler__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _bonusWeapon__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./bonusWeapon */ "./src/components/bonusWeapon.ts");
+/* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
+/* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_7__);
+
+
 
 
 
@@ -14429,13 +14506,18 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
     constructor(position, variety) {
         super();
         this.variety = variety;
+        if (variety === 1 || variety === 2 || variety === 3) {
+            this.maxDamage = 1;
+        }
+        else {
+            this.maxDamage = 2;
+        }
+        this.damage = 0;
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader" + variety]);
         this.sprite.scale.set(1.5);
         this.addChild(this.sprite);
         this.x = position.x;
         this.y = position.y;
-        // Invaders.shootCounter = 0
-        // Invaders.shotsEnded = 0
         const sheet = pixi_js__WEBPACK_IMPORTED_MODULE_0__.Assets.cache.get("invader_explosion");
         const textures = Object.values(sheet.textures);
         this.explosionSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.AnimatedSprite(textures);
@@ -14464,27 +14546,50 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
         }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed + Math.random());
         let speed = projectile.speed;
         if (this.variety === 4) {
-            speed = projectile.speed * 2;
+            speed = projectile.speed * 1.5;
         }
         if (projectile.red) {
-            speed = projectile.speed * 3;
+            speed = projectile.speed * 2;
         }
         projectile.speed = speed;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
         _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvaderProjectile(projectile);
-        // Invaders.shootCounter++
-        // console.log('Total shots fired: ' + Invaders.shootCounter)
         projectile.shootSound.play();
         projectile.moveTo(projectile.x, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight + 50, projectile.speed, () => {
             const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.findIndex((el) => el === projectile);
-            // Invaders.shotsEnded++
-            // console.log('Shots ended regularly: ' + Invaders.shotsEnded)
             //if allready removed - return
             if (i < 0)
                 return;
             _state__WEBPACK_IMPORTED_MODULE_1__.state.removeInvaderProjectile(i);
             projectile.destroy();
         });
+    }
+    createBonusWeapon(type) {
+        let gp = this.getAbsolutePosition(this);
+        const bonus = new _bonusWeapon__WEBPACK_IMPORTED_MODULE_6__.BonusWeapon({
+            x: gp.x + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth / 2,
+            y: gp.y * 1.05,
+        }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed / 2 + Math.random(), type);
+        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(bonus);
+        bonus.bonusCreatedSound.play();
+        bonus.moveTo(bonus.x, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight + 50, bonus.speed, () => {
+            if (!bonus.collected) {
+                bonus.destroy();
+            }
+        });
+    }
+    blink() {
+        this.sprite.tint = "#771111";
+        smart_timeout__WEBPACK_IMPORTED_MODULE_7___default().instantiate(() => {
+            this.sprite.tint = "#FFFFFF";
+        }, 50);
+    }
+    takeHit() {
+        this.damage++;
+        this.blink();
+    }
+    isTotallyDamaged() {
+        return this.damage >= this.maxDamage;
     }
     getAbsolutePosition(container) {
         let absoluteX = container.x;
@@ -14494,7 +14599,7 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
             currentContainer = currentContainer.parent;
             absoluteX += currentContainer.x;
             absoluteY += currentContainer.y;
-            if (currentContainer.name === 'foreground')
+            if (currentContainer.name === "foreground")
                 break;
         }
         return { x: absoluteX, y: absoluteY };
@@ -14522,6 +14627,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! howler */ "./node_modules/howler/dist/howler.js");
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(howler__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
+/* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_6__);
+
+
 
 
 
@@ -14530,26 +14640,72 @@ __webpack_require__.r(__webpack_exports__);
 class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContainer {
     constructor(position, speed) {
         super();
+        this.maxDamage = 2;
         this.red = false;
         let texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader_projectile"];
         if (InvaderProjectile.projectileCount % 3 === 0) {
             texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader_projectile_red"];
             this.red = true;
+            this.maxDamage = 3;
         }
         InvaderProjectile.projectileCount++;
+        this.damage = 0;
+        this.scaleFactor = 2;
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(texture);
-        this.scale.set(2);
+        this.scale.set(this.scaleFactor);
         this.addChild(this.sprite);
         this.speed = speed;
         this.x = position.x;
         this.y = position.y;
         this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile;
+        const sheet = pixi_js__WEBPACK_IMPORTED_MODULE_0__.Assets.cache.get("invader_explosion");
+        const textures = Object.values(sheet.textures);
+        this.explosionSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.AnimatedSprite(textures);
+        this.explosionSprite.visible = false;
+        this.explosionSprite.loop = false;
+        this.explosionSprite.scale.set(this.scaleFactor / 3);
+        this.explosionSprite.x = this.width / 2 / this.scaleFactor;
+        this.explosionSprite.y = this.height / 2 / this.scaleFactor;
+        this.explosionSprite.anchor.set(0.5);
+        this.explosionSprite.animationSpeed = 0.2;
+        this.addChild(this.explosionSprite);
         this.shootSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.invaderProjectile],
             volume: 0.5,
             loop: false,
         });
         this.shootSound.volume(0.1 + Math.random() * 0.1);
+        this.explosionSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
+            src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.invaderExplosion],
+            volume: 0.1,
+            loop: false,
+        });
+    }
+    static removeProjectile(projectile) {
+        const i = _state__WEBPACK_IMPORTED_MODULE_2__.state.invaderProjectiles.findIndex((el) => el === projectile);
+        _state__WEBPACK_IMPORTED_MODULE_2__.state.removeInvaderProjectile(i);
+        projectile.sprite.visible = false;
+        projectile.explosionSprite.visible = true;
+        projectile.explosionSprite.tint = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomWebColor)();
+        projectile.explosionSprite.play();
+        projectile.explosionSound.play();
+        projectile.explosionSprite.onComplete = () => {
+            projectile.stopTween();
+            projectile.destroy();
+        };
+    }
+    blink() {
+        this.sprite.tint = "#771111";
+        smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+            this.sprite.tint = "#FFFFFF";
+        }, 50);
+    }
+    takeHit() {
+        this.damage++;
+        this.blink();
+    }
+    isTotallyDamaged() {
+        return this.damage >= this.maxDamage;
     }
     collisionTestPlayerWithInvaderProjectile(c) {
         if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
@@ -14563,15 +14719,9 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
                 bounds1.y < bounds2.y + bounds2.height &&
                 bounds1.y + bounds1.height > bounds2.y) {
                 // Collision detected
-                c.stopTween();
-                _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
                 _state__WEBPACK_IMPORTED_MODULE_2__.state.setPlayerAlive(false);
-                const i = _state__WEBPACK_IMPORTED_MODULE_2__.state.invaderProjectiles.findIndex((el) => el === invaderProjectile);
-                //console.log('player kill: ' + i )
-                _state__WEBPACK_IMPORTED_MODULE_2__.state.removeInvaderProjectile(i);
-                invaderProjectile.stopTween();
-                invaderProjectile.visible = false;
-                invaderProjectile.destroy();
+                _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
+                InvaderProjectile.removeProjectile(this);
                 return;
             }
         }
@@ -14630,7 +14780,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 }
             }
         };
-        this.getInvaders = function* (level, self) {
+        this.getLevelData = function* (level, self) {
             let levelData = [];
             switch (level) {
                 case 1:
@@ -14732,6 +14882,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.name = "Invaders";
         //set static prop on invader projectile
         _invaderProjectile__WEBPACK_IMPORTED_MODULE_7__.InvaderProjectile.projectileCount = 1;
+        this.bonusCreatedForCurrentLevel = [];
         //container
         this.container = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container();
         this.addChild(this.container);
@@ -14789,7 +14940,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 return;
             }
             const percentInvadersRemained = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / self.initialInvadersCount;
-            for (const iterator of [1, 2, 3, 4, 5, 6]) {
+            for (const iterator of [1, 2, 3, 4]) {
                 let invader = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders[Math.floor(Math.random() * _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length)];
                 const p = Math.random() < percentInvadersRemained * 0.3 + 0.2;
                 if (p === true) {
@@ -14798,11 +14949,12 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         }, 600 - 75 * _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel);
     }
-    createInvaders() {
+    createInvadersForCurrentLevel() {
         //clear invaders first
         //in case of playing game again
         this.clearAllInvaders();
-        const gen = this.getInvaders(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
+        this.bonusCreatedForCurrentLevel = [];
+        const gen = this.getLevelData(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
         for (const invaderData of gen) {
             const invader = new _invader__WEBPACK_IMPORTED_MODULE_3__.Invader({ x: invaderData.x, y: invaderData.y }, invaderData.variety);
             _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvader(invader);
@@ -14812,6 +14964,9 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.x = _settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth / 2 - this.width / 2;
         this.y = _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15;
         this.initialInvadersCount = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length;
+    }
+    clearBonusWeapons() {
+        this.bonusCreatedForCurrentLevel = [];
     }
     resetPosition() {
         return this.moveTo((_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - this.initialContainerWidth) / 2, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15, 5);
@@ -14830,6 +14985,28 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         }
     }
     removeInvader(invader) {
+        //create bonus weapon
+        const percentageInvadersDestroyed = 1 - _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / this.initialInvadersCount;
+        const r = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)();
+        if (!this.bonusCreatedForCurrentLevel.includes(1) &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weaponType < 1) {
+            if (r <= percentageInvadersDestroyed) {
+                if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.15) {
+                    invader.createBonusWeapon(1);
+                    this.bonusCreatedForCurrentLevel.push(1);
+                }
+            }
+        }
+        else if (this.bonusCreatedForCurrentLevel.includes(1) &&
+            !this.bonusCreatedForCurrentLevel.includes(2) &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weaponType < 2) {
+            if (r <= percentageInvadersDestroyed) {
+                if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.05) {
+                    invader.createBonusWeapon(2);
+                    this.bonusCreatedForCurrentLevel.push(2);
+                }
+            }
+        }
         const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.findIndex((el) => el === invader);
         _state__WEBPACK_IMPORTED_MODULE_1__.state.removeInvader(i);
         invader.sprite.visible = false;
@@ -15005,6 +15182,8 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         this.visible = false;
         this.sprite.scale.set(2);
         this.addChild(this.sprite);
+        //standard projectile as default
+        this.weaponType = 0;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(this);
         const sheet = pixi_js__WEBPACK_IMPORTED_MODULE_0__.Assets.cache.get("player_explosion");
         const textures = Object.values(sheet.textures);
@@ -15090,19 +15269,90 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             volume: 0.3,
             loop: true,
         });
+        if (_state__WEBPACK_IMPORTED_MODULE_1__.components.invaders) {
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.clearBonusWeapons();
+        }
     }
     async shoot() {
-        const projectile = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
-            x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2,
-            y: this.y * 0.95,
-        }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed);
-        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
-        _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile);
-        projectile.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2, -50, projectile.speed, () => {
-            const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile);
-            _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
-            projectile.destroy();
-        });
+        let projectile1;
+        let projectile2;
+        let projectile3;
+        switch (this.weaponType) {
+            case 0:
+                projectile1 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2,
+                    y: this.y * 0.97,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile1);
+                projectile1.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2, -50, projectile1.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile1);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile1.destroy();
+                });
+                break;
+            case 1:
+                projectile1 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 12 * this.sprite.scale.x,
+                    y: this.y * 0.97,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile1);
+                projectile1.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 12 * this.sprite.scale.x, -50, projectile1.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile1);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile1.destroy();
+                });
+                projectile2 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 12 * this.sprite.scale.x,
+                    y: this.y * 0.97,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile2);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile2);
+                projectile2.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 12 * this.sprite.scale.x, -50, projectile2.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile2);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile2.destroy();
+                });
+                break;
+            case 2:
+                projectile1 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 20 * this.sprite.scale.x,
+                    y: this.y * 0.97,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile1);
+                projectile1.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 20 * this.sprite.scale.x, -50, projectile1.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile1);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile1.destroy();
+                });
+                projectile2 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2,
+                    y: this.y * 0.95,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile2);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile2);
+                projectile2.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2, -50, projectile2.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile2);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile2.destroy();
+                });
+                projectile3 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
+                    x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 20 * this.sprite.scale.x,
+                    y: this.y * 0.97,
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile3);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile3);
+                projectile3.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 20 * this.sprite.scale.x, -50, projectile3.speed, () => {
+                    const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile3);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                    projectile3.destroy();
+                });
+                break;
+            default:
+                break;
+        }
     }
     async slideIn() {
         _state__WEBPACK_IMPORTED_MODULE_1__.state.setPlayerActive(false);
@@ -15139,7 +15389,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             }
         }
         //Y-axis movement
-        if (this.y >= 0 && (this.y + deltaY + this.height < _settings__WEBPACK_IMPORTED_MODULE_3__.stageHeight)) {
+        if (this.y >= 0 && this.y + deltaY + this.height < _settings__WEBPACK_IMPORTED_MODULE_3__.stageHeight) {
             //move player
             this.y += deltaY;
             //necessary to keep player inside playground
@@ -15260,6 +15510,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! howler */ "./node_modules/howler/dist/howler.js");
 /* harmony import */ var howler__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(howler__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
+/* harmony import */ var _invaderProjectile__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./invaderProjectile */ "./src/components/invaderProjectile.ts");
+
 
 
 
@@ -15267,15 +15519,16 @@ __webpack_require__.r(__webpack_exports__);
 
 //root container
 class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer {
-    constructor(position, speed) {
+    constructor(position, speed, type) {
         super();
-        this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["projectile"]);
+        this.projectileType = type;
+        this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`projectile_${this.projectileType}`]);
         this.sprite.scale.set(1.5);
         this.addChild(this.sprite);
         this.speed = speed;
         this.x = position.x;
         this.y = position.y;
-        this.cbOnTweenUpdate = this.collisionTestWithInvaders;
+        this.cbOnTweenUpdate = this.collisionTestWithInvadersAndInvadersProjectiles;
         this.shootSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.playerProjectile],
             volume: 0.5,
@@ -15284,8 +15537,9 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
         this.shootSound.volume(0.2 + Math.random() * 0.4);
         this.shootSound.play();
     }
-    collisionTestWithInvaders(c) {
+    collisionTestWithInvadersAndInvadersProjectiles(c) {
         const bounds1 = this.sprite.getBounds();
+        //colision with invaders
         for (const invader of _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders) {
             const bounds2 = invader.sprite.getBounds();
             // Check for collision using bounds
@@ -15294,11 +15548,38 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                 bounds1.y < bounds2.y + bounds2.height &&
                 bounds1.y + bounds1.height > bounds2.y) {
                 // Collision detected
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.removeInvader(invader);
+                invader.takeHit();
+                if (invader.isTotallyDamaged()) {
+                    _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.removeInvader(invader);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.triggerInvaderDestroyed();
+                }
+                //projectile is immediately destroyed
                 const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === this);
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
                 c.stopTween();
-                _state__WEBPACK_IMPORTED_MODULE_1__.state.triggerInvaderDestroyed();
+                this.destroy();
+                return;
+            }
+        }
+        //collision with invader projectiles
+        for (const invaderProjectile of _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles) {
+            const bounds2 = invaderProjectile.sprite.getBounds();
+            // Check for collision using bounds
+            if (bounds1.x < bounds2.x + bounds2.width &&
+                bounds1.x + bounds1.width > bounds2.x &&
+                bounds1.y < bounds2.y + bounds2.height &&
+                bounds1.y + bounds1.height > bounds2.y) {
+                // Collision detected
+                //damage invader projectile
+                invaderProjectile.takeHit();
+                if (invaderProjectile.isTotallyDamaged()) {
+                    //remove invader projectile
+                    _invaderProjectile__WEBPACK_IMPORTED_MODULE_5__.InvaderProjectile.removeProjectile(invaderProjectile);
+                }
+                //remove players projectile immediately
+                const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === this);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
+                c.stopTween();
                 this.destroy();
             }
         }
@@ -15674,7 +15955,7 @@ class Game {
         if (!_state__WEBPACK_IMPORTED_MODULE_0__.components.invaders) {
             _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders = new _components_invaders__WEBPACK_IMPORTED_MODULE_3__.Invaders();
         }
-        _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvaders();
+        _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvadersForCurrentLevel();
         this.updateView();
         _state__WEBPACK_IMPORTED_MODULE_0__.state.setLivesCounter(3);
         await _state__WEBPACK_IMPORTED_MODULE_0__.components.player.slideIn();
@@ -15709,7 +15990,7 @@ class Game {
                 }
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setCurrentLevelCompleted(false);
                 //setup next level invaders
-                _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvaders();
+                _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvadersForCurrentLevel();
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setPlayerActive(false);
                 _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.showLevelStartText();
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setPlayerActive(true);
@@ -15724,7 +16005,7 @@ class Game {
                 if (_state__WEBPACK_IMPORTED_MODULE_0__.state.invaders.length === 0) {
                     //edge case - where player dies while completing level
                     //level is repeated
-                    _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvaders();
+                    _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.createInvadersForCurrentLevel();
                 }
             }
         }
@@ -15764,10 +16045,13 @@ async function loadAssets() {
                 name: "player",
                 assets: [
                     { alias: "player", src: "assets/images/player.png" },
-                    { alias: "projectile", src: "assets/images/projectile.png" },
+                    { alias: "projectile_0", src: "assets/images/projectile_0.png" },
+                    { alias: "projectile_1", src: "assets/images/projectile_1.png" },
                     { alias: "space", src: "assets/images/space.png" },
                     { alias: "player_explosion", src: "assets/images/explosion.json" },
                     { alias: "splash", src: "assets/images/space_splash.jpg" },
+                    { alias: "axes_1", src: "assets/images/axes_1.png" },
+                    { alias: "axes_2", src: "assets/images/axes_2.png" },
                 ],
             },
             {
@@ -15922,7 +16206,7 @@ const sound = {
     soundFX: { play: true, volume: 0.1 },
 };
 const playerSpeed = 5;
-const projectileSpeed = 8;
+const projectileSpeed = 24;
 const invaderProjectileSpeed = 2.5;
 const playerSlideInSpeed = 8;
 const invaderHeight = 32 * 1.5;
@@ -15990,7 +16274,9 @@ const soundSource = {
     startPlay: "assets/sounds/game_start.mp3",
     gameOver: "assets/sounds/game_over.mp3",
     gameTheme: "assets/sounds/theme.mp3",
-    gameCompleted: "assets/sounds/game_completed.mp3"
+    gameCompleted: "assets/sounds/game_completed.mp3",
+    bonusCreated: "assets/sounds/bonus_created.mp3",
+    bonusCollected: "assets/sounds/bonus_collected.mp3"
 };
 
 
@@ -16393,6 +16679,7 @@ const components = {};
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getRandomNumber: () => (/* binding */ getRandomNumber),
 /* harmony export */   getRandomWebColor: () => (/* binding */ getRandomWebColor),
 /* harmony export */   shuffleArray: () => (/* binding */ shuffleArray)
 /* harmony export */ });
@@ -16421,6 +16708,12 @@ function getRandomWebColor() {
     const randomColor = minColor.map((min, index) => Math.floor(Math.random() * (maxColor[index] - min + 1)) + min);
     // Convert RGB values back to hex color
     return rgbToHex(...randomColor);
+}
+function getRandomNumber() {
+    const randomBytes = new Uint32Array(1);
+    crypto.getRandomValues(randomBytes);
+    // Convert randomBytes to a number between 0 and 1
+    return randomBytes[0] / (Math.pow(2, 32) - 1);
 }
 
 
@@ -49264,4 +49557,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlef0a2d1f24cbf4e00f345.js.map
+//# sourceMappingURL=bundle2ef33d7ba76fc812ce15.js.map

@@ -35,3 +35,10 @@ export function getRandomWebColor(): string {
   return rgbToHex(...(randomColor as [number,number,number]));
 }
 
+export function getRandomNumber(): number {
+  const randomBytes = new Uint32Array(1);
+  crypto.getRandomValues(randomBytes);
+  // Convert randomBytes to a number between 0 and 1
+  return randomBytes[0] / (Math.pow(2, 32) - 1);
+}
+

@@ -1,33 +1,33 @@
 {
   "frames": {
     "explosion_invader1.png": {
-      "frame": { "x": 1, "y": 1, "w": 56, "h": 56 },
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 56, "h": 56 },
-      "sourceSize": { "w": 56, "h": 56 },
+      "frame": { "x": 2, "y": 2, "w": 54, "h": 54 },
+      "spriteSourceSize": { "x": 1, "y": 1, "w": 57, "h": 57 },
+      "sourceSize": { "w": 57, "h": 57 },
       "anchor": { "x": 0, "y": 0 }
     },
     "explosion_invader2.png": {
-      "frame": { "x": 61, "y": 1, "w": 56, "h": 56 },
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 56, "h": 56 },
-      "sourceSize": { "w": 56, "h": 56 },
+      "frame": { "x": 62, "y": 2, "w": 54, "h": 54 },
+      "spriteSourceSize": { "x": 1, "y": 1, "w": 57, "h": 57 },
+      "sourceSize": { "w": 57, "h": 57 },
       "anchor": { "x": 0, "y": 0 }
     },
     "explosion_invader3.png": {
-      "frame": { "x": 121, "y": 1, "w": 56, "h": 56 },
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 56, "h": 56 },
-      "sourceSize": { "w": 56, "h": 56 },
+      "frame": { "x": 122, "y": 2, "w":54, "h": 54 },
+      "spriteSourceSize": { "x": 1, "y": 1, "w": 57, "h": 57 },
+      "sourceSize": { "w": 57, "h": 57 },
       "anchor": { "x": 0, "y": 0 }
     },
     "explosion_invader4.png": {
-      "frame": { "x": 181, "y": 1, "w": 56, "h": 56 },
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 56, "h": 56 },
-      "sourceSize": { "w": 56, "h": 56 },
+      "frame": { "x": 182, "y": 2, "w": 54, "h": 54 },
+      "spriteSourceSize": { "x": 1, "y": 1, "w": 57, "h": 57 },
+      "sourceSize": { "w": 57, "h": 57 },
       "anchor": { "x": 0, "y": 0 }
     },
     "explosion_invader5.png": {
-      "frame": { "x": 241, "y": 1, "w": 56, "h": 56 },
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 56, "h": 56 },
-      "sourceSize": { "w": 56, "h": 56 },
+      "frame": { "x": 242, "y": 2, "w": 54, "h": 54 },
+      "spriteSourceSize": { "x": 1, "y": 1, "w": 57, "h": 57 },
+      "sourceSize": { "w": 57, "h": 57 },
       "anchor": { "x": 0, "y": 0 }
     }
   },

@@ -245,7 +245,7 @@ export class Game {
       components.invaders = new Invaders()
     }
 
-    components.invaders.createInvaders()
+    components.invaders.createInvadersForCurrentLevel()
 
     this.updateView()
 
@@ -292,7 +292,7 @@ export class Game {
         }
         state.setCurrentLevelCompleted(false)
         //setup next level invaders
-        components.invaders.createInvaders()
+        components.invaders.createInvadersForCurrentLevel()
 
         state.setPlayerActive(false)
         components.foreground.showLevelStartText()
@@ -308,7 +308,7 @@ export class Game {
           //edge case - where player dies while completing level
 
           //level is repeated
-          components.invaders.createInvaders()
+          components.invaders.createInvadersForCurrentLevel()
         }
       }
     }

@@ -35,6 +35,7 @@ export class Player extends SmartContainer {
   disposerList: IReactionDisposer[]
   explosionSound: Howl
   engineSound: Howl
+  weaponType: number
   constructor() {
     super()
     this.name = "Player"
@@ -42,6 +43,9 @@ export class Player extends SmartContainer {
     this.visible = false
     this.sprite.scale.set(2)
     this.addChild(this.sprite)
+
+    //standard projectile as default
+    this.weaponType = 0
 
     components.foreground.container.addChild(this)
 
@@ -155,28 +159,154 @@ export class Player extends SmartContainer {
       volume: 0.3,
       loop: true,
     })
+
+    if(components.invaders){
+      components.invaders.clearBonusWeapons()
+    }
   }
 
-  async shoot(){
-    const projectile = new Projectile(
-      {
-        x: this.x + components.player.width / 2,
-        y: this.y * 0.95,
-      },
-      projectileSpeed
-    )
-    components.foreground.container.addChild(projectile)
-    state.addProjectile(projectile)
-    projectile.moveTo(
-      this.x + components.player.width / 2,
-      -50,
-      projectile.speed,
-      () => {
-        const i = state.projectiles.findIndex((el) => el === projectile)
-        state.removeProjectile(i)
-        projectile.destroy()
-      }
-    )
+  async shoot() {
+    let projectile1: Projectile
+    let projectile2: Projectile
+    let projectile3: Projectile
+
+    switch (this.weaponType) {
+      case 0:
+        projectile1 = new Projectile(
+          {
+            x: this.x + components.player.width / 2,
+            y: this.y * 0.97,
+          },
+          projectileSpeed,
+          0
+        )
+        components.foreground.container.addChild(projectile1)
+        state.addProjectile(projectile1)
+        projectile1.moveTo(
+          this.x + components.player.width / 2,
+          -50,
+          projectile1.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile1)
+            state.removeProjectile(i)
+            projectile1.destroy()
+          }
+        )
+        break
+
+      case 1:
+        projectile1 = new Projectile(
+          {
+            x: this.x + components.player.width / 2 - 12 * this.sprite.scale.x,
+            y: this.y * 0.97,
+          },
+          projectileSpeed,
+          0
+        )
+        components.foreground.container.addChild(projectile1)
+        state.addProjectile(projectile1)
+        projectile1.moveTo(
+          this.x + components.player.width / 2 - 12 * this.sprite.scale.x,
+          -50,
+          projectile1.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile1)
+            state.removeProjectile(i)
+            projectile1.destroy()
+          }
+        )
+
+        projectile2 = new Projectile(
+          {
+            x: this.x + components.player.width / 2 + 12 * this.sprite.scale.x,
+            y: this.y * 0.97,
+          },
+          projectileSpeed,
+          0
+        )
+        components.foreground.container.addChild(projectile2)
+        state.addProjectile(projectile2)
+        projectile2.moveTo(
+          this.x + components.player.width / 2 + 12 * this.sprite.scale.x,
+          -50,
+          projectile2.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile2)
+            state.removeProjectile(i)
+            projectile2.destroy()
+          }
+        )
+        break
+
+      case 2:
+        projectile1 = new Projectile(
+          {
+            x: this.x + components.player.width / 2 - 20 * this.sprite.scale.x,
+            y: this.y * 0.97,
+          },
+          projectileSpeed,
+          1
+        )
+        components.foreground.container.addChild(projectile1)
+        state.addProjectile(projectile1)
+        projectile1.moveTo(
+          this.x + components.player.width / 2 - 20 * this.sprite.scale.x,
+          -50,
+          projectile1.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile1)
+            state.removeProjectile(i)
+            projectile1.destroy()
+          }
+        )
+
+        projectile2 = new Projectile(
+          {
+            x: this.x + components.player.width / 2,
+            y: this.y * 0.95,
+          },
+          projectileSpeed,
+          0
+        )
+        components.foreground.container.addChild(projectile2)
+        state.addProjectile(projectile2)
+        projectile2.moveTo(
+          this.x + components.player.width / 2,
+          -50,
+          projectile2.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile2)
+            state.removeProjectile(i)
+            projectile2.destroy()
+          }
+        )
+
+        projectile3 = new Projectile(
+          {
+            x: this.x + components.player.width / 2 + 20 * this.sprite.scale.x,
+            y: this.y * 0.97,
+          },
+          projectileSpeed,
+          1
+        )
+        components.foreground.container.addChild(projectile3)
+        state.addProjectile(projectile3)
+        projectile3.moveTo(
+          this.x + components.player.width / 2 + 20 * this.sprite.scale.x,
+          -50,
+          projectile3.speed,
+          () => {
+            const i = state.projectiles.findIndex((el) => el === projectile3)
+            state.removeProjectile(i)
+            projectile3.destroy()
+          }
+        )
+
+        break
+
+      default:
+        break
+    }
   }
 
   async slideIn() {
@@ -202,11 +332,15 @@ export class Player extends SmartContainer {
   async slideToCenter() {
     state.setPlayerActive(false)
     const self = this
-    return this.moveTo(stageWidth / 2 - self.width / 2, stageHeight * 0.85, playerSlideInSpeed)
+    return this.moveTo(
+      stageWidth / 2 - self.width / 2,
+      stageHeight * 0.85,
+      playerSlideInSpeed
+    )
   }
 
   moveDelta(deltaX: number, deltaY: number) {
-    if(!state.playerActive) return
+    if (!state.playerActive) return
     //X-axis movement
     if (this.x >= 0 && this.x + deltaX + this.width < stageWidth) {
       //move player
@@ -222,7 +356,7 @@ export class Player extends SmartContainer {
     }
 
     //Y-axis movement
-    if (this.y >= 0 && (this.y + deltaY + this.height < stageHeight)) {
+    if (this.y >= 0 && this.y + deltaY + this.height < stageHeight) {
       //move player
       this.y += deltaY
       //necessary to keep player inside playground
@@ -237,7 +371,7 @@ export class Player extends SmartContainer {
   }
 
   moveToPosition(x: number, y: number) {
-    if(!state.playerActive) return
+    if (!state.playerActive) return
     //X-axis movement
     if (this.x >= 0 && this.x + x + this.width < stageWidth) {
       //move player

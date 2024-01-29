@@ -1,27 +1,49 @@
-import { AnimatedSprite, Assets, Container, Resource, Sprite, Texture, utils } from "pixi.js"
+import {
+  AnimatedSprite,
+  Assets,
+  Container,
+  Resource,
+  Sprite,
+  Texture,
+  utils,
+} from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { InvaderProjectile } from "./invaderProjectile"
-import { invaderWidth, invaderProjectileSpeed, stageHeight, soundSource } from "../settings"
+import {
+  invaderWidth,
+  invaderProjectileSpeed,
+  stageHeight,
+  soundSource,
+} from "../settings"
 import { Howl } from "howler"
-import { Invaders } from "./invaders"
+import { BonusWeapon } from "./bonusWeapon"
+import Timeout from "smart-timeout"
 
 //root container
 export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
-  explosionSound:Howl
-  variety:number
+  explosionSound: Howl
+  variety: number
+  damage: number
+  maxDamage: number
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.variety = variety
+
+    if (variety === 1 || variety === 2 || variety === 3) {
+      this.maxDamage = 1
+    } else {
+      this.maxDamage = 2
+    }
+    this.damage = 0
+
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
     this.sprite.scale.set(1.5)
     this.addChild(this.sprite)
     this.x = position.x
     this.y = position.y
-    // Invaders.shootCounter = 0
-    // Invaders.shotsEnded = 0
 
     const sheet = Assets.cache.get("invader_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
@@ -52,42 +74,67 @@ export class Invader extends SmartContainer {
         x: gp.x + invaderWidth / 2,
         y: gp.y * 1.05,
       },
-      invaderProjectileSpeed + Math.random() 
+      invaderProjectileSpeed + Math.random()
     )
 
     let speed = projectile.speed
 
-    if (this.variety === 4){
+    if (this.variety === 4) {
+      speed = projectile.speed * 1.5
+    }
+
+    if (projectile.red) {
       speed = projectile.speed * 2
     }
 
-    if (projectile.red){
-      speed = projectile.speed * 3
-    }
-
-    projectile.speed = speed 
+    projectile.speed = speed
 
     components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)
-    // Invaders.shootCounter++
-    // console.log('Total shots fired: ' + Invaders.shootCounter)
     projectile.shootSound.play()
-    projectile.moveTo(
-      projectile.x,
-      stageHeight + 50,
-      projectile.speed,
-      ()=>{
-        const i = state.invaderProjectiles.findIndex(
-          (el) => el === projectile
-        )
-        // Invaders.shotsEnded++
-        // console.log('Shots ended regularly: ' + Invaders.shotsEnded)
-        //if allready removed - return
-        if (i<0) return
-        state.removeInvaderProjectile(i)
-        projectile.destroy()
-      }
+    projectile.moveTo(projectile.x, stageHeight + 50, projectile.speed, () => {
+      const i = state.invaderProjectiles.findIndex((el) => el === projectile)
+      //if allready removed - return
+      if (i < 0) return
+      state.removeInvaderProjectile(i)
+      projectile.destroy()
+    })
+  }
+
+  createBonusWeapon(type: number) {
+    let gp = this.getAbsolutePosition(this)
+    const bonus = new BonusWeapon(
+      {
+        x: gp.x + invaderWidth / 2,
+        y: gp.y * 1.05,
+      },
+      invaderProjectileSpeed / 2 + Math.random(),
+      type
     )
+
+    components.foreground.container.addChild(bonus)
+    bonus.bonusCreatedSound.play()
+    bonus.moveTo(bonus.x, stageHeight + 50, bonus.speed, () => {
+      if (!bonus.collected) {
+        bonus.destroy()
+      }
+    })
+  }
+
+  blink() {
+    this.sprite.tint = "#771111"
+    Timeout.instantiate(() => {
+      this.sprite.tint = "#FFFFFF"
+    }, 50)
+  }
+
+  takeHit() {
+    this.damage++
+    this.blink()
+  }
+
+  isTotallyDamaged() {
+    return this.damage >= this.maxDamage
   }
 
   getAbsolutePosition(container: Container) {
@@ -96,11 +143,11 @@ export class Invader extends SmartContainer {
 
     let currentContainer = container
 
-    while (currentContainer.parent ) {
+    while (currentContainer.parent) {
       currentContainer = currentContainer.parent
       absoluteX += currentContainer.x
       absoluteY += currentContainer.y
-      if(currentContainer.name === 'foreground') break
+      if (currentContainer.name === "foreground") break
     }
 
     return { x: absoluteX, y: absoluteY }

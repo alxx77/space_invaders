@@ -7,7 +7,7 @@ export const sound = {
 
 export const playerSpeed = 5
 
-export const projectileSpeed = 8
+export const projectileSpeed = 24
 export const invaderProjectileSpeed = 2.5
 
 export const playerSlideInSpeed = 8
@@ -87,5 +87,7 @@ export const soundSource = {
   startPlay:"assets/sounds/game_start.mp3",
   gameOver:"assets/sounds/game_over.mp3",
   gameTheme:"assets/sounds/theme.mp3",
-  gameCompleted:"assets/sounds/game_completed.mp3"
+  gameCompleted:"assets/sounds/game_completed.mp3",
+  bonusCreated:"assets/sounds/bonus_created.mp3",
+  bonusCollected:"assets/sounds/bonus_collected.mp3"
 }
