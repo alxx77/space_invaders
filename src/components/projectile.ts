@@ -34,7 +34,7 @@ export class Projectile extends SmartContainer {
     this.shootSound.play()
   }
 
-  collisionTestWithInvadersAndInvadersProjectiles(c: SmartContainer) {
+  collisionTestWithInvadersAndInvadersProjectiles(c: SmartContainer,elapsed : number) {
     const bounds1 = this.sprite.getBounds()
     //colision with invaders
     for (const invader of state.invaders) {

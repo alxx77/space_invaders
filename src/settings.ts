@@ -1,14 +1,14 @@
 import { TextStyle } from "pixi.js"
 
 export const sound = {
-  music: { play: true, highVolume: 0.7, lowVolume : 0.15 },
+  music: { play: false, highVolume: 0.7, lowVolume : 0.15 },
   soundFX: { play: true, volume: 0.1 },
 }
 
 export const playerSpeed = 5
 
 export const projectileSpeed = 24
-export const invaderProjectileSpeed = 2.5
+export const invaderProjectileSpeed = 3.5
 
 export const playerSlideInSpeed = 8
 

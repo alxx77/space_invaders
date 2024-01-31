@@ -200,7 +200,7 @@ export class Player extends SmartContainer {
             x: this.x + components.player.width / 2 - 12 * this.sprite.scale.x,
             y: this.y * 0.97,
           },
-          projectileSpeed,
+          projectileSpeed * 1.5,
           0
         )
         components.foreground.container.addChild(projectile1)
@@ -221,7 +221,7 @@ export class Player extends SmartContainer {
             x: this.x + components.player.width / 2 + 12 * this.sprite.scale.x,
             y: this.y * 0.97,
           },
-          projectileSpeed,
+          projectileSpeed * 1.5,
           0
         )
         components.foreground.container.addChild(projectile2)
@@ -273,7 +273,7 @@ export class Player extends SmartContainer {
         projectile2.moveTo(
           this.x + components.player.width / 2,
           -50,
-          projectile2.speed,
+          projectile2.speed * 2,
           () => {
             const i = state.projectiles.findIndex((el) => el === projectile2)
             state.removeProjectile(i)

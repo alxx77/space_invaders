@@ -32,7 +32,7 @@ export async function initGame() {
   global.__PIXI_STAGE__ = layout
   global.__PIXI_RENDERER__ = renderer
 
-  //add stage & TWEEN to main ticker
+  //add stage & tween to ticker
   const ticker = new Ticker()
   ticker.start()
 
@@ -42,6 +42,8 @@ export async function initGame() {
   }
 
   ticker.add(cb)
+
+  components.ticker = ticker
 
   Howler.autoUnlock = true
 

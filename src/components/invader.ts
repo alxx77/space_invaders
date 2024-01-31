@@ -68,29 +68,18 @@ export class Invader extends SmartContainer {
   }
 
   shoot() {
+    //if(!components.tweenTicker.started) return
     let gp = this.getAbsolutePosition(this)
     const projectile = new InvaderProjectile(
       {
         x: gp.x + invaderWidth / 2,
         y: gp.y * 1.05,
       },
-      invaderProjectileSpeed + Math.random()
+      invaderProjectileSpeed,
+      InvaderProjectile.projectileCount % 4 === 0 ? 1 : 0
     )
-
-    let speed = projectile.speed
-
-    if (this.variety === 4) {
-      speed = projectile.speed * 1.5
-    }
-
-    if (projectile.red) {
-      speed = projectile.speed * 2
-    }
-
-    projectile.speed = speed
-
-    components.foreground.container.addChild(projectile)
     state.addInvaderProjectile(projectile)
+    components.foreground.container.addChild(projectile)
     projectile.shootSound.play()
     projectile.moveTo(projectile.x, stageHeight + 50, projectile.speed, () => {
       const i = state.invaderProjectiles.findIndex((el) => el === projectile)
@@ -98,6 +87,7 @@ export class Invader extends SmartContainer {
       if (i < 0) return
       state.removeInvaderProjectile(i)
       projectile.destroy()
+      InvaderProjectile.projectileCompleted++
     })
   }
 

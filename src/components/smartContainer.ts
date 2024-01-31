@@ -41,9 +41,9 @@ export class SmartContainer extends Container {
         .to(self.finalPosition, totalTime)
         //.easing(TWEEN.Easing.Quadratic.InOut)
         .dynamic(true) //allow dynamic tween
-        .onUpdate(function(){
+        .onUpdate(function(a,elapsed){
           if(self.cbOnTweenUpdate){
-            self.cbOnTweenUpdate(self)
+            self.cbOnTweenUpdate(self,elapsed)
           }
         })
         .onComplete(() => {

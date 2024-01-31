@@ -8,6 +8,7 @@ import { SplashScreen } from "./components/splashScreen"
 import { IPointData, FederatedPointerEvent } from "pixi.js"
 import { finalLevel } from "./settings"
 import Timeout from "smart-timeout"
+import { InvaderProjectile } from "./components/invaderProjectile"
 
 //high level game logic
 export class Game {
@@ -16,6 +17,7 @@ export class Game {
   splashScreen: SplashScreen
   autofire: NodeJS.Timeout | undefined
   constructor() {
+
     //initialize components
     this.background = new Background()
     this.foreground = new Foreground()
@@ -82,6 +84,10 @@ export class Game {
           state.set_SPACEBAR_keyPressed(true)
           break
 
+        case "0":
+          state.setToggleTWEEN()
+          break
+
         default:
           break
       }
@@ -131,6 +137,17 @@ export class Game {
         }
       }
     )
+
+    // reaction(
+    //   () => state.toggleTWEEN,
+    //   (newVal) => {
+    //     if (newVal === false) {
+    //       components.tweenTicker.stop()
+    //     } else {
+    //       components.tweenTicker.start()
+    //     }
+    //   }
+    // )
 
     components.layout.on("touchstart", onTouchStart)
     components.layout.on("touchmove", onTouchMove)
@@ -260,6 +277,11 @@ export class Game {
     state.setPlayerActive(true)
 
     while (state.livesCounter > 0) {
+      InvaderProjectile.projectileCount = 0
+      InvaderProjectile.projectileCompleted = 0
+      InvaderProjectile.projectileMiss = 0
+      InvaderProjectile.projectileHit = 0
+
       if (!state.playerAlive) {
         components.player = new Player()
         await components.player.slideIn()
@@ -302,7 +324,7 @@ export class Game {
         //so that invaders can be cleared without triggering
         //level completed change
         state.setInvadersActive(false)
-        components.invaders.clearProjectiles()
+        await components.invaders.clearAllInvadersProjectiles()
         await components.invaders.resetPosition()
         if (state.invaders.length === 0) {
           //edge case - where player dies while completing level

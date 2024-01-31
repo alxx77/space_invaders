@@ -1,5 +1,5 @@
 import { action, makeAutoObservable, computed } from "mobx"
-import { Renderer } from "pixi.js"
+import { Renderer, Ticker, TickerCallback } from "pixi.js"
 import { Layout } from "./components/layout"
 import { Game } from "./game"
 import { Player } from "./components/player"
@@ -36,6 +36,7 @@ class Store {
   _playerActive: boolean
   _splashScreenVisible: boolean
   _mobileDevice: boolean
+  _toggleTWEEN: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -60,6 +61,7 @@ class Store {
     this._playerActive = false
     this._splashScreenVisible = true
     this._mobileDevice = false
+    this._toggleTWEEN = true
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
@@ -360,6 +362,16 @@ class Store {
   get mobileDevice() {
     return this._mobileDevice
   }
+
+  @action
+  setToggleTWEEN() {
+    this._toggleTWEEN = !this._toggleTWEEN
+  }
+
+  @computed
+  get toggleTWEEN() {
+    return this._toggleTWEEN
+  }
 }
 
 export const state = new Store()
@@ -367,6 +379,7 @@ export const state = new Store()
 type Components = {
   renderer: Renderer
   layout: Layout
+  ticker: Ticker
   game: Game
   player: Player
   background: Background

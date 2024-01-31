@@ -18,26 +18,44 @@ export class InvaderProjectile extends SmartContainer {
   speed: number
   shootSound: Howl
   explosionSound: Howl
-  red: boolean
   explosionSprite: AnimatedSprite
   damage: number
-  maxDamage:number
+  maxDamage: number
   scaleFactor: number
+  type: number
+  detonate: number
+  detonationStatus: number
   static projectileCount: number
-  constructor(position: { x: number; y: number }, speed: number) {
+  static projectileCompleted: number
+  static projectileMiss: number
+  static projectileHit: number
+  serialNo: number
+  constructor(position: { x: number; y: number }, speed: number, type: number) {
     super()
-    this.maxDamage = 2
-    this.red = false
-    let texture = utils.TextureCache["invader_projectile"]
 
-    if (InvaderProjectile.projectileCount % 3 === 0) {
-      texture = utils.TextureCache["invader_projectile_red"]
-      this.red = true
-      this.maxDamage = 3
+    this.maxDamage = 1
+    this.type = type
+    let texture = utils.TextureCache["invader_projectile_0"]
+    this.speed = 1
+    this.detonate = Math.max(Math.random(), 0.2)
+    this.detonationStatus = 0
+    this.serialNo = InvaderProjectile.projectileCount++
+
+    switch (type) {
+      case 0:
+        this.maxDamage = 1
+        this.speed = speed + Math.random()
+        break
+      case 1:
+        this.maxDamage = 3
+        this.speed = (speed + Math.random()) * 2
+        break
+      default:
+        break
     }
 
-    InvaderProjectile.projectileCount++
-    
+    texture = utils.TextureCache[`invader_projectile_${this.type}`]
+
     this.damage = 0
 
     this.scaleFactor = 2
@@ -45,7 +63,6 @@ export class InvaderProjectile extends SmartContainer {
     this.sprite = new Sprite(texture)
     this.scale.set(this.scaleFactor)
     this.addChild(this.sprite)
-    this.speed = speed
     this.x = position.x
     this.y = position.y
     this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile
@@ -55,7 +72,9 @@ export class InvaderProjectile extends SmartContainer {
     this.explosionSprite = new AnimatedSprite(textures)
     this.explosionSprite.visible = false
     this.explosionSprite.loop = false
-    this.explosionSprite.scale.set(this.scaleFactor / 3)
+    this.explosionSprite.scale.set(
+      this.scaleFactor * (this.type === 1 ? 0.8 : 0.3)
+    )
     this.explosionSprite.x = this.width / 2 / this.scaleFactor
     this.explosionSprite.y = this.height / 2 / this.scaleFactor
     this.explosionSprite.anchor.set(0.5)
@@ -76,27 +95,63 @@ export class InvaderProjectile extends SmartContainer {
     })
   }
 
-  static removeProjectile(projectile: InvaderProjectile) {
+  static async removeProjectile(
+    projectile: InvaderProjectile,
+    playSound = true,
+    randomDelay = false
+  ) {
     const i = state.invaderProjectiles.findIndex((el) => el === projectile)
+    if (i === -1) return
     state.removeInvaderProjectile(i)
+
+    if (randomDelay) {
+      await new Promise<void>((resolve) => {
+        Timeout.instantiate(() => resolve(), Math.random() * 450)
+      })
+    }
+
+    //detonation started
+    projectile.detonationStatus = 1
     projectile.sprite.visible = false
     projectile.explosionSprite.visible = true
     projectile.explosionSprite.tint = getRandomWebColor()
     projectile.explosionSprite.play()
-    projectile.explosionSound.play()
-    projectile.explosionSprite.onComplete = () => {
-      projectile.stopTween()
-      projectile.destroy()
-    }
+    if (playSound) projectile.explosionSound.play()
+    return new Promise<void>((resolve) => {
+      projectile.explosionSprite.onComplete = () => {
+        projectile.stopTween()
+        projectile.visible = false
+        projectile.destroy()
+
+        //detonation ended
+        projectile.detonationStatus = 2
+        resolve()
+      }
+    })
   }
 
-  blink() {
+  async blink() {
     this.sprite.tint = "#771111"
-    Timeout.instantiate(() => {
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(() => {
         this.sprite.tint = "#FFFFFF"
-      },
-      50
-    )
+        resolve()
+      }, 50)
+    })
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(() => {
+        this.sprite.tint = "#771111"
+        resolve()
+      }, 50)
+    })
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(() => {
+        this.sprite.tint = "#FFFFFF"
+        resolve()
+      }, 50)
+    })
   }
 
   takeHit() {
@@ -108,24 +163,49 @@ export class InvaderProjectile extends SmartContainer {
     return this.damage >= this.maxDamage
   }
 
-  collisionTestPlayerWithInvaderProjectile(c: SmartContainer) {
+  onTweenUpdate(elapsed: number) {
+    if (
+      this.type === 1 &&
+      this.detonationStatus === 0 &&
+      elapsed > this.detonate
+    ) {
+      InvaderProjectile.removeProjectile(this)
+      InvaderProjectile.projectileMiss++
+    }
+  }
+
+  collisionTestPlayerWithInvaderProjectile(c: SmartContainer, elapsed: number) {
+    this.onTweenUpdate(elapsed)
     if (!state.playerAlive) return
-    const bounds1 = components.player.getBounds()
-    for (const invaderProjectile of state.invaderProjectiles) {
-      const bounds2 = invaderProjectile.sprite.getBounds()
-      // Check for collision using bounds
-      if (
-        bounds1.x < bounds2.x + bounds2.width &&
-        bounds1.x + bounds1.width > bounds2.x &&
-        bounds1.y < bounds2.y + bounds2.height &&
-        bounds1.y + bounds1.height > bounds2.y
-      ) {
-        // Collision detected
-        state.setPlayerAlive(false)
-        state.setInvadersActive(false)
-        InvaderProjectile.removeProjectile(this)
-        return
-      }
+    const bPl = components.player.getBounds()
+
+    const bSpr = this.sprite.getBounds()
+    const bExp = this.explosionSprite.getBounds()
+
+    let collisionA = false
+    let collisionB = false
+
+    //collision with projectile itself
+    collisionA =
+      bPl.x < bSpr.x + bSpr.width &&
+      bPl.x + bPl.width > bSpr.x &&
+      bPl.y < bSpr.y + bSpr.height &&
+      bPl.y + bPl.height > bSpr.y
+
+    //colision with explosion from the projectile
+    collisionB =
+      bPl.x < bExp.x + bExp.width &&
+      bPl.x + bPl.width > bExp.x &&
+      bPl.y < bExp.y + bExp.height &&
+      bPl.y + bPl.height > bExp.y
+
+    if (collisionA || (collisionB && this.detonationStatus === 1)) {
+      // Collision detected
+      state.setPlayerAlive(false)
+      state.setInvadersActive(false)
+      InvaderProjectile.removeProjectile(this)
+      InvaderProjectile.projectileHit++
+      return
     }
   }
 

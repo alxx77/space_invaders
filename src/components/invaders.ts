@@ -37,9 +37,6 @@ export class Invaders extends SmartContainer {
     super()
     this.name = "Invaders"
 
-    //set static prop on invader projectile
-    InvaderProjectile.projectileCount = 1
-
     this.bonusCreatedForCurrentLevel = []
 
     //container
@@ -113,10 +110,14 @@ export class Invaders extends SmartContainer {
       }
       const percentInvadersRemained =
         state.invaders.length / self.initialInvadersCount
+
+      let previousInvaderIndex = 0
       for (const iterator of [1, 2, 3, 4]) {
-        let invader =
-          state.invaders[Math.floor(Math.random() * state.invaders.length)]
-        const p = Math.random() < percentInvadersRemained * 0.3 + 0.2
+        let invaderIndex = Math.floor(Math.random() * state.invaders.length)
+        if (previousInvaderIndex === invaderIndex) break
+        previousInvaderIndex = invaderIndex
+        const invader = state.invaders[invaderIndex]
+        const p = Math.random() < percentInvadersRemained * 0.7 + 0.2
         if (p === true) {
           const timeout = Timeout.instantiate(
             "shoot",
@@ -178,19 +179,27 @@ export class Invaders extends SmartContainer {
     )
   }
 
-  clearProjectiles() {
-    for (let index = state.invaderProjectiles.length - 1; index >= 0; index--) {
-      const projectile = state.removeInvaderProjectile(index)[0]
-      projectile.stopTween()
-      projectile.destroy()
-    }
-  }
-
   clearAllInvaders() {
     for (let index = state.invaders.length - 1; index >= 0; index--) {
       const invader = state.removeInvader(index)[0]
       invader.destroy()
     }
+  }
+
+  async clearAllInvadersProjectiles() {
+    const promises: Promise<void>[] = []
+    for (let index = state.invaderProjectiles.length-1; index >= 0; index--) {
+      promises.push(
+        InvaderProjectile.removeProjectile(
+          state.invaderProjectiles[index],
+          false,
+          true
+        )
+      )
+    }
+    const count = promises.length
+    await Promise.all(promises)
+    return count
   }
 
   removeInvader(invader: Invader) {
@@ -244,8 +253,8 @@ export class Invaders extends SmartContainer {
       case 1:
         levelData.push("1,1,1,0,0,0,0,0,1,1,1")
         levelData.push("2,2,1,1,1,1,1,1,1,2,2")
-        levelData.push("3,2,2,2,2,2,2,2,2,2,3")
-        levelData.push("3,4,3,3,3,3,3,3,3,4,3")
+        levelData.push("2,2,2,2,2,2,2,2,2,2,2")
+        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
         levelData.push("0,0,0,3,3,3,3,3,0,0,0")
 
         yield* self.prepareLevelData(levelData)
@@ -266,15 +275,15 @@ export class Invaders extends SmartContainer {
         break
 
       case 3:
-        levelData.push("0,0,0,0,2,0,0,0,0")
-        levelData.push("0,0,0,2,3,2,0,0,0")
-        levelData.push("0,0,2,3,0,3,2,0,0")
-        levelData.push("0,2,3,0,1,0,3,2,0")
-        levelData.push("2,3,0,1,0,1,0,3,2")
-        levelData.push("3,0,1,0,4,0,1,0,3")
-        levelData.push("0,3,0,1,0,1,0,3,0")
-        levelData.push("0,0,3,0,1,0,3,0,0")
-        levelData.push("0,0,0,3,0,3,0,0,0")
+        levelData.push("4,4,4,4,0,4,4,4,4")
+        levelData.push("0,3,3,3,4,3,3,3,0")
+        levelData.push("0,0,0,3,4,3,0,0,0")
+        levelData.push("0,0,3,4,1,4,3,0,0")
+        levelData.push("0,3,4,1,4,1,4,3,0")
+        levelData.push("3,4,1,4,1,4,1,4,3")
+        levelData.push("0,3,4,1,4,1,4,3,0")
+        levelData.push("0,0,3,4,1,4,3,0,0")
+        levelData.push("0,0,0,3,4,3,0,0,0")
         levelData.push("0,0,0,0,3,0,0,0,0")
 
         yield* self.prepareLevelData(levelData)
