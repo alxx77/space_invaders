@@ -14539,21 +14539,14 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
         });
     }
     shoot() {
+        //if(!components.tweenTicker.started) return
         let gp = this.getAbsolutePosition(this);
         const projectile = new _invaderProjectile__WEBPACK_IMPORTED_MODULE_3__.InvaderProjectile({
             x: gp.x + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth / 2,
             y: gp.y * 1.05,
-        }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed + Math.random());
-        let speed = projectile.speed;
-        if (this.variety === 4) {
-            speed = projectile.speed * 1.5;
-        }
-        if (projectile.red) {
-            speed = projectile.speed * 2;
-        }
-        projectile.speed = speed;
-        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
+        }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed, _invaderProjectile__WEBPACK_IMPORTED_MODULE_3__.InvaderProjectile.projectileCount % 4 === 0 ? 1 : 0);
         _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvaderProjectile(projectile);
+        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
         projectile.shootSound.play();
         projectile.moveTo(projectile.x, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight + 50, projectile.speed, () => {
             const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.findIndex((el) => el === projectile);
@@ -14562,6 +14555,7 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
                 return;
             _state__WEBPACK_IMPORTED_MODULE_1__.state.removeInvaderProjectile(i);
             projectile.destroy();
+            _invaderProjectile__WEBPACK_IMPORTED_MODULE_3__.InvaderProjectile.projectileCompleted++;
         });
     }
     createBonusWeapon(type) {
@@ -14638,23 +14632,33 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContainer {
-    constructor(position, speed) {
+    constructor(position, speed, type) {
         super();
-        this.maxDamage = 2;
-        this.red = false;
-        let texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader_projectile"];
-        if (InvaderProjectile.projectileCount % 3 === 0) {
-            texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader_projectile_red"];
-            this.red = true;
-            this.maxDamage = 3;
+        this.maxDamage = 1;
+        this.type = type;
+        let texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["invader_projectile_0"];
+        this.speed = 1;
+        this.detonate = Math.max(Math.random(), 0.2);
+        this.detonationStatus = 0;
+        this.serialNo = InvaderProjectile.projectileCount++;
+        switch (type) {
+            case 0:
+                this.maxDamage = 1;
+                this.speed = speed + Math.random();
+                break;
+            case 1:
+                this.maxDamage = 3;
+                this.speed = (speed + Math.random()) * 2;
+                break;
+            default:
+                break;
         }
-        InvaderProjectile.projectileCount++;
+        texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`invader_projectile_${this.type}`];
         this.damage = 0;
         this.scaleFactor = 2;
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(texture);
         this.scale.set(this.scaleFactor);
         this.addChild(this.sprite);
-        this.speed = speed;
         this.x = position.x;
         this.y = position.y;
         this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile;
@@ -14663,7 +14667,7 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.explosionSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.AnimatedSprite(textures);
         this.explosionSprite.visible = false;
         this.explosionSprite.loop = false;
-        this.explosionSprite.scale.set(this.scaleFactor / 3);
+        this.explosionSprite.scale.set(this.scaleFactor * (this.type === 1 ? 0.8 : 0.3));
         this.explosionSprite.x = this.width / 2 / this.scaleFactor;
         this.explosionSprite.y = this.height / 2 / this.scaleFactor;
         this.explosionSprite.anchor.set(0.5);
@@ -14681,24 +14685,55 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
             loop: false,
         });
     }
-    static removeProjectile(projectile) {
+    static async removeProjectile(projectile, playSound = true, randomDelay = false) {
         const i = _state__WEBPACK_IMPORTED_MODULE_2__.state.invaderProjectiles.findIndex((el) => el === projectile);
+        if (i === -1)
+            return;
         _state__WEBPACK_IMPORTED_MODULE_2__.state.removeInvaderProjectile(i);
+        if (randomDelay) {
+            await new Promise((resolve) => {
+                smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => resolve(), Math.random() * 450);
+            });
+        }
+        //detonation started
+        projectile.detonationStatus = 1;
         projectile.sprite.visible = false;
         projectile.explosionSprite.visible = true;
         projectile.explosionSprite.tint = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomWebColor)();
         projectile.explosionSprite.play();
-        projectile.explosionSound.play();
-        projectile.explosionSprite.onComplete = () => {
-            projectile.stopTween();
-            projectile.destroy();
-        };
+        if (playSound)
+            projectile.explosionSound.play();
+        return new Promise((resolve) => {
+            projectile.explosionSprite.onComplete = () => {
+                projectile.stopTween();
+                projectile.visible = false;
+                projectile.destroy();
+                //detonation ended
+                projectile.detonationStatus = 2;
+                resolve();
+            };
+        });
     }
-    blink() {
+    async blink() {
         this.sprite.tint = "#771111";
-        smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
-            this.sprite.tint = "#FFFFFF";
-        }, 50);
+        await new Promise((resolve) => {
+            smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+                this.sprite.tint = "#FFFFFF";
+                resolve();
+            }, 50);
+        });
+        await new Promise((resolve) => {
+            smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+                this.sprite.tint = "#771111";
+                resolve();
+            }, 50);
+        });
+        await new Promise((resolve) => {
+            smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+                this.sprite.tint = "#FFFFFF";
+                resolve();
+            }, 50);
+        });
     }
     takeHit() {
         this.damage++;
@@ -14707,23 +14742,42 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
     isTotallyDamaged() {
         return this.damage >= this.maxDamage;
     }
-    collisionTestPlayerWithInvaderProjectile(c) {
+    onTweenUpdate(elapsed) {
+        if (this.type === 1 &&
+            this.detonationStatus === 0 &&
+            elapsed > this.detonate) {
+            InvaderProjectile.removeProjectile(this);
+            InvaderProjectile.projectileMiss++;
+        }
+    }
+    collisionTestPlayerWithInvaderProjectile(c, elapsed) {
+        this.onTweenUpdate(elapsed);
         if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
             return;
-        const bounds1 = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.getBounds();
-        for (const invaderProjectile of _state__WEBPACK_IMPORTED_MODULE_2__.state.invaderProjectiles) {
-            const bounds2 = invaderProjectile.sprite.getBounds();
-            // Check for collision using bounds
-            if (bounds1.x < bounds2.x + bounds2.width &&
-                bounds1.x + bounds1.width > bounds2.x &&
-                bounds1.y < bounds2.y + bounds2.height &&
-                bounds1.y + bounds1.height > bounds2.y) {
-                // Collision detected
-                _state__WEBPACK_IMPORTED_MODULE_2__.state.setPlayerAlive(false);
-                _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
-                InvaderProjectile.removeProjectile(this);
-                return;
-            }
+        const bPl = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.getBounds();
+        const bSpr = this.sprite.getBounds();
+        const bExp = this.explosionSprite.getBounds();
+        let collisionA = false;
+        let collisionB = false;
+        //collision with projectile itself
+        collisionA =
+            bPl.x < bSpr.x + bSpr.width &&
+                bPl.x + bPl.width > bSpr.x &&
+                bPl.y < bSpr.y + bSpr.height &&
+                bPl.y + bPl.height > bSpr.y;
+        //colision with explosion from the projectile
+        collisionB =
+            bPl.x < bExp.x + bExp.width &&
+                bPl.x + bPl.width > bExp.x &&
+                bPl.y < bExp.y + bExp.height &&
+                bPl.y + bPl.height > bExp.y;
+        if (collisionA || (collisionB && this.detonationStatus === 1)) {
+            // Collision detected
+            _state__WEBPACK_IMPORTED_MODULE_2__.state.setPlayerAlive(false);
+            _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
+            InvaderProjectile.removeProjectile(this);
+            InvaderProjectile.projectileHit++;
+            return;
         }
     }
     updateLayout(width, height) { }
@@ -14786,8 +14840,8 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 case 1:
                     levelData.push("1,1,1,0,0,0,0,0,1,1,1");
                     levelData.push("2,2,1,1,1,1,1,1,1,2,2");
-                    levelData.push("3,2,2,2,2,2,2,2,2,2,3");
-                    levelData.push("3,4,3,3,3,3,3,3,3,4,3");
+                    levelData.push("2,2,2,2,2,2,2,2,2,2,2");
+                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
                     levelData.push("0,0,0,3,3,3,3,3,0,0,0");
                     yield* self.prepareLevelData(levelData);
                     break;
@@ -14802,15 +14856,15 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                     yield* self.prepareLevelData(levelData);
                     break;
                 case 3:
-                    levelData.push("0,0,0,0,2,0,0,0,0");
-                    levelData.push("0,0,0,2,3,2,0,0,0");
-                    levelData.push("0,0,2,3,0,3,2,0,0");
-                    levelData.push("0,2,3,0,1,0,3,2,0");
-                    levelData.push("2,3,0,1,0,1,0,3,2");
-                    levelData.push("3,0,1,0,4,0,1,0,3");
-                    levelData.push("0,3,0,1,0,1,0,3,0");
-                    levelData.push("0,0,3,0,1,0,3,0,0");
-                    levelData.push("0,0,0,3,0,3,0,0,0");
+                    levelData.push("4,4,4,4,0,4,4,4,4");
+                    levelData.push("0,3,3,3,4,3,3,3,0");
+                    levelData.push("0,0,0,3,4,3,0,0,0");
+                    levelData.push("0,0,3,4,1,4,3,0,0");
+                    levelData.push("0,3,4,1,4,1,4,3,0");
+                    levelData.push("3,4,1,4,1,4,1,4,3");
+                    levelData.push("0,3,4,1,4,1,4,3,0");
+                    levelData.push("0,0,3,4,1,4,3,0,0");
+                    levelData.push("0,0,0,3,4,3,0,0,0");
                     levelData.push("0,0,0,0,3,0,0,0,0");
                     yield* self.prepareLevelData(levelData);
                     break;
@@ -14880,8 +14934,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         };
         this.name = "Invaders";
-        //set static prop on invader projectile
-        _invaderProjectile__WEBPACK_IMPORTED_MODULE_7__.InvaderProjectile.projectileCount = 1;
         this.bonusCreatedForCurrentLevel = [];
         //container
         this.container = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container();
@@ -14940,9 +14992,14 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 return;
             }
             const percentInvadersRemained = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / self.initialInvadersCount;
+            let previousInvaderIndex = 0;
             for (const iterator of [1, 2, 3, 4]) {
-                let invader = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders[Math.floor(Math.random() * _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length)];
-                const p = Math.random() < percentInvadersRemained * 0.3 + 0.2;
+                let invaderIndex = Math.floor(Math.random() * _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length);
+                if (previousInvaderIndex === invaderIndex)
+                    break;
+                previousInvaderIndex = invaderIndex;
+                const invader = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders[invaderIndex];
+                const p = Math.random() < percentInvadersRemained * 0.7 + 0.2;
                 if (p === true) {
                     const timeout = smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate("shoot", () => invader.shoot(), Math.random() * 75);
                 }
@@ -14971,18 +15028,20 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
     resetPosition() {
         return this.moveTo((_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - this.initialContainerWidth) / 2, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15, 5);
     }
-    clearProjectiles() {
-        for (let index = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.length - 1; index >= 0; index--) {
-            const projectile = _state__WEBPACK_IMPORTED_MODULE_1__.state.removeInvaderProjectile(index)[0];
-            projectile.stopTween();
-            projectile.destroy();
-        }
-    }
     clearAllInvaders() {
         for (let index = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length - 1; index >= 0; index--) {
             const invader = _state__WEBPACK_IMPORTED_MODULE_1__.state.removeInvader(index)[0];
             invader.destroy();
         }
+    }
+    async clearAllInvadersProjectiles() {
+        const promises = [];
+        for (let index = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.length - 1; index >= 0; index--) {
+            promises.push(_invaderProjectile__WEBPACK_IMPORTED_MODULE_7__.InvaderProjectile.removeProjectile(_state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles[index], false, true));
+        }
+        const count = promises.length;
+        await Promise.all(promises);
+        return count;
     }
     removeInvader(invader) {
         //create bonus weapon
@@ -15295,7 +15354,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
                 projectile1 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
                     x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 12 * this.sprite.scale.x,
                     y: this.y * 0.97,
-                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.5, 0);
                 _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile1);
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile1);
                 projectile1.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 - 12 * this.sprite.scale.x, -50, projectile1.speed, () => {
@@ -15306,7 +15365,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
                 projectile2 = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
                     x: this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 12 * this.sprite.scale.x,
                     y: this.y * 0.97,
-                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
+                }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.5, 0);
                 _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile2);
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile2);
                 projectile2.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2 + 12 * this.sprite.scale.x, -50, projectile2.speed, () => {
@@ -15333,7 +15392,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
                 }, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0);
                 _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile2);
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile2);
-                projectile2.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2, -50, projectile2.speed, () => {
+                projectile2.moveTo(this.x + _state__WEBPACK_IMPORTED_MODULE_1__.components.player.width / 2, -50, projectile2.speed * 2, () => {
                     const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.projectiles.findIndex((el) => el === projectile2);
                     _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
                     projectile2.destroy();
@@ -15537,7 +15596,7 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
         this.shootSound.volume(0.2 + Math.random() * 0.4);
         this.shootSound.play();
     }
-    collisionTestWithInvadersAndInvadersProjectiles(c) {
+    collisionTestWithInvadersAndInvadersProjectiles(c, elapsed) {
         const bounds1 = this.sprite.getBounds();
         //colision with invaders
         for (const invader of _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders) {
@@ -15635,9 +15694,9 @@ class SmartContainer extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
                 .to(self.finalPosition, totalTime)
                 //.easing(TWEEN.Easing.Quadratic.InOut)
                 .dynamic(true) //allow dynamic tween
-                .onUpdate(function () {
+                .onUpdate(function (a, elapsed) {
                 if (self.cbOnTweenUpdate) {
-                    self.cbOnTweenUpdate(self);
+                    self.cbOnTweenUpdate(self, elapsed);
                 }
             })
                 .onComplete(() => {
@@ -15752,7 +15811,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Game: () => (/* binding */ Game)
 /* harmony export */ });
-/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
+/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/state.ts");
 /* harmony import */ var _components_player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/player */ "./src/components/player.ts");
 /* harmony import */ var _components_background__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/background */ "./src/components/background.ts");
@@ -15762,6 +15821,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./settings */ "./src/settings.ts");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./components/invaderProjectile */ "./src/components/invaderProjectile.ts");
+
 
 
 
@@ -15832,6 +15893,9 @@ class Game {
                 case " ":
                     _state__WEBPACK_IMPORTED_MODULE_0__.state.set_SPACEBAR_keyPressed(true);
                     break;
+                case "0":
+                    _state__WEBPACK_IMPORTED_MODULE_0__.state.setToggleTWEEN();
+                    break;
                 default:
                     break;
             }
@@ -15866,11 +15930,21 @@ class Game {
             }
         });
         //score count
-        (0,mobx__WEBPACK_IMPORTED_MODULE_8__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal, oldVal) => {
+        (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal, oldVal) => {
             if (newVal > oldVal) {
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 100);
             }
         });
+        // reaction(
+        //   () => state.toggleTWEEN,
+        //   (newVal) => {
+        //     if (newVal === false) {
+        //       components.tweenTicker.stop()
+        //     } else {
+        //       components.tweenTicker.start()
+        //     }
+        //   }
+        // )
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchstart", onTouchStart);
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchmove", onTouchMove);
         _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.on("touchend", onTouchEnd);
@@ -15932,7 +16006,7 @@ class Game {
     //player is destroyed and destruction is completed
     async levelPlayingStopped() {
         return new Promise((resolve) => {
-            let disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_8__.reaction)(() => ({
+            let disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => ({
                 currentLevelCompleted: _state__WEBPACK_IMPORTED_MODULE_0__.state.currentLevelCompleted,
                 playerAlive: _state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive,
                 playerDestructionCompletedTrigger: _state__WEBPACK_IMPORTED_MODULE_0__.state.playerDestructionCompletedTrigger,
@@ -15965,6 +16039,10 @@ class Game {
         _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.showLevelStartText();
         _state__WEBPACK_IMPORTED_MODULE_0__.state.setPlayerActive(true);
         while (_state__WEBPACK_IMPORTED_MODULE_0__.state.livesCounter > 0) {
+            _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileCount = 0;
+            _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileCompleted = 0;
+            _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileMiss = 0;
+            _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileHit = 0;
             if (!_state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive) {
                 _state__WEBPACK_IMPORTED_MODULE_0__.components.player = new _components_player__WEBPACK_IMPORTED_MODULE_1__.Player();
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.player.slideIn();
@@ -16000,7 +16078,7 @@ class Game {
                 //so that invaders can be cleared without triggering
                 //level completed change
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setInvadersActive(false);
-                _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.clearProjectiles();
+                await _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.clearAllInvadersProjectiles();
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.invaders.resetPosition();
                 if (_state__WEBPACK_IMPORTED_MODULE_0__.state.invaders.length === 0) {
                     //edge case - where player dies while completing level
@@ -16061,8 +16139,8 @@ async function loadAssets() {
                     { alias: "invader2", src: "assets/images/enemy2.png" },
                     { alias: "invader3", src: "assets/images/enemy3.png" },
                     { alias: "invader4", src: "assets/images/enemy4.png" },
-                    { alias: "invader_projectile", src: "assets/images/invader_projectile.png" },
-                    { alias: "invader_projectile_red", src: "assets/images/invader_projectile_red.png" },
+                    { alias: "invader_projectile_0", src: "assets/images/invader_projectile_0.png" },
+                    { alias: "invader_projectile_1", src: "assets/images/invader_projectile_1.png" },
                     { alias: "invader_explosion", src: "assets/images/explosion_invader.json" },
                 ],
             },
@@ -16156,7 +16234,7 @@ async function initGame() {
     const global = globalThis;
     global.__PIXI_STAGE__ = layout;
     global.__PIXI_RENDERER__ = renderer;
-    //add stage & TWEEN to main ticker
+    //add stage & tween to ticker
     const ticker = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Ticker();
     ticker.start();
     const cb = function () {
@@ -16164,6 +16242,7 @@ async function initGame() {
         _tweenjs_tween_js__WEBPACK_IMPORTED_MODULE_0__.update();
     };
     ticker.add(cb);
+    _state__WEBPACK_IMPORTED_MODULE_4__.components.ticker = ticker;
     Howler.autoUnlock = true;
     //init assets
     await (0,_initAssets__WEBPACK_IMPORTED_MODULE_2__.initAssets)();
@@ -16207,7 +16286,7 @@ const sound = {
 };
 const playerSpeed = 5;
 const projectileSpeed = 24;
-const invaderProjectileSpeed = 2.5;
+const invaderProjectileSpeed = 3.5;
 const playerSlideInSpeed = 8;
 const invaderHeight = 32 * 1.5;
 const invaderWidth = 44 * 1.5;
@@ -16326,6 +16405,7 @@ class Store {
         this._playerActive = false;
         this._splashScreenVisible = true;
         this._mobileDevice = false;
+        this._toggleTWEEN = true;
         (0,mobx__WEBPACK_IMPORTED_MODULE_0__.makeAutoObservable)(this, {}, { autoBind: true });
     }
     //A key
@@ -16519,6 +16599,12 @@ class Store {
     get mobileDevice() {
         return this._mobileDevice;
     }
+    setToggleTWEEN() {
+        this._toggleTWEEN = !this._toggleTWEEN;
+    }
+    get toggleTWEEN() {
+        return this._toggleTWEEN;
+    }
 }
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.action
@@ -16664,6 +16750,12 @@ __decorate([
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.computed
 ], Store.prototype, "mobileDevice", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.action
+], Store.prototype, "setToggleTWEEN", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.computed
+], Store.prototype, "toggleTWEEN", null);
 const state = new Store();
 const components = {};
 
@@ -49557,4 +49649,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle2ef33d7ba76fc812ce15.js.map
+//# sourceMappingURL=bundle9da3f60743812f14a66f.js.map
