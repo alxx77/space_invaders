@@ -1,7 +1,7 @@
 import { TextStyle } from "pixi.js"
 
 export const sound = {
-  music: { play: false, highVolume: 0.7, lowVolume : 0.15 },
+  music: { play: true, highVolume: 0.7, lowVolume : 0.15 },
   soundFX: { play: true, volume: 0.1 },
 }
 
