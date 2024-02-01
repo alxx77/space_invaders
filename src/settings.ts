@@ -12,6 +12,8 @@ export const invaderProjectileSpeed = 3.5
 
 export const playerSlideInSpeed = 8
 
+export const invadersSlideInSpeed = 6
+
 export const invaderHeight = 32 * 1.5
 export const invaderWidth = 44 * 1.5 
 

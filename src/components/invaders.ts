@@ -7,6 +7,7 @@ import {
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
+  invadersSlideInSpeed,
   stageHeight,
   stageWidth,
 } from "../settings"
@@ -77,6 +78,9 @@ export class Invaders extends SmartContainer {
         if (newVal === false) {
           this.stopMove()
           this.stopShooting()
+        } else {
+          this.startMove()
+          this.startShooting()
         }
       }
     )
@@ -99,6 +103,23 @@ export class Invaders extends SmartContainer {
     if (components.invaders.interval) {
       clearInterval(components.invaders.interval)
     }
+  }
+
+  async slideIn() {
+    this.x = stageWidth/2 - this.width/2
+    this.y = - this.height -50
+    this.visible = true
+    return this.moveTo(
+      stageWidth / 2 - this.width / 2,
+      stageHeight * 0.15,
+      invadersSlideInSpeed
+    )
+  }
+
+  moveOutOfSight() {
+    state.setInvadersActive(false)
+    this.x = stageWidth/2 - this.width/2
+    this.y = - this.height -50
   }
 
   startShooting() {

@@ -221,6 +221,8 @@ export class Game {
       clearInterval(self.autofire)
       state.set_SPACEBAR_keyPressed(false)
     }
+
+    this.updateView()
   }
 
   //signal when level is finished in any way
@@ -256,15 +258,18 @@ export class Game {
     state.setGameLevel(1)
     state.setScoreCounter(0)
 
-    components.player = new Player()
-
+    if(!state.playerAlive){
+      components.player = new Player()
+    }
+  
     if (!components.invaders) {
       components.invaders = new Invaders()
     }
 
+    //prepare invaders
+    components.invaders.moveOutOfSight()
     components.invaders.createInvadersForCurrentLevel()
-
-    this.updateView()
+    components.invaders.slideIn()
 
     state.setLivesCounter(3)
     await components.player.slideIn()
@@ -274,9 +279,11 @@ export class Game {
     state.setPlayerActive(false)
     await components.foreground.showPressSpaceToPlayText()
     components.foreground.showLevelStartText()
-    state.setPlayerActive(true)
+
 
     while (state.livesCounter > 0) {
+
+      //some stats for debugging
       InvaderProjectile.projectileCount = 0
       InvaderProjectile.projectileCompleted = 0
       InvaderProjectile.projectileMiss = 0
@@ -287,18 +294,16 @@ export class Game {
         await components.player.slideIn()
       }
 
+      //activate player & invaders
+      state.setPlayerActive(true)
       state.setInvadersActive(true)
-
-      //start playing
-      components.invaders.startMove()
-
-      components.invaders.startShooting()
 
       //wait until player dies or all enemies are destroyed
       await this.levelPlayingStopped()
 
       //check if level is completed
       if (state.currentLevelCompleted) {
+        //if YES
         //there is possibility that player is destroyed although level is completed
         if (!state.playerAlive) {
           components.player = new Player()
@@ -314,11 +319,14 @@ export class Game {
         }
         state.setCurrentLevelCompleted(false)
         //setup next level invaders
+        components.invaders.moveOutOfSight()
         components.invaders.createInvadersForCurrentLevel()
+        await components.invaders.slideIn()
 
         state.setPlayerActive(false)
         components.foreground.showLevelStartText()
         state.setPlayerActive(true)
+        state.setInvadersActive(true)
       } else {
         //here it is necessary to manually deactivate invaders
         //so that invaders can be cleared without triggering
@@ -333,6 +341,7 @@ export class Game {
           components.invaders.createInvadersForCurrentLevel()
         }
       }
+      //while
     }
 
     //here it is either game over or game completed

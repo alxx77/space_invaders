@@ -317,10 +317,7 @@ export class Player extends SmartContainer {
     return this.moveTo(
       stageWidth / 2 - this.width / 2,
       stageHeight * 0.85,
-      playerSlideInSpeed,
-      () => {
-        state.setPlayerActive(true)
-      }
+      playerSlideInSpeed
     )
   }
 
