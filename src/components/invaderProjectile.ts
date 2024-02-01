@@ -23,13 +23,15 @@ export class InvaderProjectile extends SmartContainer {
   maxDamage: number
   scaleFactor: number
   type: number
-  detonate: number
+  detonationTime: number
   detonationStatus: number
   static projectileCount: number
   static projectileCompleted: number
   static projectileMiss: number
   static projectileHit: number
   serialNo: number
+  //how much damage it causes to player when hits it
+  lethalFactor:number
   constructor(position: { x: number; y: number }, speed: number, type: number) {
     super()
 
@@ -37,18 +39,21 @@ export class InvaderProjectile extends SmartContainer {
     this.type = type
     let texture = utils.TextureCache["invader_projectile_0"]
     this.speed = 1
-    this.detonate = Math.max(Math.random(), 0.2)
+    this.detonationTime = Math.max(Math.random(), 0.2)
     this.detonationStatus = 0
     this.serialNo = InvaderProjectile.projectileCount++
+    this.lethalFactor = 0
 
     switch (type) {
       case 0:
         this.maxDamage = 1
         this.speed = speed + Math.random()
+        this.lethalFactor = 1
         break
       case 1:
         this.maxDamage = 3
         this.speed = (speed + Math.random()) * 2
+        this.lethalFactor = 3
         break
       default:
         break
@@ -167,7 +172,7 @@ export class InvaderProjectile extends SmartContainer {
     if (
       this.type === 1 &&
       this.detonationStatus === 0 &&
-      elapsed > this.detonate
+      elapsed > this.detonationTime
     ) {
       InvaderProjectile.removeProjectile(this)
       InvaderProjectile.projectileMiss++
@@ -201,11 +206,18 @@ export class InvaderProjectile extends SmartContainer {
 
     if (collisionA || (collisionB && this.detonationStatus === 1)) {
       // Collision detected
-      state.setPlayerAlive(false)
-      state.setInvadersActive(false)
-      InvaderProjectile.removeProjectile(this)
-      InvaderProjectile.projectileHit++
-      return
+
+      //check if projectile is "live"
+      //if yes do damage, otherwise not
+      if(this.detonationStatus === 0){
+        components.player.takeHitFromProjectile(this)
+        InvaderProjectile.removeProjectile(this)
+        InvaderProjectile.projectileHit++
+        if (components.player.isTotallyDamaged()) {
+          state.setPlayerAlive(false)
+          state.setInvadersActive(false)
+        }
+      }
     }
   }
 

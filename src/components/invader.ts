@@ -17,7 +17,7 @@ import {
   soundSource,
 } from "../settings"
 import { Howl } from "howler"
-import { BonusWeapon } from "./bonusWeapon"
+import { BonusItem } from "./bonusItem"
 import Timeout from "smart-timeout"
 
 //root container
@@ -93,7 +93,7 @@ export class Invader extends SmartContainer {
 
   createBonusWeapon(type: number) {
     let gp = this.getAbsolutePosition(this)
-    const bonus = new BonusWeapon(
+    const bonus = new BonusItem(
       {
         x: gp.x + invaderWidth / 2,
         y: gp.y * 1.05,

@@ -4,24 +4,34 @@ import { components, state } from "../state"
 import { Howl } from "howler"
 import { projectileSpeed, soundSource } from "../settings"
 
-export class BonusWeapon extends SmartContainer {
+export class BonusItem extends SmartContainer {
   sprite: Sprite
   speed: number
   bonusCreatedSound: Howl
   bonusCollectedSound: Howl
-  weaponType: number
+  itemType: number
   collected: boolean
   constructor(
     position: { x: number; y: number },
     speed: number,
-    weaponType: number
+    itemType: number
   ) {
     super()
-    this.weaponType = weaponType
+    this.itemType = itemType
     this.collected = false
+    //to avoid TS compiler :-D
+    this.sprite = new Sprite()
 
-    this.sprite = new Sprite( utils.TextureCache[`axes_${this.weaponType}`])
-    this.sprite.scale.set(1.5)
+    if (itemType >= 1 && itemType <= 10) {
+      this.sprite = new Sprite(utils.TextureCache[`axes_${this.itemType}`])
+      this.sprite.scale.set(1.5)
+    }
+
+    if (itemType === 10) {
+      this.sprite = new Sprite(utils.TextureCache[`bonus_shield`])
+      this.sprite.scale.set(0.8)
+    }
+
     this.addChild(this.sprite)
     this.speed = speed
     this.x = position.x
@@ -54,10 +64,15 @@ export class BonusWeapon extends SmartContainer {
       bounds1.y < bounds2.y + bounds2.height &&
       bounds1.y + bounds1.height > bounds2.y
     ) {
-      // Collision detected - player uses bonus weapon
-      if (components.player.weaponType < this.weaponType) {
+      // Collision detected
+      //do not take weapon no.1 if there is already stronger weapon
+      if (this.itemType === 1 && components.player.bonusItemsList.includes(2))
+        return
+      if (this.itemType === 1 && components.player.bonusItemsList.includes(1))
+        return
+      if (!components.player.bonusItemsList.includes(this.itemType)) {
         this.stopTween()
-        components.player.weaponType = this.weaponType
+        components.player.addBonusItem(this.itemType)
         this.bonusCollectedSound.play()
         this.collected = true
         this.destroy()

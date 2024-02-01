@@ -34,11 +34,13 @@ export class Invaders extends SmartContainer {
   static shootCounter: number
   static shotsEnded: number
   bonusCreatedForCurrentLevel: number[]
+  lastWeaponBonusTimeStamp: number
   constructor() {
     super()
     this.name = "Invaders"
 
     this.bonusCreatedForCurrentLevel = []
+    this.lastWeaponBonusTimeStamp = 0
 
     //container
     this.container = new Container()
@@ -106,8 +108,8 @@ export class Invaders extends SmartContainer {
   }
 
   async slideIn() {
-    this.x = stageWidth/2 - this.width/2
-    this.y = - this.height -50
+    this.x = stageWidth / 2 - this.width / 2
+    this.y = -this.height - 50
     this.visible = true
     return this.moveTo(
       stageWidth / 2 - this.width / 2,
@@ -118,8 +120,8 @@ export class Invaders extends SmartContainer {
 
   moveOutOfSight() {
     state.setInvadersActive(false)
-    this.x = stageWidth/2 - this.width/2
-    this.y = - this.height -50
+    this.x = stageWidth / 2 - this.width / 2
+    this.y = -this.height - 50
   }
 
   startShooting() {
@@ -170,7 +172,7 @@ export class Invaders extends SmartContainer {
     //clear invaders first
     //in case of playing game again
     this.clearAllInvaders()
-    this.bonusCreatedForCurrentLevel = []
+    this.bonusCreatedForCurrentLevel = [0]
 
     const gen = this.getLevelData(state.gameLevel, this)
     for (const invaderData of gen) {
@@ -189,7 +191,7 @@ export class Invaders extends SmartContainer {
   }
 
   clearBonusWeapons() {
-    this.bonusCreatedForCurrentLevel = []
+    this.bonusCreatedForCurrentLevel = [0]
   }
 
   resetPosition() {
@@ -209,7 +211,7 @@ export class Invaders extends SmartContainer {
 
   async clearAllInvadersProjectiles() {
     const promises: Promise<void>[] = []
-    for (let index = state.invaderProjectiles.length-1; index >= 0; index--) {
+    for (let index = state.invaderProjectiles.length - 1; index >= 0; index--) {
       promises.push(
         InvaderProjectile.removeProjectile(
           state.invaderProjectiles[index],
@@ -223,34 +225,70 @@ export class Invaders extends SmartContainer {
     return count
   }
 
-  removeInvader(invader: Invader) {
+  awardWeaponBonus(invader: Invader) {
     //create bonus weapon
     const percentageInvadersDestroyed =
       1 - state.invaders.length / this.initialInvadersCount
     const r = getRandomNumber()
+    const p = r <= percentageInvadersDestroyed
+    let weaponBonusAwarded = false
+
+    //weapon bonus 1
     if (
-      !this.bonusCreatedForCurrentLevel.includes(1) &&
-      components.player.weaponType < 1
+      p &&
+      !weaponBonusAwarded &&
+      this.bonusCreatedForCurrentLevel[
+        this.bonusCreatedForCurrentLevel.length - 1
+      ] !== 1 &&
+      //do not allow too frequent bonus (7 sec minimum from last one)
+      //but excluding start of the level
+      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
+        this.lastWeaponBonusTimeStamp === 0)
     ) {
-      if (r <= percentageInvadersDestroyed) {
-        if (getRandomNumber() < 0.15) {
-          invader.createBonusWeapon(1)
-          this.bonusCreatedForCurrentLevel.push(1)
-        }
-      }
-    } else if (
-      this.bonusCreatedForCurrentLevel.includes(1) &&
-      !this.bonusCreatedForCurrentLevel.includes(2) &&
-      components.player.weaponType < 2
-    ) {
-      if (r <= percentageInvadersDestroyed) {
-        if (getRandomNumber() < 0.05) {
-          invader.createBonusWeapon(2)
-          this.bonusCreatedForCurrentLevel.push(2)
-        }
+      if (getRandomNumber() < 0.3) {
+        invader.createBonusWeapon(1)
+        this.bonusCreatedForCurrentLevel.push(1)
+        weaponBonusAwarded = true
+        this.lastWeaponBonusTimeStamp = Date.now()
       }
     }
 
+    //weapon bonus 2
+    if (
+      p &&
+      !weaponBonusAwarded &&
+      this.bonusCreatedForCurrentLevel[
+        this.bonusCreatedForCurrentLevel.length - 1
+      ] !== 2 &&
+      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
+        this.lastWeaponBonusTimeStamp === 0) &&
+      this.bonusCreatedForCurrentLevel.includes(1)
+    ) {
+      if (getRandomNumber() < 0.08) {
+        invader.createBonusWeapon(2)
+        this.bonusCreatedForCurrentLevel.push(2)
+        weaponBonusAwarded = true
+        this.lastWeaponBonusTimeStamp = Date.now()
+      }
+    }
+
+    //shield
+    if (
+      p &&
+      !weaponBonusAwarded &&
+      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
+        this.lastWeaponBonusTimeStamp === 0)
+    ) {
+      if (getRandomNumber() < 0.5) {
+        invader.createBonusWeapon(10)
+        this.bonusCreatedForCurrentLevel.push(10)
+        weaponBonusAwarded = true
+        this.lastWeaponBonusTimeStamp = Date.now()
+      }
+    }
+  }
+
+  removeInvader(invader: Invader) {
     const i = state.invaders.findIndex((el) => el === invader)
     state.removeInvader(i)
     invader.sprite.visible = false

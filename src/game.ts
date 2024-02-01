@@ -172,8 +172,8 @@ export class Game {
         state.playerActive
       ) {
         components.player.moveToPosition(
-          initialTouch.x - components.player.width / 2,
-          initialTouch.y - components.player.height / 2
+          initialTouch.x,
+          initialTouch.y
         )
         self.autofire = setInterval(async () => {
           if (components.player && state.playerAlive && state.playerActive) {
@@ -253,6 +253,9 @@ export class Game {
   }
 
   async play() {
+
+    this.updateView()
+    
     state.setWaitingForGameStart(true)
 
     state.setGameLevel(1)
@@ -324,6 +327,7 @@ export class Game {
         await components.invaders.slideIn()
 
         state.setPlayerActive(false)
+        components.player.resetDamage()
         components.foreground.showLevelStartText()
         state.setPlayerActive(true)
         state.setInvadersActive(true)

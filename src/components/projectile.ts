@@ -50,6 +50,7 @@ export class Projectile extends SmartContainer {
         invader.takeHit()
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
+          components.invaders.awardWeaponBonus(invader)
           state.triggerInvaderDestroyed()
         }
         //projectile is immediately destroyed
