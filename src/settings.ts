@@ -1,7 +1,7 @@
 import { TextStyle } from "pixi.js"
 
 export const sound = {
-  music: { play: true, highVolume: 0.7, lowVolume : 0.15 },
+  music: { play: true, highVolume: 0.7, lowVolume: 0.15 },
   soundFX: { play: true, volume: 0.1 },
 }
 
@@ -12,10 +12,22 @@ export const invaderProjectileSpeed = 3.5
 
 export const playerSlideInSpeed = 8
 
+export const playerShieldDuration1 = 6000
+export const playerShieldDuration2 = 2000
+
 export const invadersSlideInSpeed = 6
 
-export const invaderHeight = 32 * 1.5
-export const invaderWidth = 44 * 1.5 
+export const invaderHeight = 32
+export const invaderWidth = 44
+
+export const invaderScaleFactor = 1.5
+
+export const playerHeight = 50
+export const playerWidth = 48
+
+export const playerScaleFactor = 2
+
+export const playerMaxDamage = 3
 
 export const invaderXMargin = 10
 export const invaderYMargin = 10
@@ -29,8 +41,6 @@ export const minHeight = 240
 export const minWidth = 320
 
 export const finalLevel = 7
-
-
 
 //font styles
 export const fontStyles = {
@@ -77,6 +87,30 @@ export const fontStyles = {
     dropShadowColor: "black",
     dropShadowDistance: 3,
   }),
+  shieldTextWhite: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "56px",
+    fill: "white",
+    dropShadow: true,
+    dropShadowColor: "black",
+    dropShadowDistance: 3,
+  }),
+  shieldTextRed: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "56px",
+    fill: "red",
+    dropShadow: true,
+    dropShadowColor: "white",
+    dropShadowDistance: 3,
+  }),
+  healthText: new TextStyle({
+    fontFamily: "Troika",
+    fontSize: "60px",
+    fill: "yellow",
+    dropShadow: false,
+    dropShadowColor: "white",
+    dropShadowDistance: 3,
+  }),
 }
 
 export const soundSource = {
@@ -85,11 +119,11 @@ export const soundSource = {
   invaderExplosion: "assets/sounds/invader_explosion.mp3",
   invaderProjectile: "assets/sounds/invader_projectile.mp3",
   levelCompleted: "assets/sounds/level_completed.mp3",
-  playerEngine:"assets/sounds/engineSound.mp3",
-  startPlay:"assets/sounds/game_start.mp3",
-  gameOver:"assets/sounds/game_over.mp3",
-  gameTheme:"assets/sounds/theme.mp3",
-  gameCompleted:"assets/sounds/game_completed.mp3",
-  bonusCreated:"assets/sounds/bonus_created.mp3",
-  bonusCollected:"assets/sounds/bonus_collected.mp3"
+  playerEngine: "assets/sounds/engineSound.mp3",
+  startPlay: "assets/sounds/game_start.mp3",
+  gameOver: "assets/sounds/game_over.mp3",
+  gameTheme: "assets/sounds/theme.mp3",
+  gameCompleted: "assets/sounds/game_completed.mp3",
+  bonusCreated: "assets/sounds/bonus_created.mp3",
+  bonusCollected: "assets/sounds/bonus_collected.mp3",
 }

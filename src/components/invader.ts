@@ -15,6 +15,7 @@ import {
   invaderProjectileSpeed,
   stageHeight,
   soundSource,
+  invaderScaleFactor,
 } from "../settings"
 import { Howl } from "howler"
 import { BonusItem } from "./bonusItem"
@@ -40,7 +41,7 @@ export class Invader extends SmartContainer {
     this.damage = 0
 
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
-    this.sprite.scale.set(1.5)
+    this.sprite.scale.set(invaderScaleFactor)
     this.addChild(this.sprite)
     this.x = position.x
     this.y = position.y

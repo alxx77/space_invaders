@@ -323,11 +323,10 @@ export class Game {
         state.setCurrentLevelCompleted(false)
         //setup next level invaders
         components.invaders.moveOutOfSight()
+        components.player.resetDamage()
         components.invaders.createInvadersForCurrentLevel()
         await components.invaders.slideIn()
-
         state.setPlayerActive(false)
-        components.player.resetDamage()
         components.foreground.showLevelStartText()
         state.setPlayerActive(true)
         state.setInvadersActive(true)

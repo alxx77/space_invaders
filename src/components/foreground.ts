@@ -26,6 +26,7 @@ export class Foreground extends Container {
   private smallPressSpaceToContinueText: Text
   private gameOverText: Text
   private gameCompletedText: Text
+  healthText: Text
   private levelCompletedSound: Howl
   private startSound: Howl
   private gameOverSound: Howl
@@ -55,7 +56,7 @@ export class Foreground extends Container {
     this.scoreText = new Text(`SCORE: 0`, fontStyles.scoreText)
     this.scoreText.scale.set(2)
     this.scoreText.x = 10
-    this.scoreText.y = stageHeight * 0.95
+    this.scoreText.y = stageHeight * 0.02
 
     this.container.addChild(this.scoreText)
 
@@ -63,7 +64,7 @@ export class Foreground extends Container {
     this.livesText = new Text(`CREDIT: 0`, fontStyles.scoreText)
     this.livesText.scale.set(2)
     this.livesText.x = stageWidth - 370
-    this.livesText.y = stageHeight * 0.95
+    this.livesText.y = stageHeight * 0.02
 
     this.container.addChild(this.livesText)
 
@@ -128,6 +129,22 @@ export class Foreground extends Container {
     this.gameCompletedText.visible = false
 
     this.container.addChild(this.gameCompletedText)
+
+     //health
+     this.healthText = new Text(
+      `*****`,
+      fontStyles.healthText
+    )
+    //this.healthText.anchor.set(0.5)
+    this.healthText.scale.set(2)
+
+    this.healthText.y = stageHeight * 0.14
+    this.healthText.x = 10
+    this.healthText.angle = -90
+    this.healthText.visible = true
+
+    this.container.addChild(this.healthText)
+
 
     reaction(
       () => state.scoreCounter,

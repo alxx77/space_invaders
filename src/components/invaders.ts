@@ -4,6 +4,7 @@ import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
 import {
   invaderHeight,
+  invaderScaleFactor,
   invaderWidth,
   invaderXMargin,
   invaderYMargin,
@@ -245,7 +246,7 @@ export class Invaders extends SmartContainer {
       (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
         this.lastWeaponBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < 0.3) {
+      if (getRandomNumber() < 0.25) {
         invader.createBonusWeapon(1)
         this.bonusCreatedForCurrentLevel.push(1)
         weaponBonusAwarded = true
@@ -264,7 +265,7 @@ export class Invaders extends SmartContainer {
         this.lastWeaponBonusTimeStamp === 0) &&
       this.bonusCreatedForCurrentLevel.includes(1)
     ) {
-      if (getRandomNumber() < 0.08) {
+      if (getRandomNumber() < 0.15) {
         invader.createBonusWeapon(2)
         this.bonusCreatedForCurrentLevel.push(2)
         weaponBonusAwarded = true
@@ -279,7 +280,7 @@ export class Invaders extends SmartContainer {
       (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
         this.lastWeaponBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < 0.5) {
+      if (getRandomNumber() < 0.4) {
         invader.createBonusWeapon(10)
         this.bonusCreatedForCurrentLevel.push(10)
         weaponBonusAwarded = true
@@ -353,7 +354,7 @@ export class Invaders extends SmartContainer {
         levelData.push("1,1,1,1,0,0,0,1,1,1,1")
         levelData.push("2,2,2,2,2,0,2,2,2,2,2")
         levelData.push("0,3,3,3,3,3,3,3,3,3,0")
-        levelData.push("0,0,0,0,0,4,0,0,0,0,0")
+        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
         levelData.push("0,1,1,1,1,1,1,1,1,1,0")
         levelData.push("2,2,2,2,2,0,2,2,2,2,2")
         levelData.push("3,3,3,3,0,0,0,3,3,3,3")
@@ -362,6 +363,7 @@ export class Invaders extends SmartContainer {
         break
 
       case 5:
+        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
         levelData.push("4,4,4,4,4,4,4,4,4,4,4")
         levelData.push("0,2,2,2,2,0,2,2,2,2,0")
         levelData.push("0,0,3,3,3,3,3,3,3,0,0")
@@ -415,8 +417,10 @@ export class Invaders extends SmartContainer {
         //if there should be an invader
         if (column !== "0") {
           yield {
-            x: col * (invaderWidth + invaderXMargin),
-            y: rowCounter * (invaderHeight + invaderYMargin),
+            x: col * (invaderWidth * invaderScaleFactor + invaderXMargin),
+            y:
+              rowCounter *
+              (invaderHeight * invaderScaleFactor + invaderYMargin),
             variety: Number.parseInt(column),
           }
         }

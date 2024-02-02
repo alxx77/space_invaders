@@ -6,13 +6,22 @@ import {
   AnimatedSprite,
   Assets,
   Resource,
+  Text,
+  TextStyle,
 } from "pixi.js"
 import { components, state, PlayerDirection } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { IReactionDisposer, reaction } from "mobx"
 import {
+  fontStyles,
+  playerHeight,
+  playerMaxDamage,
+  playerScaleFactor,
+  playerShieldDuration1,
+  playerShieldDuration2,
   playerSlideInSpeed,
   playerSpeed,
+  playerWidth,
   projectileSpeed,
   soundSource,
   stageHeight,
@@ -40,7 +49,7 @@ export class Player extends SmartContainer {
   engineSound: Howl
   bonusItemsList: number[]
   damage: number
-  maxDamage: number
+  private shieldText: Text
   private shieldEngaged: boolean
   constructor() {
     super()
@@ -48,11 +57,10 @@ export class Player extends SmartContainer {
     this.sprite = new Sprite(utils.TextureCache["player"])
     this.visible = false
     this.sprite.anchor.set(0.5)
-    this.sprite.scale.set(2)
+    this.sprite.scale.set(playerScaleFactor)
     this.addChild(this.sprite)
 
     this.damage = 0
-    this.maxDamage = 3
     this.shieldEngaged = false
 
     //standard projectile as default
@@ -63,7 +71,7 @@ export class Player extends SmartContainer {
     const sheet = Assets.cache.get("player_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
     this.explosionSprite = new AnimatedSprite(textures)
-    this.explosionSprite.scale.set(2)
+    this.explosionSprite.scale = this.sprite.scale
     this.explosionSprite.visible = false
     this.explosionSprite.loop = false
     this.explosionSprite.onComplete = () => {
@@ -74,11 +82,19 @@ export class Player extends SmartContainer {
     this.addChild(this.explosionSprite)
 
     this.shieldSprite = new Sprite(utils.TextureCache["player_shield"])
-    this.shieldSprite.scale.set(3)
+    this.shieldSprite.scale.set(playerScaleFactor * 1.5)
     this.shieldSprite.anchor.set(0.5)
     this.shieldSprite.y = -35
     this.shieldSprite.visible = false
     this.addChild(this.shieldSprite)
+
+    //score
+    this.shieldText = new Text(``, fontStyles.shieldTextWhite)
+    this.shieldText.anchor.set(0.5)
+    this.shieldText.x = 6
+    this.shieldText.y = 85
+
+    this.addChild(this.shieldText)
 
     this.positionCalculator = undefined
     this.playerDirection = "none"
@@ -119,6 +135,9 @@ export class Player extends SmartContainer {
       () => state.playerAlive,
       (newVal) => {
         if (newVal === false) {
+          this.damage = playerMaxDamage
+          components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
+          this.disengageShield()
           this.stop()
           this.sprite.visible = false
           this.engineSound.stop()
@@ -179,31 +198,70 @@ export class Player extends SmartContainer {
     if (components.invaders) {
       components.invaders.clearBonusWeapons()
     }
+
+    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
   }
 
+  percentageToAsterisks(percent: number): string {
+    // Ensure the percentage is within the range [0, 100]
+    const percentage = Math.max(0, Math.min(100, percent))
+
+    // Calculate the equivalent number of asterisks
+    const numAsterisks = Math.round(percentage / 20) // Each 20% corresponds to one asterisk
+
+    // Generate the asterisk string
+    return "*".repeat(numAsterisks)
+  }
+
+  healthPercentage() {
+    return (100 / playerMaxDamage) * (playerMaxDamage - this.damage) 
+  }  
+
   addBonusItem(item: number) {
+    //add to list
     this.bonusItemsList.push(item)
+
+    //handle shield
     if (item === 10) {
       this.engageShield()
-      setTimeout(() => {
-        this.disengageShield()
-      }, 10000)
+      this.shieldText.visible = true
+      this.shieldText.style = new TextStyle(fontStyles.shieldTextWhite)
+      Timeout.instantiate(() => {
+        Timeout.instantiate(() => {
+          this.disengageShield()
+          this.stopShieldBlink(i)
+        }, playerShieldDuration2)
+        const i = this.startShieldBlink()
+      }, playerShieldDuration1)
+
+      //stopwatch
+      let totalTimeLeft = playerShieldDuration1 + playerShieldDuration2
+      const self = this
+      const i = setInterval(function () {
+        totalTimeLeft = totalTimeLeft - 100
+        const formattedNumber: string = (totalTimeLeft / 1000).toFixed(1)
+        self.shieldText.text = formattedNumber
+        if (totalTimeLeft <= 0) {
+          clearInterval(i)
+        }
+      }, 100)
     }
   }
 
   async takeHitFromProjectile(ip: InvaderProjectile) {
     let damageFactor = this.shieldEngaged ? 0.25 : 1
     this.damage = this.damage + damageFactor * ip.lethalFactor
-    console.log(this.damage)
+    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
     return this.blink()
   }
 
   isTotallyDamaged() {
-    return this.damage >= this.maxDamage
+    return this.damage >= playerMaxDamage
   }
 
-  resetDamage(){
+  resetDamage() {
     this.damage = 0
+    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
   }
 
   async blink() {
@@ -228,6 +286,19 @@ export class Player extends SmartContainer {
         resolve()
       }, 50)
     })
+  }
+
+  startShieldBlink() {
+    return setInterval(() => {
+      this.shieldSprite.visible = !this.shieldSprite.visible
+      this.shieldText.style = new TextStyle(fontStyles.shieldTextRed)
+    }, 350)
+  }
+
+  stopShieldBlink(i: NodeJS.Timeout) {
+    clearInterval(i)
+    this.shieldSprite.visible = false
+    this.shieldText.visible = false
   }
 
   fireProjectile(
@@ -325,8 +396,9 @@ export class Player extends SmartContainer {
   disengageShield() {
     this.shieldEngaged = false
     this.shieldSprite.visible = false
-    let i = this.bonusItemsList.findIndex((el)=> el === 10)
-    this.bonusItemsList.splice(i,1)
+    this.shieldText.visible = false
+    let i = this.bonusItemsList.findIndex((el) => el === 10)
+    this.bonusItemsList.splice(i, 1)
   }
 
   async slideIn() {
@@ -349,62 +421,70 @@ export class Player extends SmartContainer {
 
   moveDelta(deltaX: number, deltaY: number) {
     if (!state.playerActive) return
+
+    const w = playerWidth * playerScaleFactor
+    const h = playerHeight * playerScaleFactor
+
     //X-axis movement
-    if (this.x + deltaX + this.width / 2 < stageWidth) {
+    if (this.x + deltaX + w / 2 < stageWidth) {
       //move player
       this.x += deltaX
       //necessary to keep player inside playground
       //because there might be pixel fractions
-      if (this.x < this.width / 2) {
-        this.x = this.width / 2
+      if (this.x < w / 2) {
+        this.x = w / 2
       }
-      if (this.x > stageWidth - this.width / 2) {
-        this.x = stageWidth - this.width / 2
+      if (this.x > stageWidth - w / 2) {
+        this.x = stageWidth - w / 2
       }
     }
 
     //Y-axis movement
-    if (this.y + deltaY + this.height / 2 < stageHeight) {
+    if (this.y + deltaY + h / 2 < stageHeight) {
       //move player
       this.y += deltaY
       //necessary to keep player inside playground
       //because there might be pixel fractions
-      if (this.y < this.height / 2) {
-        this.y = this.height / 2
+      if (this.y < h / 2) {
+        this.y = h / 2
       }
-      if (this.y > stageHeight - this.height / 2) {
-        this.y = stageHeight - this.height / 2
+      if (this.y > stageHeight - h / 2) {
+        this.y = stageHeight - h / 2
       }
     }
   }
 
   moveToPosition(x: number, y: number) {
     if (!state.playerActive) return
+
+    const w = playerWidth * playerScaleFactor
+    const h = playerHeight * playerScaleFactor
+
     //X-axis movement
-    if (this.x >= 0 && this.x + x + this.width / 2 < stageWidth) {
+    if (this.x >= 0 && this.x + x + w / 2 < stageWidth) {
       //move player
       this.x = x
       //necessary to keep player inside playground
       //because there might be pixel fractions
-      if (this.x < this.width / 2) {
-        this.x = this.width / 2
+      if (this.x < w / 2) {
+        this.x = w / 2
       }
-      if (this.x > stageWidth - this.width / 2) {
-        this.x = stageWidth - this.width / 2
+      if (this.x > stageWidth - w / 2) {
+        this.x = stageWidth - w / 2
       }
     }
 
     //Y-axis movement
-    if (this.y + y + this.height / 2 < stageHeight) {
+    if (this.y + y + h / 2 < stageHeight) {
       //move player
       this.y = y
       //necessary to keep player inside playground
       //because there might be pixel fractions
-      if (this.y < this.height / 2) {
-        this.y = this.height / 2
+      if (this.y < h / 2) {
+        this.y = h / 2
       }
-      if (this.y > stageHeight - this.height / 2) {
-        this.y = stageHeight - this.height / 2
+      if (this.y > stageHeight - h / 2) {
+        this.y = stageHeight - h / 2
       }
     }
   }
@@ -414,6 +494,8 @@ export class Player extends SmartContainer {
     let step: IteratorResult<DeltaPosition, void>
     let ticker = new Ticker()
     let self = this
+    const w = playerWidth * playerScaleFactor
+    const h = playerHeight * playerScaleFactor
     ticker.add(function (delta) {
       //if not active do not listen to commands
       if (!state.playerActive) return
@@ -423,29 +505,29 @@ export class Player extends SmartContainer {
         if (step.done === false) {
           if (step.value) {
             //X-axis movement
-            if (self.x + step.value.dx + self.width / 2 < stageWidth) {
+            if (self.x + step.value.dx + w / 2 < stageWidth) {
               //move player
               self.x = self.x + step.value.dx
 
               //necessary to keep player inside playground
               //because there might be pixel fractions
-              if (self.x < self.width / 2) {
-                self.x = self.width / 2
+              if (self.x < w / 2) {
+                self.x = w / 2
               }
-              if (self.x > stageWidth - self.width / 2) {
-                self.x = stageWidth - self.width / 2
+              if (self.x > stageWidth - w / 2) {
+                self.x = stageWidth - w / 2
               }
             }
 
             //Y axis movement
-            if (self.y + step.value.dy + self.height / 2 < stageHeight) {
+            if (self.y + step.value.dy + h / 2 < stageHeight) {
               self.y = self.y + step.value.dy
 
-              if (self.y < self.height / 2) {
-                self.y = self.height / 2
+              if (self.y < h / 2) {
+                self.y = h / 2
               }
-              if (self.y > stageHeight - self.height / 2) {
-                self.y = stageHeight - self.height / 2
+              if (self.y > stageHeight - h / 2) {
+                self.y = stageHeight - h / 2
               }
             }
           }
