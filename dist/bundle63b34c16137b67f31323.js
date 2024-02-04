@@ -14183,12 +14183,27 @@ class BonusItem extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContai
         //to avoid TS compiler :-D
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite();
         if (itemType >= 1 && itemType <= 10) {
-            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`axes_${this.itemType}`]);
+            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`axes_1`]);
             this.sprite.scale.set(1.5);
         }
-        if (itemType === 10) {
-            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`bonus_shield`]);
-            this.sprite.scale.set(0.8);
+        //shield
+        if (itemType === 11) {
+            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`shield`]);
+            this.sprite.scale.set(0.9);
+        }
+        if (itemType === 15) {
+            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`bonus_health`]);
+            this.sprite.scale.set(0.9);
+        }
+        //rapid fire stage 1
+        if (itemType === 20) {
+            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`bonus_weapon_upgrade`]);
+            this.sprite.scale.set(0.9);
+        }
+        //rapid fire stage 2
+        if (itemType === 21) {
+            this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`bonus_weapon_upgrade`]);
+            this.sprite.scale.set(0.9);
         }
         this.addChild(this.sprite);
         this.speed = speed;
@@ -14218,18 +14233,27 @@ class BonusItem extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContai
             bounds1.y < bounds2.y + bounds2.height &&
             bounds1.y + bounds1.height > bounds2.y) {
             // Collision detected
-            //do not take weapon no.1 if there is already stronger weapon
-            if (this.itemType === 1 && _state__WEBPACK_IMPORTED_MODULE_2__.components.player.bonusItemsList.includes(2))
-                return;
-            if (this.itemType === 1 && _state__WEBPACK_IMPORTED_MODULE_2__.components.player.bonusItemsList.includes(1))
-                return;
-            if (!_state__WEBPACK_IMPORTED_MODULE_2__.components.player.bonusItemsList.includes(this.itemType)) {
-                this.stopTween();
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.addBonusItem(this.itemType);
-                this.bonusCollectedSound.play();
-                this.collected = true;
-                this.destroy();
+            if (this.itemType >= 1 && this.itemType <= 10) {
+                if (_state__WEBPACK_IMPORTED_MODULE_2__.components.player.weapon < 3) {
+                    _state__WEBPACK_IMPORTED_MODULE_2__.components.player.weapon++;
+                }
             }
+            if (this.itemType === 11 && !_state__WEBPACK_IMPORTED_MODULE_2__.components.player.shieldEngaged) {
+                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.powerUpShield();
+            }
+            if (this.itemType === 15) {
+                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.resetDamage();
+            }
+            if (this.itemType === 20) {
+                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.setFireControlParams(_settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate1.autofireInterval, _settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond);
+            }
+            if (this.itemType === 21) {
+                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.setFireControlParams(_settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate2.autofireInterval, _settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate2.maxPlayerProjectilesFiredPerSecond);
+            }
+            this.stopTween();
+            this.bonusCollectedSound.play();
+            this.collected = true;
+            this.destroy();
         }
     }
     updateLayout(width, height) { }
@@ -14396,8 +14420,13 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         return new Promise((resolve) => {
             const disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_4__.reaction)(
             //react on SPACEBAR keyup
-            () => _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed, (newVal, oldVal) => {
-                if (newVal === false && oldVal === true) {
+            () => ({
+                SPACEBAR_keyPressed: _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed,
+                screenTapped: _state__WEBPACK_IMPORTED_MODULE_1__.state.screenTapped,
+            }), (newVal, oldVal) => {
+                if ((newVal.SPACEBAR_keyPressed === false &&
+                    oldVal.SPACEBAR_keyPressed === true) ||
+                    (newVal.screenTapped === false && oldVal.screenTapped === true)) {
                     clearInterval(i);
                     self.startText.visible = false;
                     _state__WEBPACK_IMPORTED_MODULE_1__.state.setWaitingForGameStart(false);
@@ -14417,7 +14446,7 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
             setTimeout(() => {
                 self.levelCompletedText.visible = false;
                 resolve();
-            }, 1250);
+            }, 1000);
         });
     }
     async showLevelCompletedText() {
@@ -14435,9 +14464,14 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         return new Promise((resolve) => {
             const disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_4__.reaction)(
             //react on SPACEBAR keyup
-            () => _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed, (newVal, oldVal) => {
-                if (newVal === false &&
-                    oldVal === true &&
+            () => ({
+                SPACEBAR_keyPressed: _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed,
+                screenTapped: _state__WEBPACK_IMPORTED_MODULE_1__.state.screenTapped,
+            }), (newVal, oldVal) => {
+                if (((newVal.SPACEBAR_keyPressed === false &&
+                    oldVal.SPACEBAR_keyPressed === true) ||
+                    (newVal.screenTapped === false &&
+                        oldVal.screenTapped === true)) &&
                     Date.now() - startTime > 2700) {
                     clearInterval(i);
                     self.levelCompletedText.visible = false;
@@ -14463,9 +14497,14 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         return new Promise((resolve) => {
             const disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_4__.reaction)(
             //react on SPACEBAR keyup
-            () => _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed, (newVal, oldVal) => {
-                if (newVal === false &&
-                    oldVal === true &&
+            () => ({
+                SPACEBAR_keyPressed: _state__WEBPACK_IMPORTED_MODULE_1__.state.SPACEBAR_keyPressed,
+                screenTapped: _state__WEBPACK_IMPORTED_MODULE_1__.state.screenTapped,
+            }), (newVal, oldVal) => {
+                if (((newVal.SPACEBAR_keyPressed === false &&
+                    oldVal.SPACEBAR_keyPressed === true) ||
+                    (newVal.screenTapped === false &&
+                        oldVal.screenTapped === true)) &&
                     Date.now() - startTime > 1000) {
                     clearInterval(i);
                     self.gameOverText.visible = false;
@@ -14515,6 +14554,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bonusItem__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./bonusItem */ "./src/components/bonusItem.ts");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
 
 
 
@@ -14567,10 +14608,15 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
             x: gp.x + _settings__WEBPACK_IMPORTED_MODULE_4__.invaderWidth / 2,
             y: gp.y * 1.05,
         }, _settings__WEBPACK_IMPORTED_MODULE_4__.invaderProjectileSpeed, _invaderProjectile__WEBPACK_IMPORTED_MODULE_3__.InvaderProjectile.projectileCount % 4 === 0 ? 1 : 0);
+        let destX = projectile.x;
+        if (_invaderProjectile__WEBPACK_IMPORTED_MODULE_3__.InvaderProjectile.projectileCount % 2 === 0) {
+            let diff = (0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() * 300 * ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() > 0.5 ? -1 : 1);
+            destX = destX + diff;
+        }
         _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvaderProjectile(projectile);
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
         projectile.shootSound.play();
-        projectile.moveTo(projectile.x, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight + 50, projectile.speed, () => {
+        projectile.moveTo(destX, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight + 50, projectile.speed + (0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() * 7, () => {
             const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.findIndex((el) => el === projectile);
             //if allready removed - return
             if (i < 0)
@@ -14967,8 +15013,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         };
         this.name = "Invaders";
-        this.bonusCreatedForCurrentLevel = [];
-        this.lastWeaponBonusTimeStamp = 0;
+        this.lastBonusTimeStamp = 0;
         //container
         this.container = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container();
         this.addChild(this.container);
@@ -15042,7 +15087,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
             const percentInvadersRemained = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / self.initialInvadersCount;
             let previousInvaderIndex = 0;
-            for (const iterator of [1, 2, 3, 4]) {
+            for (const iterator of [1, 2, 3, 4, 5, 6]) {
                 let invaderIndex = Math.floor(Math.random() * _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length);
                 if (previousInvaderIndex === invaderIndex)
                     break;
@@ -15059,7 +15104,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         //clear invaders first
         //in case of playing game again
         this.clearAllInvaders();
-        this.bonusCreatedForCurrentLevel = [0];
         const gen = this.getLevelData(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
         for (const invaderData of gen) {
             const invader = new _invader__WEBPACK_IMPORTED_MODULE_3__.Invader({ x: invaderData.x, y: invaderData.y }, invaderData.variety);
@@ -15070,9 +15114,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.x = _settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth / 2 - this.width / 2;
         this.y = _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15;
         this.initialInvadersCount = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length;
-    }
-    clearBonusWeapons() {
-        this.bonusCreatedForCurrentLevel = [0];
     }
     resetPosition() {
         return this.moveTo((_settings__WEBPACK_IMPORTED_MODULE_4__.stageWidth - this.initialContainerWidth) / 2, _settings__WEBPACK_IMPORTED_MODULE_4__.stageHeight * 0.15, 5);
@@ -15092,51 +15133,88 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         await Promise.all(promises);
         return count;
     }
-    awardWeaponBonus(invader) {
+    awardBonus(invader) {
         //create bonus weapon
         const percentageInvadersDestroyed = 1 - _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / this.initialInvadersCount;
         const r = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)();
         const p = r <= percentageInvadersDestroyed;
-        let weaponBonusAwarded = false;
+        let bonusAwarded = false;
         //weapon bonus 1
         if (p &&
-            !weaponBonusAwarded &&
-            this.bonusCreatedForCurrentLevel[this.bonusCreatedForCurrentLevel.length - 1] !== 1 &&
+            !bonusAwarded &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon < 3 &&
             //do not allow too frequent bonus (7 sec minimum from last one)
             //but excluding start of the level
-            (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-                this.lastWeaponBonusTimeStamp === 0)) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.25) {
+            (Date.now() - this.lastBonusTimeStamp > 7000 ||
+                this.lastBonusTimeStamp === 0)) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.12) {
                 invader.createBonusWeapon(1);
-                this.bonusCreatedForCurrentLevel.push(1);
-                weaponBonusAwarded = true;
-                this.lastWeaponBonusTimeStamp = Date.now();
-            }
-        }
-        //weapon bonus 2
-        if (p &&
-            !weaponBonusAwarded &&
-            this.bonusCreatedForCurrentLevel[this.bonusCreatedForCurrentLevel.length - 1] !== 2 &&
-            (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-                this.lastWeaponBonusTimeStamp === 0) &&
-            this.bonusCreatedForCurrentLevel.includes(1)) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.15) {
-                invader.createBonusWeapon(2);
-                this.bonusCreatedForCurrentLevel.push(2);
-                weaponBonusAwarded = true;
-                this.lastWeaponBonusTimeStamp = Date.now();
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(1);
+                bonusAwarded = true;
+                this.lastBonusTimeStamp = Date.now();
+                if (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 2) {
+                    setTimeout(() => {
+                        if (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 3) {
+                            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon = 2;
+                        }
+                    }, 8000);
+                }
+                if (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 1) {
+                    setTimeout(() => {
+                        if (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 2) {
+                            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon = 1;
+                        }
+                    }, 20000);
+                }
             }
         }
         //shield
+        if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.15) {
+                invader.createBonusWeapon(11);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(11);
+                bonusAwarded = true;
+                this.lastBonusTimeStamp = Date.now();
+            }
+        }
+        //health
         if (p &&
-            !weaponBonusAwarded &&
-            (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-                this.lastWeaponBonusTimeStamp === 0)) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.4) {
-                invader.createBonusWeapon(10);
-                this.bonusCreatedForCurrentLevel.push(10);
-                weaponBonusAwarded = true;
-                this.lastWeaponBonusTimeStamp = Date.now();
+            _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel > 3 &&
+            Date.now() - this.lastBonusTimeStamp > 7000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.17) {
+                invader.createBonusWeapon(15);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(15);
+                this.lastBonusTimeStamp = Date.now();
+            }
+        }
+        //fire rate 1
+        if (p &&
+            !bonusAwarded &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
+            Date.now() - this.lastBonusTimeStamp > 5000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.17) {
+                invader.createBonusWeapon(20);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(20);
+                bonusAwarded = true;
+                this.lastBonusTimeStamp = Date.now();
+            }
+        }
+        //fire rate 2
+        if (p &&
+            !bonusAwarded &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
+            Date.now() - this.lastBonusTimeStamp > 12000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.12) {
+                invader.createBonusWeapon(21);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(21);
+                bonusAwarded = true;
+                this.lastBonusTimeStamp = Date.now();
+                //revert to rate1
+                setTimeout(() => {
+                    _state__WEBPACK_IMPORTED_MODULE_1__.components.player.setFireControlParams(_settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate1.autofireInterval, _settings__WEBPACK_IMPORTED_MODULE_4__.playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond);
+                }, 10000);
             }
         }
     }
@@ -15322,8 +15400,12 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         this.addChild(this.sprite);
         this.damage = 0;
         this.shieldEngaged = false;
+        this.bonusApplied = [];
         //standard projectile as default
-        this.bonusItemsList = [0];
+        this.weapon = 0;
+        this.autofireInterval = _settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate0.autofireInterval;
+        this.maxPlayerProjectilesFiredPerSecond =
+            _settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate0.maxPlayerProjectilesFiredPerSecond;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(this);
         const sheet = pixi_js__WEBPACK_IMPORTED_MODULE_0__.Assets.cache.get("player_explosion");
         const textures = Object.values(sheet.textures);
@@ -15366,8 +15448,12 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             if (!_state__WEBPACK_IMPORTED_MODULE_1__.state.playerAlive || !_state__WEBPACK_IMPORTED_MODULE_1__.state.playerActive)
                 return;
             //if spacebar is pressed fire a projectile
+            //if conditions are met
             if (newVal.SpaceBar_keyPressed === true) {
-                this.shoot();
+                if (_state__WEBPACK_IMPORTED_MODULE_1__.components.game.firingRateCalculator.calculateRate() <
+                    this.maxPlayerProjectilesFiredPerSecond) {
+                    _state__WEBPACK_IMPORTED_MODULE_1__.components.player.shoot();
+                }
             }
         });
         this.disposerList.push(d);
@@ -15422,9 +15508,6 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             volume: 0.3,
             loop: true,
         });
-        if (_state__WEBPACK_IMPORTED_MODULE_1__.components.invaders) {
-            _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.clearBonusWeapons();
-        }
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage());
     }
     percentageToAsterisks(percent) {
@@ -15438,33 +15521,38 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     healthPercentage() {
         return (100 / _settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage) * (_settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage - this.damage);
     }
-    addBonusItem(item) {
-        //add to list
-        this.bonusItemsList.push(item);
-        //handle shield
-        if (item === 10) {
-            this.engageShield();
-            this.shieldText.visible = true;
-            this.shieldText.style = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle(_settings__WEBPACK_IMPORTED_MODULE_3__.fontStyles.shieldTextWhite);
-            smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
-                smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
-                    this.disengageShield();
-                    this.stopShieldBlink(i);
-                }, _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration2);
-                const i = this.startShieldBlink();
-            }, _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration1);
-            //stopwatch
-            let totalTimeLeft = _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration1 + _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration2;
-            const self = this;
-            const i = setInterval(function () {
-                totalTimeLeft = totalTimeLeft - 100;
-                const formattedNumber = (totalTimeLeft / 1000).toFixed(1);
-                self.shieldText.text = formattedNumber;
-                if (totalTimeLeft <= 0) {
-                    clearInterval(i);
-                }
-            }, 100);
+    setFireControlParams(interval, maxRate) {
+        this.autofireInterval = interval;
+        this.maxPlayerProjectilesFiredPerSecond = maxRate;
+        //reignite autofire with new params
+        if (_state__WEBPACK_IMPORTED_MODULE_1__.components.game.autofire) {
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.game.dismountAutofire();
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.game.mountAutofire();
         }
+    }
+    powerUpShield() {
+        //handle shield
+        this.engageShield();
+        this.shieldText.visible = true;
+        this.shieldText.style = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle(_settings__WEBPACK_IMPORTED_MODULE_3__.fontStyles.shieldTextWhite);
+        smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+            smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => {
+                this.disengageShield();
+                this.stopShieldBlink(i);
+            }, _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration2);
+            const i = this.startShieldBlink();
+        }, _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration1);
+        //stopwatch
+        let totalTimeLeft = _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration1 + _settings__WEBPACK_IMPORTED_MODULE_3__.playerShieldDuration2;
+        const self = this;
+        const i = setInterval(function () {
+            totalTimeLeft = totalTimeLeft - 100;
+            const formattedNumber = (totalTimeLeft / 1000).toFixed(1);
+            self.shieldText.text = formattedNumber;
+            if (totalTimeLeft <= 0) {
+                clearInterval(i);
+            }
+        }, 100);
     }
     async takeHitFromProjectile(ip) {
         let damageFactor = this.shieldEngaged ? 0.25 : 1;
@@ -15523,23 +15611,45 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
             projectile.destroy();
         });
+        return projectile;
+    }
+    fireWeapon0() {
+        const pl = this.fireProjectile(this.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x, -50);
+    }
+    fireWeapon1() {
+        const pl = this.fireProjectile(this.x - 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x - 12 * this.sprite.scale.x, -50);
+        this.fireProjectile(this.x + 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x + 12 * this.sprite.scale.x, -50);
+    }
+    fireWeapon2() {
+        this.fireProjectile(this.x - 20 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x - 20 * this.sprite.scale.x, -50);
+        this.fireProjectile(this.x + 20 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x + 20 * this.sprite.scale.x, -50);
+        const pl = this.fireProjectile(this.x, this.y * 0.95, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 2, 0, this.x, -50);
+    }
+    fireWeapon3() {
+        const p1 = this.fireProjectile(this.x - 18.2 * 2, this.y - 50 * 2, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 0.6, 0, this.x - (this.y + 50 * 2) * 0.3639, -50);
+        p1.rotate(-20);
+        const p2 = this.fireProjectile(this.x + 18.2 * 2, this.y - 50 * 2, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 0.6, 0, this.x + (this.y + 50 * 2) * 0.3639, -50);
+        p2.rotate(20);
     }
     async shoot() {
-        if (this.bonusItemsList.includes(2)) {
-            this.fireProjectile(this.x - 20 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x - 20 * this.sprite.scale.x, -50);
-            this.fireProjectile(this.x + 20 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x + 20 * this.sprite.scale.x, -50);
-            this.fireProjectile(this.x, this.y * 0.95, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 2, 0, this.x, -50);
-            return;
+        switch (this.weapon) {
+            case 0:
+                this.fireWeapon0();
+                break;
+            case 1:
+                this.fireWeapon1();
+                break;
+            case 2:
+                this.fireWeapon2();
+                break;
+            case 3:
+                this.fireWeapon2();
+                this.fireWeapon3();
+                break;
+            default:
+                break;
         }
-        if (this.bonusItemsList.includes(1)) {
-            this.fireProjectile(this.x - 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.5, 1, this.x - 12 * this.sprite.scale.x, -50);
-            this.fireProjectile(this.x + 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.5, 1, this.x + 12 * this.sprite.scale.x, -50);
-            return;
-        }
-        if (this.bonusItemsList.includes(0)) {
-            this.fireProjectile(this.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x, -50);
-            return;
-        }
+        _state__WEBPACK_IMPORTED_MODULE_1__.components.game.firingRateCalculator.addEvent();
     }
     engageShield() {
         this.shieldEngaged = true;
@@ -15549,8 +15659,6 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         this.shieldEngaged = false;
         this.shieldSprite.visible = false;
         this.shieldText.visible = false;
-        let i = this.bonusItemsList.findIndex((el) => el === 10);
-        this.bonusItemsList.splice(i, 1);
     }
     async slideIn() {
         _state__WEBPACK_IMPORTED_MODULE_1__.state.setPlayerActive(false);
@@ -15735,6 +15843,10 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
         });
         this.shootSound.volume(0.2 + Math.random() * 0.4);
         this.shootSound.play();
+        this.createdAt = Date.now();
+    }
+    rotate(deg) {
+        this.sprite.angle = deg;
     }
     collisionTestWithInvadersAndInvadersProjectiles(c, elapsed) {
         const bounds1 = this.sprite.getBounds();
@@ -15750,7 +15862,7 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                 invader.takeHit();
                 if (invader.isTotallyDamaged()) {
                     _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.removeInvader(invader);
-                    _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.awardWeaponBonus(invader);
+                    _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.awardBonus(invader);
                     _state__WEBPACK_IMPORTED_MODULE_1__.state.triggerInvaderDestroyed();
                 }
                 //projectile is immediately destroyed
@@ -15952,7 +16064,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Game: () => (/* binding */ Game)
 /* harmony export */ });
-/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
+/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/state.ts");
 /* harmony import */ var _components_player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/player */ "./src/components/player.ts");
 /* harmony import */ var _components_background__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/background */ "./src/components/background.ts");
@@ -15963,6 +16075,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_7__);
 /* harmony import */ var _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./components/invaderProjectile */ "./src/components/invaderProjectile.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils */ "./src/utils.ts");
+
 
 
 
@@ -15985,6 +16099,8 @@ class Game {
             //update components
             _state__WEBPACK_IMPORTED_MODULE_0__.components.layout.updateLayout(w, h);
         };
+        //calculate firing rate per second
+        this.firingRateCalculator = new _utils__WEBPACK_IMPORTED_MODULE_9__.EventRateCalculator(1000);
         //initialize components
         this.background = new _components_background__WEBPACK_IMPORTED_MODULE_2__.Background();
         this.foreground = new _components_foreground__WEBPACK_IMPORTED_MODULE_4__.Foreground();
@@ -16071,7 +16187,7 @@ class Game {
             }
         });
         //score count
-        (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal, oldVal) => {
+        (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal, oldVal) => {
             if (newVal > oldVal) {
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 100);
             }
@@ -16096,23 +16212,20 @@ class Game {
         let initialTouch = undefined;
         // Define the touchstart event handler function
         function onTouchStart(event) {
-            _state__WEBPACK_IMPORTED_MODULE_0__.state.set_SPACEBAR_keyPressed(true);
+            _state__WEBPACK_IMPORTED_MODULE_0__.state.setScreenTapped(true);
             initialTouch = event.getLocalPosition(_state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.container);
             if (_state__WEBPACK_IMPORTED_MODULE_0__.components.player &&
                 initialTouch &&
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive &&
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.playerActive) {
                 _state__WEBPACK_IMPORTED_MODULE_0__.components.player.moveToPosition(initialTouch.x, initialTouch.y);
-                self.autofire = setInterval(async () => {
-                    if (_state__WEBPACK_IMPORTED_MODULE_0__.components.player && _state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive && _state__WEBPACK_IMPORTED_MODULE_0__.state.playerActive) {
-                        await new Promise((resolve) => {
-                            const t = smart_timeout__WEBPACK_IMPORTED_MODULE_7___default().instantiate(() => {
-                                _state__WEBPACK_IMPORTED_MODULE_0__.components.player.shoot();
-                                resolve();
-                            }, Math.random() * 75);
-                        });
-                    }
-                }, 200);
+                //shoot immediately once
+                if (self.firingRateCalculator.calculateRate() <
+                    _state__WEBPACK_IMPORTED_MODULE_0__.components.player.maxPlayerProjectilesFiredPerSecond) {
+                    _state__WEBPACK_IMPORTED_MODULE_0__.components.player.shoot();
+                }
+                //.. then set autofire while touchdown
+                self.mountAutofire();
             }
         }
         // Define the touchmove event handler function
@@ -16134,21 +16247,41 @@ class Game {
         function onTouchEnd() {
             initialTouch = undefined;
             clearInterval(self.autofire);
-            _state__WEBPACK_IMPORTED_MODULE_0__.state.set_SPACEBAR_keyPressed(false);
+            self.autofire = undefined;
+            _state__WEBPACK_IMPORTED_MODULE_0__.state.setScreenTapped(false);
         }
         function onTouchEndOutside() {
             initialTouch = undefined;
             clearInterval(self.autofire);
-            _state__WEBPACK_IMPORTED_MODULE_0__.state.set_SPACEBAR_keyPressed(false);
+            self.autofire = undefined;
+            _state__WEBPACK_IMPORTED_MODULE_0__.state.setScreenTapped(false);
         }
         this.updateView();
+    }
+    mountAutofire() {
+        this.autofire = setInterval(async () => {
+            if (_state__WEBPACK_IMPORTED_MODULE_0__.components.player && _state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive && _state__WEBPACK_IMPORTED_MODULE_0__.state.playerActive) {
+                await new Promise((resolve) => {
+                    const t = smart_timeout__WEBPACK_IMPORTED_MODULE_7___default().instantiate(() => {
+                        if (this.firingRateCalculator.calculateRate() <
+                            _state__WEBPACK_IMPORTED_MODULE_0__.components.player.maxPlayerProjectilesFiredPerSecond) {
+                            _state__WEBPACK_IMPORTED_MODULE_0__.components.player.shoot();
+                        }
+                        resolve();
+                    }, Math.random() * 100);
+                });
+            }
+        }, _state__WEBPACK_IMPORTED_MODULE_0__.components.player.autofireInterval);
+    }
+    dismountAutofire() {
+        clearInterval(this.autofire);
     }
     //signal when level is finished in any way
     //if current level is completed ( there i no more enemies) or
     //player is destroyed and destruction is completed
     async levelPlayingStopped() {
         return new Promise((resolve) => {
-            let disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => ({
+            let disposer = (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => ({
                 currentLevelCompleted: _state__WEBPACK_IMPORTED_MODULE_0__.state.currentLevelCompleted,
                 playerAlive: _state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive,
                 playerDestructionCompletedTrigger: _state__WEBPACK_IMPORTED_MODULE_0__.state.playerDestructionCompletedTrigger,
@@ -16275,7 +16408,7 @@ async function loadAssets() {
                 name: "player",
                 assets: [
                     { alias: "player", src: "assets/images/player.png" },
-                    { alias: "bonus_shield", src: "assets/images/shield_bonus.png" },
+                    { alias: "shield", src: "assets/images/shield_bonus.png" },
                     { alias: "player_shield", src: "assets/images/player_shield.png" },
                     { alias: "projectile_0", src: "assets/images/projectile_0.png" },
                     { alias: "projectile_1", src: "assets/images/projectile_1.png" },
@@ -16284,6 +16417,8 @@ async function loadAssets() {
                     { alias: "splash", src: "assets/images/space_splash.jpg" },
                     { alias: "axes_1", src: "assets/images/axes_1.png" },
                     { alias: "axes_2", src: "assets/images/axes_2.png" },
+                    { alias: "bonus_health", src: "assets/images/shield_bonus_health.png" },
+                    { alias: "bonus_weapon_upgrade", src: "assets/images/shield_bonus_weapon_upgrade.png" },
                 ],
             },
             {
@@ -16426,6 +16561,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   invadersSlideInSpeed: () => (/* binding */ invadersSlideInSpeed),
 /* harmony export */   minHeight: () => (/* binding */ minHeight),
 /* harmony export */   minWidth: () => (/* binding */ minWidth),
+/* harmony export */   playerFireControl: () => (/* binding */ playerFireControl),
 /* harmony export */   playerHeight: () => (/* binding */ playerHeight),
 /* harmony export */   playerMaxDamage: () => (/* binding */ playerMaxDamage),
 /* harmony export */   playerScaleFactor: () => (/* binding */ playerScaleFactor),
@@ -16448,7 +16584,7 @@ const sound = {
 };
 const playerSpeed = 5;
 const projectileSpeed = 24;
-const invaderProjectileSpeed = 3.5;
+const invaderProjectileSpeed = 4;
 const playerSlideInSpeed = 8;
 const playerShieldDuration1 = 6000;
 const playerShieldDuration2 = 2000;
@@ -16460,6 +16596,20 @@ const playerHeight = 50;
 const playerWidth = 48;
 const playerScaleFactor = 2;
 const playerMaxDamage = 3;
+const playerFireControl = {
+    fireRate0: {
+        autofireInterval: 330,
+        maxPlayerProjectilesFiredPerSecond: 3,
+    },
+    fireRate1: {
+        autofireInterval: 280,
+        maxPlayerProjectilesFiredPerSecond: 4,
+    },
+    fireRate2: {
+        autofireInterval: 200,
+        maxPlayerProjectilesFiredPerSecond: 5,
+    },
+};
 const invaderXMargin = 10;
 const invaderYMargin = 10;
 const stageWidth = 1080;
@@ -16600,6 +16750,7 @@ class Store {
         this._splashScreenVisible = true;
         this._mobileDevice = false;
         this._toggleTWEEN = true;
+        this._screenTapped = false;
         (0,mobx__WEBPACK_IMPORTED_MODULE_0__.makeAutoObservable)(this, {}, { autoBind: true });
     }
     //A key
@@ -16799,6 +16950,12 @@ class Store {
     get toggleTWEEN() {
         return this._toggleTWEEN;
     }
+    setScreenTapped(value) {
+        this._screenTapped = value;
+    }
+    get screenTapped() {
+        return this._screenTapped;
+    }
 }
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.action
@@ -16950,6 +17107,12 @@ __decorate([
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.computed
 ], Store.prototype, "toggleTWEEN", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.action
+], Store.prototype, "setScreenTapped", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.computed
+], Store.prototype, "screenTapped", null);
 const state = new Store();
 const components = {};
 
@@ -16965,6 +17128,7 @@ const components = {};
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   EventRateCalculator: () => (/* binding */ EventRateCalculator),
 /* harmony export */   getRandomNumber: () => (/* binding */ getRandomNumber),
 /* harmony export */   getRandomWebColor: () => (/* binding */ getRandomWebColor),
 /* harmony export */   shuffleArray: () => (/* binding */ shuffleArray)
@@ -16983,14 +17147,14 @@ function shuffleArray(array) {
 function getRandomWebColor() {
     // Convert hex color to RGB
     const hexToRgb = (hex) => hex
-        .replace(/^#/, '')
+        .replace(/^#/, "")
         .match(/.{1,2}/g)
         .map((v) => parseInt(v, 16));
     // Convert RGB to hex color
-    const rgbToHex = (r, g, b) => `#${(1 << 24 | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+    const rgbToHex = (r, g, b) => `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
     // Generate random RGB values within the specified range
-    const minColor = hexToRgb('#222222');
-    const maxColor = hexToRgb('#FFFFFF');
+    const minColor = hexToRgb("#222222");
+    const maxColor = hexToRgb("#FFFFFF");
     const randomColor = minColor.map((min, index) => Math.floor(Math.random() * (maxColor[index] - min + 1)) + min);
     // Convert RGB values back to hex color
     return rgbToHex(...randomColor);
@@ -17000,6 +17164,28 @@ function getRandomNumber() {
     crypto.getRandomValues(randomBytes);
     // Convert randomBytes to a number between 0 and 1
     return randomBytes[0] / (Math.pow(2, 32) - 1);
+}
+class EventRateCalculator {
+    constructor(windowSizeMS) {
+        this.windowSizeMS = windowSizeMS;
+        this.timestamps = [];
+    }
+    addEvent() {
+        const currentTime = Date.now();
+        this.timestamps.push(currentTime);
+        // Remove timestamps that are outside the window
+        const windowStart = currentTime - this.windowSizeMS;
+        this.timestamps = this.timestamps.filter(timestamp => timestamp >= windowStart);
+    }
+    calculateRate() {
+        const currentTime = Date.now();
+        const windowStart = currentTime - this.windowSizeMS;
+        // Filter timestamps within the window
+        const timestampsWithinWindow = this.timestamps.filter(timestamp => timestamp >= windowStart);
+        // Calculate rate based on the number of timestamps within the window
+        const rate = timestampsWithinWindow.length / (this.windowSizeMS / 1000); // Convert window size to seconds
+        return rate;
+    }
 }
 
 
@@ -49843,4 +50029,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlec38844c4335ffaed9b96.js.map
+//# sourceMappingURL=bundle63b34c16137b67f31323.js.map

@@ -2,7 +2,7 @@ import { Sprite, Texture, utils } from "pixi.js"
 import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
-import { projectileSpeed, soundSource } from "../settings"
+import { playerFireControl, projectileSpeed, soundSource } from "../settings"
 
 export class BonusItem extends SmartContainer {
   sprite: Sprite
@@ -23,13 +23,31 @@ export class BonusItem extends SmartContainer {
     this.sprite = new Sprite()
 
     if (itemType >= 1 && itemType <= 10) {
-      this.sprite = new Sprite(utils.TextureCache[`axes_${this.itemType}`])
+      this.sprite = new Sprite(utils.TextureCache[`axes_1`])
       this.sprite.scale.set(1.5)
     }
 
-    if (itemType === 10) {
-      this.sprite = new Sprite(utils.TextureCache[`bonus_shield`])
-      this.sprite.scale.set(0.8)
+    //shield
+    if (itemType === 11) {
+      this.sprite = new Sprite(utils.TextureCache[`shield`])
+      this.sprite.scale.set(0.9)
+    }
+
+    if (itemType === 15) {
+      this.sprite = new Sprite(utils.TextureCache[`bonus_health`])
+      this.sprite.scale.set(0.9)
+    }
+
+    //rapid fire stage 1
+    if (itemType === 20) {
+      this.sprite = new Sprite(utils.TextureCache[`bonus_weapon_upgrade`])
+      this.sprite.scale.set(0.9)
+    }
+
+    //rapid fire stage 2
+    if (itemType === 21) {
+      this.sprite = new Sprite(utils.TextureCache[`bonus_weapon_upgrade`])
+      this.sprite.scale.set(0.9)
     }
 
     this.addChild(this.sprite)
@@ -49,6 +67,7 @@ export class BonusItem extends SmartContainer {
       volume: 0.5,
       loop: false,
     })
+
   }
 
   collisionTestPlayerWithBonusWeapon(c: SmartContainer) {
@@ -65,18 +84,38 @@ export class BonusItem extends SmartContainer {
       bounds1.y + bounds1.height > bounds2.y
     ) {
       // Collision detected
-      //do not take weapon no.1 if there is already stronger weapon
-      if (this.itemType === 1 && components.player.bonusItemsList.includes(2))
-        return
-      if (this.itemType === 1 && components.player.bonusItemsList.includes(1))
-        return
-      if (!components.player.bonusItemsList.includes(this.itemType)) {
-        this.stopTween()
-        components.player.addBonusItem(this.itemType)
-        this.bonusCollectedSound.play()
-        this.collected = true
-        this.destroy()
+      if (this.itemType >= 1 && this.itemType <= 10) {
+        if (components.player.weapon < 3) {
+          components.player.weapon++
+        }
       }
+
+      if (this.itemType === 11 && !components.player.shieldEngaged) {
+        components.player.powerUpShield()
+      }
+
+      if (this.itemType === 15) {
+        components.player.resetDamage()
+      }
+
+      if (this.itemType === 20) {
+        components.player.setFireControlParams(
+          playerFireControl.fireRate1.autofireInterval,
+          playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
+        )
+      }
+
+      if (this.itemType === 21) {
+        components.player.setFireControlParams(
+          playerFireControl.fireRate2.autofireInterval,
+          playerFireControl.fireRate2.maxPlayerProjectilesFiredPerSecond
+        )
+      }
+
+      this.stopTween()
+      this.bonusCollectedSound.play()
+      this.collected = true
+      this.destroy()
     }
   }
 

@@ -7,7 +7,7 @@ async function loadAssets() {
         name: "player",
         assets: [
           { alias: "player", src: "assets/images/player.png" },
-          { alias: "bonus_shield", src: "assets/images/shield_bonus.png" },
+          { alias: "shield", src: "assets/images/shield_bonus.png" },
           { alias: "player_shield", src: "assets/images/player_shield.png" },
           { alias: "projectile_0", src: "assets/images/projectile_0.png" },
           { alias: "projectile_1", src: "assets/images/projectile_1.png" },
@@ -16,6 +16,8 @@ async function loadAssets() {
           { alias: "splash", src: "assets/images/space_splash.jpg" },
           { alias: "axes_1", src: "assets/images/axes_1.png" },
           { alias: "axes_2", src: "assets/images/axes_2.png" },
+          { alias: "bonus_health", src: "assets/images/shield_bonus_health.png" },
+          { alias: "bonus_weapon_upgrade", src: "assets/images/shield_bonus_weapon_upgrade.png" },
         ],
       },
       {

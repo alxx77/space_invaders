@@ -20,6 +20,7 @@ import {
 import { Howl } from "howler"
 import { BonusItem } from "./bonusItem"
 import Timeout from "smart-timeout"
+import { getRandomNumber } from "../utils"
 
 //root container
 export class Invader extends SmartContainer {
@@ -79,17 +80,27 @@ export class Invader extends SmartContainer {
       invaderProjectileSpeed,
       InvaderProjectile.projectileCount % 4 === 0 ? 1 : 0
     )
+    let destX = projectile.x
+    if (InvaderProjectile.projectileCount % 2 === 0) {
+      let diff = getRandomNumber() * 300 * (getRandomNumber() > 0.5 ? -1 : 1)
+      destX = destX + diff
+    }
     state.addInvaderProjectile(projectile)
     components.foreground.container.addChild(projectile)
     projectile.shootSound.play()
-    projectile.moveTo(projectile.x, stageHeight + 50, projectile.speed, () => {
-      const i = state.invaderProjectiles.findIndex((el) => el === projectile)
-      //if allready removed - return
-      if (i < 0) return
-      state.removeInvaderProjectile(i)
-      projectile.destroy()
-      InvaderProjectile.projectileCompleted++
-    })
+    projectile.moveTo(
+      destX,
+      stageHeight + 50,
+      projectile.speed + getRandomNumber() * 7,
+      () => {
+        const i = state.invaderProjectiles.findIndex((el) => el === projectile)
+        //if allready removed - return
+        if (i < 0) return
+        state.removeInvaderProjectile(i)
+        projectile.destroy()
+        InvaderProjectile.projectileCompleted++
+      }
+    )
   }
 
   createBonusWeapon(type: number) {

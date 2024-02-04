@@ -8,7 +8,7 @@ export const sound = {
 export const playerSpeed = 5
 
 export const projectileSpeed = 24
-export const invaderProjectileSpeed = 3.5
+export const invaderProjectileSpeed = 4
 
 export const playerSlideInSpeed = 8
 
@@ -28,6 +28,22 @@ export const playerWidth = 48
 export const playerScaleFactor = 2
 
 export const playerMaxDamage = 3
+
+export const playerFireControl = {
+  fireRate0: {
+    autofireInterval: 330,
+    maxPlayerProjectilesFiredPerSecond: 3,
+  },
+
+  fireRate1: {
+    autofireInterval: 280,
+    maxPlayerProjectilesFiredPerSecond: 4,
+  },
+  fireRate2: {
+    autofireInterval: 200,
+    maxPlayerProjectilesFiredPerSecond: 5,
+  },
+}
 
 export const invaderXMargin = 10
 export const invaderYMargin = 10

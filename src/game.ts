@@ -9,6 +9,7 @@ import { IPointData, FederatedPointerEvent } from "pixi.js"
 import { finalLevel } from "./settings"
 import Timeout from "smart-timeout"
 import { InvaderProjectile } from "./components/invaderProjectile"
+import { EventRateCalculator } from "./utils"
 
 //high level game logic
 export class Game {
@@ -16,7 +17,11 @@ export class Game {
   foreground: Foreground
   splashScreen: SplashScreen
   autofire: NodeJS.Timeout | undefined
+
+  firingRateCalculator: EventRateCalculator
   constructor() {
+    //calculate firing rate per second
+    this.firingRateCalculator = new EventRateCalculator(1000)
 
     //initialize components
     this.background = new Background()
@@ -163,7 +168,7 @@ export class Game {
 
     // Define the touchstart event handler function
     function onTouchStart(event: FederatedPointerEvent) {
-      state.set_SPACEBAR_keyPressed(true)
+      state.setScreenTapped(true)
       initialTouch = event.getLocalPosition(components.foreground.container)
       if (
         components.player &&
@@ -171,20 +176,16 @@ export class Game {
         state.playerAlive &&
         state.playerActive
       ) {
-        components.player.moveToPosition(
-          initialTouch.x,
-          initialTouch.y
-        )
-        self.autofire = setInterval(async () => {
-          if (components.player && state.playerAlive && state.playerActive) {
-            await new Promise<void>((resolve) => {
-              const t = Timeout.instantiate(() => {
-                components.player.shoot()
-                resolve()
-              }, Math.random() * 75)
-            })
-          }
-        }, 200)
+        components.player.moveToPosition(initialTouch.x, initialTouch.y)
+        //shoot immediately once
+        if (
+          self.firingRateCalculator.calculateRate() <
+          components.player.maxPlayerProjectilesFiredPerSecond
+        ) {
+          components.player.shoot()
+        }
+        //.. then set autofire while touchdown
+        self.mountAutofire()
       }
     }
 
@@ -213,16 +214,40 @@ export class Game {
     function onTouchEnd() {
       initialTouch = undefined
       clearInterval(self.autofire)
-      state.set_SPACEBAR_keyPressed(false)
+      self.autofire = undefined
+      state.setScreenTapped(false)
     }
 
     function onTouchEndOutside() {
       initialTouch = undefined
       clearInterval(self.autofire)
-      state.set_SPACEBAR_keyPressed(false)
+      self.autofire = undefined
+      state.setScreenTapped(false)
     }
 
     this.updateView()
+  }
+
+  mountAutofire() {
+    this.autofire = setInterval(async () => {
+      if (components.player && state.playerAlive && state.playerActive) {
+        await new Promise<void>((resolve) => {
+          const t = Timeout.instantiate(() => {
+            if (
+              this.firingRateCalculator.calculateRate() <
+              components.player.maxPlayerProjectilesFiredPerSecond
+            ) {
+              components.player.shoot()
+            }
+            resolve()
+          }, Math.random() * 100)
+        })
+      }
+    }, components.player.autofireInterval)
+  }
+
+  dismountAutofire() {
+    clearInterval(this.autofire)
   }
 
   //signal when level is finished in any way
@@ -253,18 +278,17 @@ export class Game {
   }
 
   async play() {
-
     this.updateView()
-    
+
     state.setWaitingForGameStart(true)
 
     state.setGameLevel(1)
     state.setScoreCounter(0)
 
-    if(!state.playerAlive){
+    if (!state.playerAlive) {
       components.player = new Player()
     }
-  
+
     if (!components.invaders) {
       components.invaders = new Invaders()
     }
@@ -283,9 +307,7 @@ export class Game {
     await components.foreground.showPressSpaceToPlayText()
     components.foreground.showLevelStartText()
 
-
     while (state.livesCounter > 0) {
-
       //some stats for debugging
       InvaderProjectile.projectileCount = 0
       InvaderProjectile.projectileCompleted = 0

@@ -37,6 +37,7 @@ class Store {
   _splashScreenVisible: boolean
   _mobileDevice: boolean
   _toggleTWEEN: boolean
+  _screenTapped: boolean
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -62,6 +63,7 @@ class Store {
     this._splashScreenVisible = true
     this._mobileDevice = false
     this._toggleTWEEN = true
+    this._screenTapped = false
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
@@ -371,6 +373,16 @@ class Store {
   @computed
   get toggleTWEEN() {
     return this._toggleTWEEN
+  }
+
+  @action
+  setScreenTapped(value: boolean) {
+    this._screenTapped = value
+  }
+
+  @computed
+  get screenTapped() {
+    return this._screenTapped
   }
 }
 

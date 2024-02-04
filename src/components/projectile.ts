@@ -11,6 +11,8 @@ export class Projectile extends SmartContainer {
   speed: number
   shootSound: Howl
   projectileType: number
+  //creation timestamp
+  createdAt: number
   constructor(position: { x: number; y: number }, speed: number, type: number) {
     super()
     this.projectileType = type
@@ -32,9 +34,18 @@ export class Projectile extends SmartContainer {
     })
     this.shootSound.volume(0.2 + Math.random() * 0.4)
     this.shootSound.play()
+
+    this.createdAt = Date.now()
   }
 
-  collisionTestWithInvadersAndInvadersProjectiles(c: SmartContainer,elapsed : number) {
+  rotate(deg:number){
+    this.sprite.angle = deg
+  }
+
+  collisionTestWithInvadersAndInvadersProjectiles(
+    c: SmartContainer,
+    elapsed: number
+  ) {
     const bounds1 = this.sprite.getBounds()
     //colision with invaders
     for (const invader of state.invaders) {
@@ -50,7 +61,7 @@ export class Projectile extends SmartContainer {
         invader.takeHit()
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
-          components.invaders.awardWeaponBonus(invader)
+          components.invaders.awardBonus(invader)
           state.triggerInvaderDestroyed()
         }
         //projectile is immediately destroyed

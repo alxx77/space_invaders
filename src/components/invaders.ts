@@ -1,4 +1,4 @@
-import { Container, Prepare } from "pixi.js"
+import { Container} from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
@@ -9,6 +9,7 @@ import {
   invaderXMargin,
   invaderYMargin,
   invadersSlideInSpeed,
+  playerFireControl,
   stageHeight,
   stageWidth,
 } from "../settings"
@@ -34,14 +35,11 @@ export class Invaders extends SmartContainer {
   private initialInvadersCount: number
   static shootCounter: number
   static shotsEnded: number
-  bonusCreatedForCurrentLevel: number[]
-  lastWeaponBonusTimeStamp: number
+  lastBonusTimeStamp: number
   constructor() {
     super()
     this.name = "Invaders"
-
-    this.bonusCreatedForCurrentLevel = []
-    this.lastWeaponBonusTimeStamp = 0
+    this.lastBonusTimeStamp = 0
 
     //container
     this.container = new Container()
@@ -136,7 +134,7 @@ export class Invaders extends SmartContainer {
         state.invaders.length / self.initialInvadersCount
 
       let previousInvaderIndex = 0
-      for (const iterator of [1, 2, 3, 4]) {
+      for (const iterator of [1, 2, 3, 4, 5, 6]) {
         let invaderIndex = Math.floor(Math.random() * state.invaders.length)
         if (previousInvaderIndex === invaderIndex) break
         previousInvaderIndex = invaderIndex
@@ -173,7 +171,6 @@ export class Invaders extends SmartContainer {
     //clear invaders first
     //in case of playing game again
     this.clearAllInvaders()
-    this.bonusCreatedForCurrentLevel = [0]
 
     const gen = this.getLevelData(state.gameLevel, this)
     for (const invaderData of gen) {
@@ -189,10 +186,6 @@ export class Invaders extends SmartContainer {
     this.y = stageHeight * 0.15
 
     this.initialInvadersCount = state.invaders.length
-  }
-
-  clearBonusWeapons() {
-    this.bonusCreatedForCurrentLevel = [0]
   }
 
   resetPosition() {
@@ -226,65 +219,109 @@ export class Invaders extends SmartContainer {
     return count
   }
 
-  awardWeaponBonus(invader: Invader) {
+  awardBonus(invader: Invader) {
     //create bonus weapon
     const percentageInvadersDestroyed =
       1 - state.invaders.length / this.initialInvadersCount
     const r = getRandomNumber()
     const p = r <= percentageInvadersDestroyed
-    let weaponBonusAwarded = false
+    let bonusAwarded = false
 
     //weapon bonus 1
     if (
       p &&
-      !weaponBonusAwarded &&
-      this.bonusCreatedForCurrentLevel[
-        this.bonusCreatedForCurrentLevel.length - 1
-      ] !== 1 &&
+      !bonusAwarded &&
+      components.player.weapon<3 &&
       //do not allow too frequent bonus (7 sec minimum from last one)
       //but excluding start of the level
-      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-        this.lastWeaponBonusTimeStamp === 0)
+      (Date.now() - this.lastBonusTimeStamp > 7000 ||
+        this.lastBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < 0.25) {
+      if (getRandomNumber() < 0.12) {
         invader.createBonusWeapon(1)
-        this.bonusCreatedForCurrentLevel.push(1)
-        weaponBonusAwarded = true
-        this.lastWeaponBonusTimeStamp = Date.now()
-      }
-    }
+        components.player.bonusApplied.push(1)
+        bonusAwarded = true
+        this.lastBonusTimeStamp = Date.now()
 
-    //weapon bonus 2
-    if (
-      p &&
-      !weaponBonusAwarded &&
-      this.bonusCreatedForCurrentLevel[
-        this.bonusCreatedForCurrentLevel.length - 1
-      ] !== 2 &&
-      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-        this.lastWeaponBonusTimeStamp === 0) &&
-      this.bonusCreatedForCurrentLevel.includes(1)
-    ) {
-      if (getRandomNumber() < 0.15) {
-        invader.createBonusWeapon(2)
-        this.bonusCreatedForCurrentLevel.push(2)
-        weaponBonusAwarded = true
-        this.lastWeaponBonusTimeStamp = Date.now()
+        if(components.player.weapon === 2){
+          setTimeout(() => {
+            if(components.player.weapon === 3){
+              components.player.weapon = 2
+            }
+          }, 8000);
+        }
+
+        if(components.player.weapon === 1){
+          setTimeout(() => {
+            if(components.player.weapon === 2){
+              components.player.weapon = 1
+            }
+          }, 20000);
+        }
       }
     }
 
     //shield
+    if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
+      if (getRandomNumber() < 0.15) {
+        invader.createBonusWeapon(11)
+        components.player.bonusApplied.push(11)
+        bonusAwarded = true
+        this.lastBonusTimeStamp = Date.now()
+      }
+    }
+
+    //health
     if (
       p &&
-      !weaponBonusAwarded &&
-      (Date.now() - this.lastWeaponBonusTimeStamp > 7000 ||
-        this.lastWeaponBonusTimeStamp === 0)
+      state.gameLevel > 3 &&
+      Date.now() - this.lastBonusTimeStamp > 7000
     ) {
-      if (getRandomNumber() < 0.4) {
-        invader.createBonusWeapon(10)
-        this.bonusCreatedForCurrentLevel.push(10)
-        weaponBonusAwarded = true
-        this.lastWeaponBonusTimeStamp = Date.now()
+      if (getRandomNumber() < 0.17) {
+        invader.createBonusWeapon(15)
+        components.player.bonusApplied.push(15)
+        this.lastBonusTimeStamp = Date.now()
+      }
+    }
+
+    //fire rate 1
+    if (
+      p &&
+      !bonusAwarded &&
+      !components.player.bonusApplied.includes(20) &&
+      !components.player.bonusApplied.includes(21) &&
+      Date.now() - this.lastBonusTimeStamp > 5000
+    ) {
+      if (getRandomNumber() < 0.17) {
+        invader.createBonusWeapon(20)
+        components.player.bonusApplied.push(20)
+        bonusAwarded = true
+        this.lastBonusTimeStamp = Date.now()
+      }
+    }
+
+    //fire rate 2
+    if (
+      p &&
+      !bonusAwarded &&
+      !components.player.bonusApplied.includes(21) &&
+      components.player.bonusApplied.includes(20) &&
+      Date.now() - this.lastBonusTimeStamp > 12000
+    ) {
+      if (getRandomNumber() < 0.12) {
+        invader.createBonusWeapon(21)
+        components.player.bonusApplied.push(21)
+        bonusAwarded = true
+        this.lastBonusTimeStamp = Date.now()
+
+        //revert to rate1
+        setTimeout(() => {
+          components.player.setFireControlParams(
+            playerFireControl.fireRate1.autofireInterval,
+            playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
+          )
+        }, 10000);
+
       }
     }
   }

@@ -14,6 +14,7 @@ import { SmartContainer } from "./smartContainer"
 import { IReactionDisposer, reaction } from "mobx"
 import {
   fontStyles,
+  playerFireControl,
   playerHeight,
   playerMaxDamage,
   playerScaleFactor,
@@ -31,6 +32,7 @@ import { Projectile } from "./projectile"
 import { Howl } from "howler"
 import { InvaderProjectile } from "./invaderProjectile"
 import Timeout from "smart-timeout"
+import { Game } from "../game"
 
 //single change of position
 type DeltaPosition = { dx: number; dy: number }
@@ -38,19 +40,22 @@ type DeltaPosition = { dx: number; dy: number }
 //root container
 export class Player extends SmartContainer {
   public name: string
-  sprite: Sprite
-  shieldSprite: Sprite
-  explosionSprite: AnimatedSprite
-  positionCalculator: Generator<DeltaPosition, void, number> | undefined
-  playerDirection: PlayerDirection
-  ticker: Ticker | undefined
-  disposerList: IReactionDisposer[]
-  explosionSound: Howl
-  engineSound: Howl
-  bonusItemsList: number[]
-  damage: number
+  readonly sprite: Sprite
+  private shieldSprite: Sprite
+  private explosionSprite: AnimatedSprite
+  private positionCalculator: Generator<DeltaPosition, void, number> | undefined
+  private playerDirection: PlayerDirection
+  private ticker: Ticker | undefined
+  private disposerList: IReactionDisposer[]
+  private explosionSound: Howl
+  private engineSound: Howl
+  weapon: number
+  private damage: number
   private shieldText: Text
-  private shieldEngaged: boolean
+  shieldEngaged: boolean
+  autofireInterval: number
+  maxPlayerProjectilesFiredPerSecond: number
+  bonusApplied: number[]
   constructor() {
     super()
     this.name = "Player"
@@ -62,9 +67,13 @@ export class Player extends SmartContainer {
 
     this.damage = 0
     this.shieldEngaged = false
+    this.bonusApplied = []
 
     //standard projectile as default
-    this.bonusItemsList = [0]
+    this.weapon = 0
+    this.autofireInterval = playerFireControl.fireRate0.autofireInterval
+    this.maxPlayerProjectilesFiredPerSecond =
+      playerFireControl.fireRate0.maxPlayerProjectilesFiredPerSecond
 
     components.foreground.container.addChild(this)
 
@@ -122,8 +131,14 @@ export class Player extends SmartContainer {
         if (!state.playerAlive || !state.playerActive) return
 
         //if spacebar is pressed fire a projectile
+        //if conditions are met
         if (newVal.SpaceBar_keyPressed === true) {
-          this.shoot()
+          if (
+            components.game.firingRateCalculator.calculateRate() <
+            this.maxPlayerProjectilesFiredPerSecond
+          ) {
+            components.player.shoot()
+          }
         }
       }
     )
@@ -136,7 +151,9 @@ export class Player extends SmartContainer {
       (newVal) => {
         if (newVal === false) {
           this.damage = playerMaxDamage
-          components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
+          components.foreground.healthText.text = this.percentageToAsterisks(
+            this.healthPercentage()
+          )
           this.disengageShield()
           this.stop()
           this.sprite.visible = false
@@ -195,14 +212,12 @@ export class Player extends SmartContainer {
       loop: true,
     })
 
-    if (components.invaders) {
-      components.invaders.clearBonusWeapons()
-    }
-
-    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
+    components.foreground.healthText.text = this.percentageToAsterisks(
+      this.healthPercentage()
+    )
   }
 
-  percentageToAsterisks(percent: number): string {
+  private percentageToAsterisks(percent: number): string {
     // Ensure the percentage is within the range [0, 100]
     const percentage = Math.max(0, Math.min(100, percent))
 
@@ -213,45 +228,52 @@ export class Player extends SmartContainer {
     return "*".repeat(numAsterisks)
   }
 
-  healthPercentage() {
-    return (100 / playerMaxDamage) * (playerMaxDamage - this.damage) 
-  }  
+  private healthPercentage() {
+    return (100 / playerMaxDamage) * (playerMaxDamage - this.damage)
+  }
 
-  addBonusItem(item: number) {
-    //add to list
-    this.bonusItemsList.push(item)
-
-    //handle shield
-    if (item === 10) {
-      this.engageShield()
-      this.shieldText.visible = true
-      this.shieldText.style = new TextStyle(fontStyles.shieldTextWhite)
-      Timeout.instantiate(() => {
-        Timeout.instantiate(() => {
-          this.disengageShield()
-          this.stopShieldBlink(i)
-        }, playerShieldDuration2)
-        const i = this.startShieldBlink()
-      }, playerShieldDuration1)
-
-      //stopwatch
-      let totalTimeLeft = playerShieldDuration1 + playerShieldDuration2
-      const self = this
-      const i = setInterval(function () {
-        totalTimeLeft = totalTimeLeft - 100
-        const formattedNumber: string = (totalTimeLeft / 1000).toFixed(1)
-        self.shieldText.text = formattedNumber
-        if (totalTimeLeft <= 0) {
-          clearInterval(i)
-        }
-      }, 100)
+  setFireControlParams(interval: number, maxRate: number) {
+    this.autofireInterval = interval
+    this.maxPlayerProjectilesFiredPerSecond = maxRate
+    //reignite autofire with new params
+    if(components.game.autofire){
+      components.game.dismountAutofire()
+      components.game.mountAutofire()
     }
+  }
+
+  powerUpShield() {
+    //handle shield
+    this.engageShield()
+    this.shieldText.visible = true
+    this.shieldText.style = new TextStyle(fontStyles.shieldTextWhite)
+    Timeout.instantiate(() => {
+      Timeout.instantiate(() => {
+        this.disengageShield()
+        this.stopShieldBlink(i)
+      }, playerShieldDuration2)
+      const i = this.startShieldBlink()
+    }, playerShieldDuration1)
+
+    //stopwatch
+    let totalTimeLeft = playerShieldDuration1 + playerShieldDuration2
+    const self = this
+    const i = setInterval(function () {
+      totalTimeLeft = totalTimeLeft - 100
+      const formattedNumber: string = (totalTimeLeft / 1000).toFixed(1)
+      self.shieldText.text = formattedNumber
+      if (totalTimeLeft <= 0) {
+        clearInterval(i)
+      }
+    }, 100)
   }
 
   async takeHitFromProjectile(ip: InvaderProjectile) {
     let damageFactor = this.shieldEngaged ? 0.25 : 1
     this.damage = this.damage + damageFactor * ip.lethalFactor
-    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
+    components.foreground.healthText.text = this.percentageToAsterisks(
+      this.healthPercentage()
+    )
     return this.blink()
   }
 
@@ -261,10 +283,12 @@ export class Player extends SmartContainer {
 
   resetDamage() {
     this.damage = 0
-    components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage())
+    components.foreground.healthText.text = this.percentageToAsterisks(
+      this.healthPercentage()
+    )
   }
 
-  async blink() {
+  private async blink() {
     this.sprite.tint = "#771111"
     await new Promise<void>((resolve) => {
       Timeout.instantiate(() => {
@@ -288,20 +312,20 @@ export class Player extends SmartContainer {
     })
   }
 
-  startShieldBlink() {
+  private startShieldBlink() {
     return setInterval(() => {
       this.shieldSprite.visible = !this.shieldSprite.visible
       this.shieldText.style = new TextStyle(fontStyles.shieldTextRed)
     }, 350)
   }
 
-  stopShieldBlink(i: NodeJS.Timeout) {
+  private stopShieldBlink(i: NodeJS.Timeout) {
     clearInterval(i)
     this.shieldSprite.visible = false
     this.shieldText.visible = false
   }
 
-  fireProjectile(
+  private fireProjectile(
     x: number,
     y: number,
     projectileSpeed: number,
@@ -324,81 +348,122 @@ export class Player extends SmartContainer {
       state.removeProjectile(i)
       projectile.destroy()
     })
+
+    return projectile
+  }
+
+  private fireWeapon0() {
+    const pl = this.fireProjectile(
+      this.x,
+      this.y * 0.97,
+      projectileSpeed,
+      1,
+      this.x,
+      -50
+    )
+  }
+
+  private fireWeapon1() {
+    const pl = this.fireProjectile(
+      this.x - 12 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed * 1.2,
+      1,
+      this.x - 12 * this.sprite.scale.x,
+      -50
+    )
+    this.fireProjectile(
+      this.x + 12 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed * 1.2,
+      1,
+      this.x + 12 * this.sprite.scale.x,
+      -50
+    )
+  }
+
+  private fireWeapon2() {
+    this.fireProjectile(
+      this.x - 20 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed,
+      1,
+      this.x - 20 * this.sprite.scale.x,
+      -50
+    )
+    this.fireProjectile(
+      this.x + 20 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed,
+      1,
+      this.x + 20 * this.sprite.scale.x,
+      -50
+    )
+    const pl = this.fireProjectile(
+      this.x,
+      this.y * 0.95,
+      projectileSpeed * 2,
+      0,
+      this.x,
+      -50
+    )
+  }
+
+  private fireWeapon3() {
+    const p1 = this.fireProjectile(
+      this.x - 18.2 * 2,
+      this.y - 50 * 2,
+      projectileSpeed * 0.6,
+      0,
+      this.x - (this.y + 50 * 2) * 0.3639,
+      -50
+    )
+
+    p1.rotate(-20)
+
+    const p2 = this.fireProjectile(
+      this.x + 18.2 * 2,
+      this.y - 50 * 2,
+      projectileSpeed * 0.6,
+      0,
+      this.x + (this.y + 50 * 2) * 0.3639,
+      -50
+    )
+
+    p2.rotate(20)
   }
 
   async shoot() {
-    if (this.bonusItemsList.includes(2)) {
-      this.fireProjectile(
-        this.x - 20 * this.sprite.scale.x,
-        this.y * 0.97,
-        projectileSpeed,
-        1,
-        this.x - 20 * this.sprite.scale.x,
-        -50
-      )
-      this.fireProjectile(
-        this.x + 20 * this.sprite.scale.x,
-        this.y * 0.97,
-        projectileSpeed,
-        1,
-        this.x + 20 * this.sprite.scale.x,
-        -50
-      )
-      this.fireProjectile(
-        this.x,
-        this.y * 0.95,
-        projectileSpeed * 2,
-        0,
-        this.x,
-        -50
-      )
-      return
+    switch (this.weapon) {
+      case 0:
+        this.fireWeapon0()
+        break
+      case 1:
+        this.fireWeapon1()
+        break
+      case 2:
+        this.fireWeapon2()
+        break
+      case 3:
+        this.fireWeapon2()
+        this.fireWeapon3()
+        break
+      default:
+        break
     }
 
-    if (this.bonusItemsList.includes(1)) {
-      this.fireProjectile(
-        this.x - 12 * this.sprite.scale.x,
-        this.y * 0.97,
-        projectileSpeed * 1.5,
-        1,
-        this.x - 12 * this.sprite.scale.x,
-        -50
-      )
-      this.fireProjectile(
-        this.x + 12 * this.sprite.scale.x,
-        this.y * 0.97,
-        projectileSpeed * 1.5,
-        1,
-        this.x + 12 * this.sprite.scale.x,
-        -50
-      )
-      return
-    }
-
-    if (this.bonusItemsList.includes(0)) {
-      this.fireProjectile(
-        this.x,
-        this.y * 0.97,
-        projectileSpeed,
-        1,
-        this.x,
-        -50
-      )
-      return
-    }
+    components.game.firingRateCalculator.addEvent()
   }
 
-  engageShield() {
+  private engageShield() {
     this.shieldEngaged = true
     this.shieldSprite.visible = true
   }
 
-  disengageShield() {
+  private disengageShield() {
     this.shieldEngaged = false
     this.shieldSprite.visible = false
     this.shieldText.visible = false
-    let i = this.bonusItemsList.findIndex((el) => el === 10)
-    this.bonusItemsList.splice(i, 1)
   }
 
   async slideIn() {

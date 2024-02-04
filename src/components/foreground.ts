@@ -130,11 +130,8 @@ export class Foreground extends Container {
 
     this.container.addChild(this.gameCompletedText)
 
-     //health
-     this.healthText = new Text(
-      `*****`,
-      fontStyles.healthText
-    )
+    //health
+    this.healthText = new Text(`*****`, fontStyles.healthText)
     //this.healthText.anchor.set(0.5)
     this.healthText.scale.set(2)
 
@@ -144,7 +141,6 @@ export class Foreground extends Container {
     this.healthText.visible = true
 
     this.container.addChild(this.healthText)
-
 
     reaction(
       () => state.scoreCounter,
@@ -214,9 +210,16 @@ export class Foreground extends Container {
     return new Promise<void>((resolve) => {
       const disposer = reaction(
         //react on SPACEBAR keyup
-        () => state.SPACEBAR_keyPressed,
+        () => ({
+          SPACEBAR_keyPressed: state.SPACEBAR_keyPressed,
+          screenTapped: state.screenTapped,
+        }),
         (newVal, oldVal) => {
-          if (newVal === false && oldVal === true) {
+          if (
+            (newVal.SPACEBAR_keyPressed === false &&
+              oldVal.SPACEBAR_keyPressed === true) ||
+            (newVal.screenTapped === false && oldVal.screenTapped === true)
+          ) {
             clearInterval(i)
             self.startText.visible = false
             state.setWaitingForGameStart(false)
@@ -239,7 +242,7 @@ export class Foreground extends Container {
       setTimeout(() => {
         self.levelCompletedText.visible = false
         resolve()
-      }, 1250)
+      }, 1000)
     })
   }
 
@@ -261,11 +264,16 @@ export class Foreground extends Container {
     return new Promise<void>((resolve) => {
       const disposer = reaction(
         //react on SPACEBAR keyup
-        () => state.SPACEBAR_keyPressed,
+        () => ({
+          SPACEBAR_keyPressed: state.SPACEBAR_keyPressed,
+          screenTapped: state.screenTapped,
+        }),
         (newVal, oldVal) => {
           if (
-            newVal === false &&
-            oldVal === true &&
+            ((newVal.SPACEBAR_keyPressed === false &&
+              oldVal.SPACEBAR_keyPressed === true) ||
+              (newVal.screenTapped === false &&
+                oldVal.screenTapped === true)) &&
             Date.now() - startTime > 2700
           ) {
             clearInterval(i)
@@ -297,11 +305,16 @@ export class Foreground extends Container {
     return new Promise<void>((resolve) => {
       const disposer = reaction(
         //react on SPACEBAR keyup
-        () => state.SPACEBAR_keyPressed,
+        () => ({
+          SPACEBAR_keyPressed: state.SPACEBAR_keyPressed,
+          screenTapped: state.screenTapped,
+        }),
         (newVal, oldVal) => {
           if (
-            newVal === false &&
-            oldVal === true &&
+            ((newVal.SPACEBAR_keyPressed === false &&
+              oldVal.SPACEBAR_keyPressed === true) ||
+              (newVal.screenTapped === false &&
+                oldVal.screenTapped === true)) &&
             Date.now() - startTime > 1000
           ) {
             clearInterval(i)
