@@ -8,6 +8,7 @@ export class SmartContainer extends Container {
   private tween: TWEEN.Tween<this>
   public skipFeatureRequested: boolean
   public cbOnTweenUpdate: Function | undefined
+  public easingFunction: any
   constructor() {
     super()
     this.finalPosition = {} as FinalPosition
@@ -39,7 +40,7 @@ export class SmartContainer extends Container {
     return new Promise<void>((resolve) => {
       this.tween = new TWEEN.Tween(self)
         .to(self.finalPosition, totalTime)
-        //.easing(TWEEN.Easing.Quadratic.InOut)
+        .easing(this.easingFunction)
         .dynamic(true) //allow dynamic tween
         .onUpdate(function(a,elapsed){
           if(self.cbOnTweenUpdate){
@@ -63,6 +64,10 @@ export class SmartContainer extends Container {
 
   endTween(){
     this.tween.end()
+  }
+
+  setEasingFunction(e: any){
+    this.easingFunction = e
   }
 
   goToFinalPosition() {

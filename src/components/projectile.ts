@@ -7,10 +7,10 @@ import { InvaderProjectile } from "./invaderProjectile"
 
 //root container
 export class Projectile extends SmartContainer {
-  sprite: Sprite
+  private sprite: Sprite
   speed: number
   shootSound: Howl
-  projectileType: number
+  private projectileType: number
   //creation timestamp
   createdAt: number
   constructor(position: { x: number; y: number }, speed: number, type: number) {

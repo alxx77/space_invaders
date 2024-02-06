@@ -27,18 +27,33 @@ export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
   explosionSound: Howl
-  variety: number
-  damage: number
-  maxDamage: number
+  private variety: number
+  private damage: number
+  private maxDamage: number = 1
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.variety = variety
 
-    if (variety === 1 || variety === 2 || variety === 3) {
-      this.maxDamage = 1
-    } else {
-      this.maxDamage = 2
+    switch (variety) {
+      case 1:
+      case 2:
+      case 3:
+        this.maxDamage = 1
+        break
+      case 4:
+        this.maxDamage = 2
+        break
+      case 5:
+        this.maxDamage = 3
+        break
+      case 6:
+        this.maxDamage = 5
+        break
+
+      default:
+        break
     }
+
     this.damage = 0
 
     this.sprite = new Sprite(utils.TextureCache["invader" + variety])
@@ -91,7 +106,7 @@ export class Invader extends SmartContainer {
     projectile.moveTo(
       destX,
       stageHeight + 50,
-      projectile.speed + getRandomNumber() * 7,
+      projectile.speed + getRandomNumber() * 3,
       () => {
         const i = state.invaderProjectiles.findIndex((el) => el === projectile)
         //if allready removed - return
@@ -116,7 +131,7 @@ export class Invader extends SmartContainer {
 
     components.foreground.container.addChild(bonus)
     bonus.bonusCreatedSound.play()
-    bonus.moveTo(bonus.x, stageHeight + 50, bonus.speed, () => {
+    bonus.moveTo(bonus.x, stageHeight + 50, undefined , () => {
       if (!bonus.collected) {
         bonus.destroy()
       }

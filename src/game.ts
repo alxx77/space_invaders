@@ -13,9 +13,9 @@ import { EventRateCalculator } from "./utils"
 
 //high level game logic
 export class Game {
-  background: Background
-  foreground: Foreground
-  splashScreen: SplashScreen
+  private background: Background
+  private foreground: Foreground
+  private splashScreen: SplashScreen
   autofire: NodeJS.Timeout | undefined
 
   firingRateCalculator: EventRateCalculator
@@ -298,7 +298,7 @@ export class Game {
     components.invaders.createInvadersForCurrentLevel()
     components.invaders.slideIn()
 
-    state.setLivesCounter(3)
+    state.setLivesCounter(5)
     await components.player.slideIn()
 
     document.body.style.cursor = "none"
@@ -318,6 +318,8 @@ export class Game {
         components.player = new Player()
         await components.player.slideIn()
       }
+
+      //components.player.weapon = 2
 
       //activate player & invaders
       state.setPlayerActive(true)

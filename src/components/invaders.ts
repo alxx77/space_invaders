@@ -1,4 +1,4 @@
-import { Container} from "pixi.js"
+import { Container } from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { Invader } from "./invader"
@@ -9,7 +9,6 @@ import {
   invaderXMargin,
   invaderYMargin,
   invadersSlideInSpeed,
-  playerFireControl,
   stageHeight,
   stageWidth,
 } from "../settings"
@@ -17,6 +16,7 @@ import { reaction } from "mobx"
 import { getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 import { InvaderProjectile } from "./invaderProjectile"
+import { SoloInvader } from "./soloInvader"
 
 type InvaderData = {
   x: number
@@ -31,11 +31,12 @@ export class Invaders extends SmartContainer {
   container: Container
   public name: string
   private initialContainerWidth: number
-  interval: NodeJS.Timeout | undefined
+  private intervalRegular: NodeJS.Timeout | undefined
+  private intervalSolo: NodeJS.Timeout | undefined
   private initialInvadersCount: number
   static shootCounter: number
   static shotsEnded: number
-  lastBonusTimeStamp: number
+  private lastBonusTimeStamp: number
   constructor() {
     super()
     this.name = "Invaders"
@@ -82,6 +83,7 @@ export class Invaders extends SmartContainer {
         } else {
           this.startMove()
           this.startShooting()
+          this.startShootingSolos()
         }
       }
     )
@@ -90,44 +92,98 @@ export class Invaders extends SmartContainer {
   }
 
   async startMove() {
-    let g = this.movesGenerator(this)
+    //start solo invaders first
+    const soloList = state.invaders.filter(
+      (el) => el.constructor.name === "SoloInvader"
+    )
+
+    for (const solo of soloList) {
+      ;(solo as SoloInvader).active = true
+      ;(solo as SoloInvader).startMoving()
+    }
+
+    //move group
+    const g = this.movesGenerator(this)
     for await (const nextMove of g) {
       if (state.invadersActive === false) break
     }
   }
 
   stopMove() {
+    const soloList = state.invaders.filter(
+      (el) => el.constructor.name === "SoloInvader"
+    )
+
+    for (const solo of soloList) {
+      ;(solo as SoloInvader).active = false
+      solo.stopTween()
+    }
+
     this.stopTween()
   }
 
   stopShooting() {
-    if (components.invaders.interval) {
-      clearInterval(components.invaders.interval)
+    if (components.invaders.intervalRegular) {
+      clearInterval(components.invaders.intervalRegular)
+    }
+    if (components.invaders.intervalSolo) {
+      clearInterval(components.invaders.intervalSolo)
     }
   }
 
   async slideIn() {
+    const promises: Promise<void>[] = []
+    const soloList = state.invaders.filter(
+      (el) => el.constructor.name === "SoloInvader"
+    )
+
+    for (const solo of soloList) {
+      solo.visible = true
+      promises.push(
+        solo.moveTo(
+          stageWidth / 2 - solo.width / 2,
+          50,
+          5
+        )
+      )
+    }
+
     this.x = stageWidth / 2 - this.width / 2
     this.y = -this.height - 50
     this.visible = true
-    return this.moveTo(
-      stageWidth / 2 - this.width / 2,
-      stageHeight * 0.15,
-      invadersSlideInSpeed
+
+    promises.push(
+      this.moveTo(
+        stageWidth / 2 - this.width / 2,
+        stageHeight * 0.15,
+        invadersSlideInSpeed
+      )
     )
+
+    return Promise.all(promises)
   }
 
   moveOutOfSight() {
     state.setInvadersActive(false)
+
+    const soloList = state.invaders.filter(
+      (el) => el.constructor.name === "SoloInvader"
+    )
+
+    for (const solo of soloList) {
+      solo.x = stageWidth / 2 - this.width / 2
+      solo.y = -this.height - 50
+    }
+
     this.x = stageWidth / 2 - this.width / 2
     this.y = -this.height - 50
   }
 
   startShooting() {
     const self = this
-    this.interval = setInterval(function () {
+    this.intervalRegular = setInterval(function () {
       if (state.invaders.length === 0) {
-        clearInterval(self.interval)
+        clearInterval(self.intervalRegular)
         return
       }
       const percentInvadersRemained =
@@ -148,7 +204,32 @@ export class Invaders extends SmartContainer {
           )
         }
       }
-    }, 600 - 75 * state.gameLevel)
+    }, 600 - (75 * state.gameLevel) / 2)
+  }
+
+  startShootingSolos() {
+    const self = this
+
+    if (state.invaders.length === 0) {
+      clearInterval(self.intervalSolo)
+      return
+    }
+
+    this.intervalSolo = setInterval(function () {
+      const soloList = state.invaders.filter(
+        (el) => el.constructor.name === "SoloInvader"
+      )
+
+      for (const solo of soloList) {
+        if (getRandomNumber() < 0.5) {
+          Timeout.instantiate(
+            "shoot",
+            () => (solo as SoloInvader).shootSolo(),
+            Math.random() * 150
+          )
+        }
+      }
+    }, 800 - 45 * state.gameLevel)
   }
 
   movesGenerator = function* (self: Invaders) {
@@ -185,15 +266,72 @@ export class Invaders extends SmartContainer {
     this.x = stageWidth / 2 - this.width / 2
     this.y = stageHeight * 0.15
 
+    let n = 0
+    let v = 5
+
+    switch (state.gameLevel) {
+      case 1:
+      case 2:
+        n = 2
+        break
+      case 3:
+      case 4:
+        n = 3
+        break
+
+      case 5:
+      case 6:
+        n = 4
+        break
+
+      case 7:
+      case 8:
+        n = 5
+        break
+
+      case 9:
+      case 10:
+        n = 6
+        break
+
+      case 11:
+        n = 11
+        v = 6
+        break
+
+      default:
+        break
+    }
+
+    for (let i = 0; i < n; i++) {
+      const solo = new SoloInvader({ x: -50, y: 50 }, v)
+
+      state.addInvader(solo)
+      components.foreground.container.addChild(solo)
+    }
+
     this.initialInvadersCount = state.invaders.length
   }
 
   resetPosition() {
-    return this.moveTo(
-      (stageWidth - this.initialContainerWidth) / 2,
-      stageHeight * 0.15,
-      5
+    const promises: Promise<void>[] = []
+    const soloList = state.invaders.filter(
+      (el) => el.constructor.name === "SoloInvader"
     )
+
+    for (const solo of soloList) {
+      promises.push(solo.moveTo(stageWidth / 2 - solo.width / 2, 50, 8))
+    }
+
+    promises.push(
+      this.moveTo(
+        (stageWidth - this.initialContainerWidth) / 2,
+        stageHeight * 0.15,
+        5
+      )
+    )
+
+    return Promise.all(promises)
   }
 
   clearAllInvaders() {
@@ -227,43 +365,57 @@ export class Invaders extends SmartContainer {
     const p = r <= percentageInvadersDestroyed
     let bonusAwarded = false
 
+    let bonusFactor = 1
+
+    switch (state.gameLevel) {
+      case 5:
+      case 6:
+        bonusFactor = 1.2
+
+        break
+
+      case 7:
+      case 8:
+        bonusFactor = 1.4
+
+        break
+
+      case 9:
+      case 10:
+        bonusFactor = 1.6
+
+        break
+
+      case 11:
+        bonusFactor = 1.8
+
+        break
+
+      default:
+        break
+    }
+
     //weapon bonus 1
     if (
       p &&
       !bonusAwarded &&
-      components.player.weapon<3 &&
+      components.player.weapon < 3 &&
       //do not allow too frequent bonus (7 sec minimum from last one)
       //but excluding start of the level
       (Date.now() - this.lastBonusTimeStamp > 7000 ||
         this.lastBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < 0.12) {
+      if (getRandomNumber() < 0.12 * bonusFactor) {
         invader.createBonusWeapon(1)
         components.player.bonusApplied.push(1)
-        bonusAwarded = true
+        //bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
-
-        if(components.player.weapon === 2){
-          setTimeout(() => {
-            if(components.player.weapon === 3){
-              components.player.weapon = 2
-            }
-          }, 8000);
-        }
-
-        if(components.player.weapon === 1){
-          setTimeout(() => {
-            if(components.player.weapon === 2){
-              components.player.weapon = 1
-            }
-          }, 20000);
-        }
       }
     }
 
     //shield
     if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
-      if (getRandomNumber() < 0.15) {
+      if (getRandomNumber() < 0.18 * bonusFactor) {
         invader.createBonusWeapon(11)
         components.player.bonusApplied.push(11)
         bonusAwarded = true
@@ -277,7 +429,7 @@ export class Invaders extends SmartContainer {
       state.gameLevel > 3 &&
       Date.now() - this.lastBonusTimeStamp > 7000
     ) {
-      if (getRandomNumber() < 0.17) {
+      if (getRandomNumber() < 0.2 * bonusFactor) {
         invader.createBonusWeapon(15)
         components.player.bonusApplied.push(15)
         this.lastBonusTimeStamp = Date.now()
@@ -292,10 +444,10 @@ export class Invaders extends SmartContainer {
       !components.player.bonusApplied.includes(21) &&
       Date.now() - this.lastBonusTimeStamp > 5000
     ) {
-      if (getRandomNumber() < 0.17) {
+      if (getRandomNumber() < 0.2 * bonusFactor) {
         invader.createBonusWeapon(20)
         components.player.bonusApplied.push(20)
-        bonusAwarded = true
+        //bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
       }
     }
@@ -308,26 +460,23 @@ export class Invaders extends SmartContainer {
       components.player.bonusApplied.includes(20) &&
       Date.now() - this.lastBonusTimeStamp > 12000
     ) {
-      if (getRandomNumber() < 0.12) {
+      if (getRandomNumber() < 0.12 * bonusFactor) {
         invader.createBonusWeapon(21)
         components.player.bonusApplied.push(21)
-        bonusAwarded = true
+        //bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
-
-        //revert to rate1
-        setTimeout(() => {
-          components.player.setFireControlParams(
-            playerFireControl.fireRate1.autofireInterval,
-            playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
-          )
-        }, 10000);
-
       }
     }
   }
 
   removeInvader(invader: Invader) {
     const i = state.invaders.findIndex((el) => el === invader)
+
+    if (invader.constructor.name === "SoloInvader") {
+      invader.stopTween()
+      ;(invader as SoloInvader).active = false
+    }
+
     state.removeInvader(i)
     invader.sprite.visible = false
     invader.explosionSprite.scale.set(0.5 + Math.random())
@@ -434,6 +583,52 @@ export class Invaders extends SmartContainer {
         levelData.push("0,0,0,1,1,1,1,1,0,0,0")
         levelData.push("0,0,0,0,4,4,4,0,0,0,0")
         levelData.push("0,0,0,0,0,4,0,0,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 8:
+        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
+        levelData.push("0,0,0,0,3,3,3,0,0,0,0")
+        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
+        levelData.push("0,0,0,0,3,3,3,0,0,0,0")
+        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 9:
+        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 10:
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
+        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
+        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
+
+        yield* self.prepareLevelData(levelData)
+        break
+
+      case 11:
+        levelData.push("0,4,0,4,0,4,0,4,0,4,0")
+        levelData.push("4,3,4,3,4,3,4,3,4,3,4")
+        levelData.push("0,4,0,4,0,4,0,4,0,4,0")
 
         yield* self.prepareLevelData(levelData)
         break

@@ -16,7 +16,6 @@ if (hasTouchScreen) {
     state.setMobileDevice(true)
 }
 
-
 const waitForSpacebarKeyPress = async () => {
   return new Promise<void>((resolve) => {
     let disposer = reaction(

@@ -29,6 +29,22 @@ export const playerScaleFactor = 2
 
 export const playerMaxDamage = 3
 
+//solo invader speed, pause MS, projectile speed
+export const soloInvaderSpecsPerLevel = [
+  [0, 0, 0],
+  [5, 1500, 4],
+  [5, 1500, 4],
+  [5, 1500, 4],
+  [5, 1200, 4],
+  [6, 1200, 5],
+  [6, 1200, 5],
+  [6, 900, 5],
+  [7, 900, 6],
+  [7, 900, 6],
+  [7, 800, 6],
+  [10, 700, 7],
+]
+
 export const playerFireControl = {
   fireRate0: {
     autofireInterval: 330,
@@ -56,7 +72,7 @@ export const backgroundScrollTimePerSprite = 7000
 export const minHeight = 240
 export const minWidth = 320
 
-export const finalLevel = 7
+export const finalLevel = 11
 
 //font styles
 export const fontStyles = {
@@ -127,6 +143,22 @@ export const fontStyles = {
     dropShadowColor: "white",
     dropShadowDistance: 3,
   }),
+  bonus1Text: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "36px",
+    fill: "red",
+    dropShadow: true,
+    dropShadowColor: "gray",
+    dropShadowDistance: 2,
+  }),
+  bonus2Text: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "36px",
+    fill: "orange",
+    dropShadow: true,
+    dropShadowColor: "gray",
+    dropShadowDistance: 2,
+  }),
 }
 
 export const soundSource = {
@@ -142,4 +174,5 @@ export const soundSource = {
   gameCompleted: "assets/sounds/game_completed.mp3",
   bonusCreated: "assets/sounds/bonus_created.mp3",
   bonusCollected: "assets/sounds/bonus_collected.mp3",
+  bonusEnds: "assets/sounds/bonus_ends.mp3",
 }

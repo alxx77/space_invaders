@@ -55,6 +55,11 @@ export class InvaderProjectile extends SmartContainer {
         this.speed = (speed + Math.random()) * 2
         this.lethalFactor = 3
         break
+      case 2:
+          this.maxDamage = 2
+          this.speed = (speed + Math.random()) * 1.5
+          this.lethalFactor = 2
+          break
       default:
         break
     }
@@ -65,7 +70,12 @@ export class InvaderProjectile extends SmartContainer {
 
     this.scaleFactor = 2
 
+    if(this.type === 2){
+      this.scaleFactor = 0.75
+    }
+
     this.sprite = new Sprite(texture)
+    this.sprite.anchor.set(0.5)
     this.scale.set(this.scaleFactor)
     this.addChild(this.sprite)
     this.x = position.x

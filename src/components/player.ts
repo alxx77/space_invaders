@@ -32,7 +32,6 @@ import { Projectile } from "./projectile"
 import { Howl } from "howler"
 import { InvaderProjectile } from "./invaderProjectile"
 import Timeout from "smart-timeout"
-import { Game } from "../game"
 
 //single change of position
 type DeltaPosition = { dx: number; dy: number }
@@ -154,6 +153,12 @@ export class Player extends SmartContainer {
           components.foreground.healthText.text = this.percentageToAsterisks(
             this.healthPercentage()
           )
+          if (components.foreground.weaponBonusTextInterval !== undefined) {
+            components.foreground.hideWeaponBonusText(false)
+          }
+          if (components.foreground.fireRateBonusTextInterval !== undefined) {
+            components.foreground.hideFireRateBonusText(false)
+          }
           this.disengageShield()
           this.stop()
           this.sprite.visible = false
@@ -236,7 +241,7 @@ export class Player extends SmartContainer {
     this.autofireInterval = interval
     this.maxPlayerProjectilesFiredPerSecond = maxRate
     //reignite autofire with new params
-    if(components.game.autofire){
+    if (components.game.autofire) {
       components.game.dismountAutofire()
       components.game.mountAutofire()
     }
@@ -414,7 +419,7 @@ export class Player extends SmartContainer {
       this.x - 18.2 * 2,
       this.y - 50 * 2,
       projectileSpeed * 0.6,
-      0,
+      2,
       this.x - (this.y + 50 * 2) * 0.3639,
       -50
     )
@@ -425,7 +430,7 @@ export class Player extends SmartContainer {
       this.x + 18.2 * 2,
       this.y - 50 * 2,
       projectileSpeed * 0.6,
-      0,
+      2,
       this.x + (this.y + 50 * 2) * 0.3639,
       -50
     )

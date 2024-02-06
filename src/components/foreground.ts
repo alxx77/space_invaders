@@ -15,6 +15,8 @@ import {
 } from "../settings"
 import { reaction } from "mobx"
 import { Howl } from "howler"
+import * as TWEEN from "@tweenjs/tween.js"
+import { TextureAtlasPage } from "pixi-spine"
 
 export class Foreground extends Container {
   container: Container
@@ -32,6 +34,13 @@ export class Foreground extends Container {
   private gameOverSound: Howl
   gameTheme: Howl
   private gameCompletedSound: Howl
+  private weaponBonusText: Text
+  private fireRateBonusText: Text
+  weaponBonusTextInterval: NodeJS.Timeout | undefined
+  fireRateBonusTextInterval: NodeJS.Timeout | undefined
+  private weaponBonusEndsSound: Howl
+  private fireRateBonusEndsSound: Howl
+
   constructor() {
     super()
     //container
@@ -73,7 +82,7 @@ export class Foreground extends Container {
       ? `Tap to Start`
       : `Press SPACE to Start`
     this.startText = new Text(startText, fontStyles.startText)
-    this.startText.scale.set(2)
+    this.startText.scale.set(1.85)
     this.startText.anchor.set(0.5)
     this.startText.x = stageWidth / 2 + 10
     this.startText.y = stageHeight / 2
@@ -108,7 +117,7 @@ export class Foreground extends Container {
     this.container.addChild(this.smallPressSpaceToContinueText)
 
     //game over
-    this.gameOverText = new Text(`GAME OVER`, fontStyles.levelCompletedText)
+    this.gameOverText = new Text(` GAME OVER `, fontStyles.levelCompletedText)
     this.gameOverText.anchor.set(0.5)
     this.gameOverText.scale.set(2)
     this.gameOverText.x = stageWidth / 2
@@ -141,6 +150,20 @@ export class Foreground extends Container {
     this.healthText.visible = true
 
     this.container.addChild(this.healthText)
+
+    //weapon bonus
+    this.weaponBonusText = new Text(`Weapon Stage 3!`, fontStyles.bonus1Text)
+    this.weaponBonusText.scale.set(1.75)
+    this.weaponBonusText.visible = false
+
+    this.container.addChild(this.weaponBonusText)
+
+    //fire rate bonus
+    this.fireRateBonusText = new Text(`Bonus Fire Rate!`, fontStyles.bonus2Text)
+    this.fireRateBonusText.scale.set(1.75)
+    this.fireRateBonusText.visible = false
+
+    this.container.addChild(this.fireRateBonusText)
 
     reaction(
       () => state.scoreCounter,
@@ -190,6 +213,86 @@ export class Foreground extends Container {
       volume: 0.7,
       loop: false,
     })
+
+    this.weaponBonusEndsSound = new Howl({
+      src: [soundSource.bonusEnds],
+      volume: 0.3,
+      loop: false,
+    })
+
+    this.fireRateBonusEndsSound = new Howl({
+      src: [soundSource.bonusEnds],
+      volume: 0.3,
+      loop: false,
+    })
+  }
+
+  showFireRateBonusText(x: number, y: number) {
+    this.fireRateBonusText.x = x
+    this.fireRateBonusText.y = y
+    this.fireRateBonusText.visible = true
+    const self = this
+
+    new TWEEN.Tween({ xPos: x, yPos: y })
+      .to({ xPos: stageWidth * 0.05, yPos: stageHeight * 0.92 }, 750)
+      .delay(1000)
+      .onUpdate(function (value) {
+        self.fireRateBonusText.x = value.xPos
+        self.fireRateBonusText.y = value.yPos
+      })
+      .start()
+      .onComplete(() => {
+        this.fireRateBonusTextInterval = setInterval(() => {
+          this.fireRateBonusText.visible = !this.fireRateBonusText.visible
+        }, 550)
+      })
+  }
+
+  hideFireRateBonusText(playSound: boolean) {
+    if (!this.fireRateBonusTextInterval) return
+    this.fireRateBonusText.visible = false
+    if (playSound) {
+      this.fireRateBonusEndsSound.play()
+      this.fireRateBonusEndsSound.once("end", () => {
+        this.fireRateBonusEndsSound.play()
+      })
+    }
+    clearInterval(this.fireRateBonusTextInterval)
+    this.fireRateBonusTextInterval = undefined
+  }
+
+  showWeaponBonusText(x: number, y: number) {
+    this.weaponBonusText.x = x
+    this.weaponBonusText.y = y
+    this.weaponBonusText.visible = true
+    const self = this
+
+    new TWEEN.Tween({ xPos: x, yPos: y })
+      .to({ xPos: stageWidth * 0.53, yPos: stageHeight * 0.97 }, 750)
+      .delay(1000)
+      .onUpdate(function (value) {
+        self.weaponBonusText.x = value.xPos
+        self.weaponBonusText.y = value.yPos
+      })
+      .start()
+      .onComplete(() => {
+        this.weaponBonusTextInterval = setInterval(() => {
+          this.weaponBonusText.visible = !this.weaponBonusText.visible
+        }, 550)
+      })
+  }
+
+  hideWeaponBonusText(playSound: boolean) {
+    if (!this.weaponBonusTextInterval) return
+    this.weaponBonusText.visible = false
+    clearInterval(this.weaponBonusTextInterval)
+    this.weaponBonusTextInterval = undefined
+    if (playSound) {
+      this.weaponBonusEndsSound.play()
+      this.weaponBonusEndsSound.once("end", () => {
+        this.weaponBonusEndsSound.play()
+      })
+    }
   }
 
   updateScoreText(score: number) {
