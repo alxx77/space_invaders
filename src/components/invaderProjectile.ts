@@ -10,7 +10,7 @@ import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
 import { projectileSpeed, soundSource } from "../settings"
-import { getRandomWebColor } from "../utils"
+import { getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 
 export class InvaderProjectile extends SmartContainer {
@@ -20,6 +20,7 @@ export class InvaderProjectile extends SmartContainer {
   explosionSound: Howl
   explosionSprite: AnimatedSprite
   damage: number
+  //how much damage can sustain
   maxDamage: number
   scaleFactor: number
   type: number
@@ -31,7 +32,7 @@ export class InvaderProjectile extends SmartContainer {
   static projectileHit: number
   serialNo: number
   //how much damage it causes to player when hits it
-  lethalFactor:number
+  lethalFactor: number
   constructor(position: { x: number; y: number }, speed: number, type: number) {
     super()
 
@@ -44,40 +45,20 @@ export class InvaderProjectile extends SmartContainer {
     this.serialNo = InvaderProjectile.projectileCount++
     this.lethalFactor = 0
 
-    switch (type) {
-      case 0:
-        this.maxDamage = 1
-        this.speed = speed + Math.random()
-        this.lethalFactor = 1
-        break
-      case 1:
-        this.maxDamage = 3
-        this.speed = (speed + Math.random()) * 2
-        this.lethalFactor = 3
-        break
-      case 2:
-          this.maxDamage = 2
-          this.speed = (speed + Math.random()) * 1.5
-          this.lethalFactor = 2
-          break
-      default:
-        break
-    }
-
     texture = utils.TextureCache[`invader_projectile_${this.type}`]
 
     this.damage = 0
 
     this.scaleFactor = 2
 
-    if(this.type === 2){
+    if (this.type === 2) {
       this.scaleFactor = 0.75
     }
 
     this.sprite = new Sprite(texture)
     this.sprite.anchor.set(0.5)
     this.scale.set(this.scaleFactor)
-    this.addChild(this.sprite)
+
     this.x = position.x
     this.y = position.y
     this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile
@@ -87,13 +68,39 @@ export class InvaderProjectile extends SmartContainer {
     this.explosionSprite = new AnimatedSprite(textures)
     this.explosionSprite.visible = false
     this.explosionSprite.loop = false
-    this.explosionSprite.scale.set(
-      this.scaleFactor * (this.type === 1 ? 0.8 : 0.3)
-    )
+
     this.explosionSprite.x = this.width / 2 / this.scaleFactor
     this.explosionSprite.y = this.height / 2 / this.scaleFactor
     this.explosionSprite.anchor.set(0.5)
     this.explosionSprite.animationSpeed = 0.2
+
+    switch (type) {
+      case 0:
+        //regular
+        this.maxDamage = 1
+        this.speed = speed + getRandomNumber()
+        this.lethalFactor = 1
+        this.explosionSprite.scale.set(this.scaleFactor * 0.3)
+        break
+      case 1:
+        //red bomb
+        this.maxDamage = 3
+        this.speed = (speed + getRandomNumber()) * 2
+        this.lethalFactor = 3
+        this.explosionSprite.scale.set(this.scaleFactor * 0.8)
+        break
+      case 2:
+        //solo shot
+        this.maxDamage = 0.5 + getRandomNumber()
+        this.speed = (speed + getRandomNumber()) * 1.5
+        this.lethalFactor = 2
+        this.explosionSprite.scale.set(this.scaleFactor * (2.5 + getRandomNumber()*0.5))
+        break
+      default:
+        break
+    }
+
+    this.addChild(this.sprite)
     this.addChild(this.explosionSprite)
 
     this.shootSound = new Howl({
@@ -101,7 +108,7 @@ export class InvaderProjectile extends SmartContainer {
       volume: 0.5,
       loop: false,
     })
-    this.shootSound.volume(0.1 + Math.random() * 0.1)
+    this.shootSound.volume(0.1 + getRandomNumber() * 0.1)
 
     this.explosionSound = new Howl({
       src: [soundSource.invaderExplosion],
@@ -121,7 +128,7 @@ export class InvaderProjectile extends SmartContainer {
 
     if (randomDelay) {
       await new Promise<void>((resolve) => {
-        Timeout.instantiate(() => resolve(), Math.random() * 450)
+        Timeout.instantiate(() => resolve(), getRandomNumber() * 450)
       })
     }
 
@@ -219,7 +226,7 @@ export class InvaderProjectile extends SmartContainer {
 
       //check if projectile is "live"
       //if yes do damage, otherwise not
-      if(this.detonationStatus === 0){
+      if (this.detonationStatus === 0) {
         components.player.takeHitFromProjectile(this)
         InvaderProjectile.removeProjectile(this)
         InvaderProjectile.projectileHit++

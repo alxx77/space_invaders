@@ -14830,25 +14830,6 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.detonationStatus = 0;
         this.serialNo = InvaderProjectile.projectileCount++;
         this.lethalFactor = 0;
-        switch (type) {
-            case 0:
-                this.maxDamage = 1;
-                this.speed = speed + Math.random();
-                this.lethalFactor = 1;
-                break;
-            case 1:
-                this.maxDamage = 3;
-                this.speed = (speed + Math.random()) * 2;
-                this.lethalFactor = 3;
-                break;
-            case 2:
-                this.maxDamage = 2;
-                this.speed = (speed + Math.random()) * 1.5;
-                this.lethalFactor = 2;
-                break;
-            default:
-                break;
-        }
         texture = pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache[`invader_projectile_${this.type}`];
         this.damage = 0;
         this.scaleFactor = 2;
@@ -14858,7 +14839,6 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(texture);
         this.sprite.anchor.set(0.5);
         this.scale.set(this.scaleFactor);
-        this.addChild(this.sprite);
         this.x = position.x;
         this.y = position.y;
         this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile;
@@ -14867,18 +14847,43 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.explosionSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.AnimatedSprite(textures);
         this.explosionSprite.visible = false;
         this.explosionSprite.loop = false;
-        this.explosionSprite.scale.set(this.scaleFactor * (this.type === 1 ? 0.8 : 0.3));
         this.explosionSprite.x = this.width / 2 / this.scaleFactor;
         this.explosionSprite.y = this.height / 2 / this.scaleFactor;
         this.explosionSprite.anchor.set(0.5);
         this.explosionSprite.animationSpeed = 0.2;
+        switch (type) {
+            case 0:
+                //regular
+                this.maxDamage = 1;
+                this.speed = speed + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)();
+                this.lethalFactor = 1;
+                this.explosionSprite.scale.set(this.scaleFactor * 0.3);
+                break;
+            case 1:
+                //red bomb
+                this.maxDamage = 3;
+                this.speed = (speed + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)()) * 2;
+                this.lethalFactor = 3;
+                this.explosionSprite.scale.set(this.scaleFactor * 0.8);
+                break;
+            case 2:
+                //solo shot
+                this.maxDamage = 0.5 + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)();
+                this.speed = (speed + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)()) * 1.5;
+                this.lethalFactor = 2;
+                this.explosionSprite.scale.set(this.scaleFactor * (2.5 + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() * 0.5));
+                break;
+            default:
+                break;
+        }
+        this.addChild(this.sprite);
         this.addChild(this.explosionSprite);
         this.shootSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.invaderProjectile],
             volume: 0.5,
             loop: false,
         });
-        this.shootSound.volume(0.1 + Math.random() * 0.1);
+        this.shootSound.volume(0.1 + (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() * 0.1);
         this.explosionSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.invaderExplosion],
             volume: 0.1,
@@ -14892,7 +14897,7 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         _state__WEBPACK_IMPORTED_MODULE_2__.state.removeInvaderProjectile(i);
         if (randomDelay) {
             await new Promise((resolve) => {
-                smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => resolve(), Math.random() * 450);
+                smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().instantiate(() => resolve(), (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() * 450);
             });
         }
         //detonation started
@@ -50496,4 +50501,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle8ad0fca4431c241d4264.js.map
+//# sourceMappingURL=bundlefc57be3958099fc9b1e2.js.map
