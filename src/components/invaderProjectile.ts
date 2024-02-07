@@ -178,6 +178,8 @@ export class InvaderProjectile extends SmartContainer {
 
   takeHit() {
     this.damage++
+    this.lethalFactor -= 0.75
+    if(this.lethalFactor<0) this.lethalFactor = 0
     this.blink()
   }
 

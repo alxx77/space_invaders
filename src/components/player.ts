@@ -415,27 +415,23 @@ export class Player extends SmartContainer {
   }
 
   private fireWeapon3() {
-    const p1 = this.fireProjectile(
-      this.x - 18.2 * 2,
-      this.y - 50 * 2,
-      projectileSpeed * 0.6,
-      2,
-      this.x - (this.y + 50 * 2) * 0.3639,
+    this.fireProjectile(
+      this.x - playerWidth * 0.75 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed,
+      0,
+      this.x - playerWidth * 0.75 * this.sprite.scale.x,
       -50
     )
 
-    p1.rotate(-20)
-
-    const p2 = this.fireProjectile(
-      this.x + 18.2 * 2,
-      this.y - 50 * 2,
-      projectileSpeed * 0.6,
-      2,
-      this.x + (this.y + 50 * 2) * 0.3639,
+    this.fireProjectile(
+      this.x + playerWidth * 0.75 * this.sprite.scale.x,
+      this.y * 0.97,
+      projectileSpeed,
+      0,
+      this.x + playerWidth * 0.75 * this.sprite.scale.x,
       -50
     )
-
-    p2.rotate(20)
   }
 
   async shoot() {

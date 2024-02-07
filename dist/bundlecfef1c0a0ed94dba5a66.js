@@ -14942,6 +14942,9 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
     }
     takeHit() {
         this.damage++;
+        this.lethalFactor -= 0.75;
+        if (this.lethalFactor < 0)
+            this.lethalFactor = 0;
         this.blink();
     }
     isTotallyDamaged() {
@@ -15898,10 +15901,8 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         const pl = this.fireProjectile(this.x, this.y * 0.95, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 2, 0, this.x, -50);
     }
     fireWeapon3() {
-        const p1 = this.fireProjectile(this.x - 18.2 * 2, this.y - 50 * 2, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 0.6, 2, this.x - (this.y + 50 * 2) * 0.3639, -50);
-        p1.rotate(-20);
-        const p2 = this.fireProjectile(this.x + 18.2 * 2, this.y - 50 * 2, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 0.6, 2, this.x + (this.y + 50 * 2) * 0.3639, -50);
-        p2.rotate(20);
+        this.fireProjectile(this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50);
+        this.fireProjectile(this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50);
     }
     async shoot() {
         switch (this.weapon) {
@@ -50512,4 +50513,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlec5917ad7a7250382af62.js.map
+//# sourceMappingURL=bundlecfef1c0a0ed94dba5a66.js.map
