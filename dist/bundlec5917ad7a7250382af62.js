@@ -15427,7 +15427,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             //but excluding start of the level
             (Date.now() - this.lastBonusTimeStamp > 7000 ||
                 this.lastBonusTimeStamp === 0)) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.12 * bonusFactor) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < (0.12 * bonusFactor) + (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 0 ? 0.30 : 0)) {
                 invader.createBonusWeapon(1);
                 _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(1);
                 //bonusAwarded = true
@@ -15459,7 +15459,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
             !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
             Date.now() - this.lastBonusTimeStamp > 5000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.2 * bonusFactor) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.2 * bonusFactor + (_state__WEBPACK_IMPORTED_MODULE_1__.components.game.autofire === undefined ? 0.25 : 0)) {
                 invader.createBonusWeapon(20);
                 _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(20);
                 //bonusAwarded = true
@@ -16691,6 +16691,7 @@ class Game {
     }
     dismountAutofire() {
         clearInterval(this.autofire);
+        this.autofire = undefined;
     }
     //signal when level is finished in any way
     //if current level is completed ( there i no more enemies) or
@@ -16740,6 +16741,13 @@ class Game {
             _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileMiss = 0;
             _components_invaderProjectile__WEBPACK_IMPORTED_MODULE_8__.InvaderProjectile.projectileHit = 0;
             if (!_state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive) {
+                //clear if active
+                if (_state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.weaponBonusTextInterval !== undefined) {
+                    _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.hideWeaponBonusText(false);
+                }
+                if (_state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.fireRateBonusTextInterval !== undefined) {
+                    _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.hideFireRateBonusText(false);
+                }
                 _state__WEBPACK_IMPORTED_MODULE_0__.components.player = new _components_player__WEBPACK_IMPORTED_MODULE_1__.Player();
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.player.slideIn();
             }
@@ -50492,6 +50500,9 @@ const waitForSpacebarKeyPress = async () => {
     //start music theme
     if (_settings__WEBPACK_IMPORTED_MODULE_4__.sound.music.play) {
         _state__WEBPACK_IMPORTED_MODULE_2__.components.foreground.gameTheme.play();
+        setInterval(() => {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.foreground.gameTheme.play();
+        }, 500000);
     }
     //start
     _state__WEBPACK_IMPORTED_MODULE_2__.components.game.play();
@@ -50501,4 +50512,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlefc57be3958099fc9b1e2.js.map
+//# sourceMappingURL=bundlec5917ad7a7250382af62.js.map

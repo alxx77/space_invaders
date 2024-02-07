@@ -405,7 +405,7 @@ export class Invaders extends SmartContainer {
       (Date.now() - this.lastBonusTimeStamp > 7000 ||
         this.lastBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < 0.12 * bonusFactor) {
+      if (getRandomNumber() < (0.12 * bonusFactor) + (components.player.weapon === 0 ? 0.30 : 0)) {
         invader.createBonusWeapon(1)
         components.player.bonusApplied.push(1)
         //bonusAwarded = true
@@ -444,7 +444,7 @@ export class Invaders extends SmartContainer {
       !components.player.bonusApplied.includes(21) &&
       Date.now() - this.lastBonusTimeStamp > 5000
     ) {
-      if (getRandomNumber() < 0.2 * bonusFactor) {
+      if (getRandomNumber() < 0.2 * bonusFactor + (components.game.autofire === undefined ? 0.25 : 0)) {
         invader.createBonusWeapon(20)
         components.player.bonusApplied.push(20)
         //bonusAwarded = true

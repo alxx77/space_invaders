@@ -248,6 +248,7 @@ export class Game {
 
   dismountAutofire() {
     clearInterval(this.autofire)
+    this.autofire = undefined
   }
 
   //signal when level is finished in any way
@@ -315,6 +316,15 @@ export class Game {
       InvaderProjectile.projectileHit = 0
 
       if (!state.playerAlive) {
+
+        //clear if active
+        if (components.foreground.weaponBonusTextInterval !== undefined) {
+          components.foreground.hideWeaponBonusText(false)
+        }
+        if (components.foreground.fireRateBonusTextInterval !== undefined) {
+          components.foreground.hideFireRateBonusText(false)
+        }
+
         components.player = new Player()
         await components.player.slideIn()
       }

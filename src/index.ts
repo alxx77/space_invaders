@@ -50,6 +50,9 @@ const waitForSpacebarKeyPress = async () => {
   //start music theme
   if (sound.music.play) {
     components.foreground.gameTheme.play()
+    setInterval(()=>{
+      components.foreground.gameTheme.play()
+    },500000)
   }
 
   //start
