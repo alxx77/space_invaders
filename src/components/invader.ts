@@ -49,6 +49,9 @@ export class Invader extends SmartContainer {
       case 6:
         this.maxDamage = 5
         break
+      case 7:
+        this.maxDamage = 10
+        break
 
       default:
         break
@@ -131,7 +134,7 @@ export class Invader extends SmartContainer {
 
     components.foreground.container.addChild(bonus)
     bonus.bonusCreatedSound.play()
-    bonus.moveTo(bonus.x, stageHeight + 50, undefined , () => {
+    bonus.moveTo(bonus.x, stageHeight + 50, undefined, () => {
       if (!bonus.collected) {
         bonus.destroy()
       }
@@ -145,8 +148,8 @@ export class Invader extends SmartContainer {
     }, 50)
   }
 
-  takeHit() {
-    this.damage++
+  takeHit(h: number) {
+    this.damage += h
     this.blink()
   }
 

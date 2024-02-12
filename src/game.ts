@@ -316,20 +316,11 @@ export class Game {
       InvaderProjectile.projectileHit = 0
 
       if (!state.playerAlive) {
-
-        //clear if active
-        if (components.foreground.weaponBonusTextInterval !== undefined) {
-          components.foreground.hideWeaponBonusText(false)
-        }
-        if (components.foreground.fireRateBonusTextInterval !== undefined) {
-          components.foreground.hideFireRateBonusText(false)
-        }
-
         components.player = new Player()
         await components.player.slideIn()
       }
 
-      //components.player.weapon = 2
+      components.player.weapon = 2
 
       //activate player & invaders
       state.setPlayerActive(true)

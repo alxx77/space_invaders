@@ -9,6 +9,7 @@ import {
   invaderXMargin,
   invaderYMargin,
   invadersSlideInSpeed,
+  soloInvaderSpecsPerLevel,
   stageHeight,
   stageWidth,
 } from "../settings"
@@ -139,13 +140,7 @@ export class Invaders extends SmartContainer {
 
     for (const solo of soloList) {
       solo.visible = true
-      promises.push(
-        solo.moveTo(
-          stageWidth / 2 - solo.width / 2,
-          50,
-          5
-        )
-      )
+      promises.push(solo.moveTo(stageWidth / 2 - solo.width / 2, 50, 5))
     }
 
     this.x = stageWidth / 2 - this.width / 2
@@ -253,6 +248,8 @@ export class Invaders extends SmartContainer {
     //in case of playing game again
     this.clearAllInvaders()
 
+    this.lastBonusTimeStamp = 0
+
     const gen = this.getLevelData(state.gameLevel, this)
     for (const invaderData of gen) {
       const invader = new Invader(
@@ -266,6 +263,7 @@ export class Invaders extends SmartContainer {
     this.x = stageWidth / 2 - this.width / 2
     this.y = stageHeight * 0.15
 
+    //create solo invaders
     let n = 0
     let v = 5
 
@@ -276,26 +274,28 @@ export class Invaders extends SmartContainer {
         break
       case 3:
       case 4:
-        n = 3
+        n = 4
         break
 
       case 5:
       case 6:
-        n = 4
+        n = 6
         break
 
       case 7:
       case 8:
-        n = 5
+        n = 6
+        v = 6
         break
 
       case 9:
       case 10:
-        n = 6
+        n = 8
+        v = 6
         break
 
       case 11:
-        n = 11
+        n = 14
         v = 6
         break
 
@@ -304,8 +304,25 @@ export class Invaders extends SmartContainer {
     }
 
     for (let i = 0; i < n; i++) {
-      const solo = new SoloInvader({ x: -50, y: 50 }, v)
-
+      let projectileSpeed = soloInvaderSpecsPerLevel[state.gameLevel][2]
+      let speed =
+        soloInvaderSpecsPerLevel[state.gameLevel][0] + getRandomNumber() * 3
+      let movePause =
+        soloInvaderSpecsPerLevel[state.gameLevel][1] + getRandomNumber() * 250
+      //make extra spicy invader ;-)
+      if (i === n - 1) {
+        projectileSpeed = Math.min(projectileSpeed + 4, 11)
+        speed = Math.min(speed + 4, 10)
+        movePause = Math.max(movePause / 2, 700)
+        v = 7
+      }
+      const solo = new SoloInvader(
+        { x: -50, y: 50 },
+        v,
+        projectileSpeed,
+        speed,
+        movePause
+      )
       state.addInvader(solo)
       components.foreground.container.addChild(solo)
     }
@@ -395,7 +412,7 @@ export class Invaders extends SmartContainer {
         break
     }
 
-    //weapon bonus 1
+    //weapon bonus
     if (
       p &&
       !bonusAwarded &&
@@ -405,17 +422,20 @@ export class Invaders extends SmartContainer {
       (Date.now() - this.lastBonusTimeStamp > 7000 ||
         this.lastBonusTimeStamp === 0)
     ) {
-      if (getRandomNumber() < (0.12 * bonusFactor) + (components.player.weapon === 0 ? 0.30 : 0)) {
+      if (
+        getRandomNumber() <
+        0.12 * bonusFactor + (components.player.weapon === 0 ? 0.3 : 0)
+      ) {
         invader.createBonusWeapon(1)
         components.player.bonusApplied.push(1)
-        //bonusAwarded = true
+        bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
       }
     }
 
     //shield
     if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
-      if (getRandomNumber() < 0.18 * bonusFactor) {
+      if (getRandomNumber() < 0.2 * bonusFactor) {
         invader.createBonusWeapon(11)
         components.player.bonusApplied.push(11)
         bonusAwarded = true
@@ -444,10 +464,13 @@ export class Invaders extends SmartContainer {
       !components.player.bonusApplied.includes(21) &&
       Date.now() - this.lastBonusTimeStamp > 5000
     ) {
-      if (getRandomNumber() < 0.2 * bonusFactor + (components.game.autofire === undefined ? 0.25 : 0)) {
+      if (
+        getRandomNumber() <
+        0.2 * bonusFactor + (components.game.autofire === undefined ? 0.45 : 0)
+      ) {
         invader.createBonusWeapon(20)
         components.player.bonusApplied.push(20)
-        //bonusAwarded = true
+        bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
       }
     }
@@ -463,7 +486,17 @@ export class Invaders extends SmartContainer {
       if (getRandomNumber() < 0.12 * bonusFactor) {
         invader.createBonusWeapon(21)
         components.player.bonusApplied.push(21)
-        //bonusAwarded = true
+        bonusAwarded = true
+        this.lastBonusTimeStamp = Date.now()
+      }
+    }
+
+    //cannonball
+    if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 12000) {
+      if (getRandomNumber() < 0.12 * bonusFactor) {
+        invader.createBonusWeapon(22)
+        components.player.bonusApplied.push(22)
+        bonusAwarded = true
         this.lastBonusTimeStamp = Date.now()
       }
     }
@@ -508,8 +541,8 @@ export class Invaders extends SmartContainer {
         break
 
       case 2:
-        levelData.push("4,4,0,0,0,0,0,4,4")
-        levelData.push("2,2,0,0,0,0,0,2,2")
+        levelData.push("4,4,4,0,0,0,4,4,4")
+        levelData.push("2,2,4,4,4,4,4,2,2")
         levelData.push("0,2,2,2,2,2,2,2,0")
         levelData.push("0,0,1,1,1,1,1,0,0")
         levelData.push("0,2,2,2,2,2,2,2,0")
@@ -537,10 +570,10 @@ export class Invaders extends SmartContainer {
         break
 
       case 4:
-        levelData.push("1,1,1,1,0,0,0,1,1,1,1")
-        levelData.push("2,2,2,2,2,0,2,2,2,2,2")
+        levelData.push("1,1,1,1,4,4,4,1,1,1,1")
+        levelData.push("2,2,2,2,2,4,2,2,2,2,2")
         levelData.push("0,3,3,3,3,3,3,3,3,3,0")
-        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
+        levelData.push("0,0,0,0,4,3,4,0,0,0,0")
         levelData.push("0,1,1,1,1,1,1,1,1,1,0")
         levelData.push("2,2,2,2,2,0,2,2,2,2,2")
         levelData.push("3,3,3,3,0,0,0,3,3,3,3")
@@ -581,8 +614,8 @@ export class Invaders extends SmartContainer {
         levelData.push("0,2,2,2,2,2,2,2,2,2,0")
         levelData.push("0,0,1,1,1,1,1,1,1,0,0")
         levelData.push("0,0,0,1,1,1,1,1,0,0,0")
-        levelData.push("0,0,0,0,4,4,4,0,0,0,0")
-        levelData.push("0,0,0,0,0,4,0,0,0,0,0")
+        levelData.push("0,0,0,0,1,1,1,0,0,0,0")
+        levelData.push("0,0,0,0,0,1,0,0,0,0,0")
 
         yield* self.prepareLevelData(levelData)
         break

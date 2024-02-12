@@ -5,7 +5,7 @@ export const sound = {
   soundFX: { play: true, volume: 0.1 },
 }
 
-export const playerSpeed = 5
+export const playerSpeed = 10
 
 export const projectileSpeed = 24
 export const invaderProjectileSpeed = 4
@@ -33,16 +33,16 @@ export const playerMaxDamage = 3
 export const soloInvaderSpecsPerLevel = [
   [0, 0, 0],
   [5, 1500, 4],
-  [5, 1500, 4],
-  [5, 1500, 4],
-  [5, 1200, 4],
-  [6, 1200, 5],
-  [6, 1200, 5],
-  [6, 900, 5],
-  [7, 900, 6],
-  [7, 900, 6],
-  [7, 800, 6],
-  [10, 700, 7],
+  [5, 1500, 5],
+  [5, 1500, 6],
+  [5, 1200, 6],
+  [6, 1200, 7],
+  [6, 1200, 7],
+  [6, 900, 8],
+  [7, 900, 8],
+  [7, 900, 8],
+  [7, 800, 9],
+  [10, 700, 11],
 ]
 
 export const playerFireControl = {
@@ -60,6 +60,18 @@ export const playerFireControl = {
     maxPlayerProjectilesFiredPerSecond: 5,
   },
 }
+
+export const playerWeaponBonusDuration1 = 3500
+export const playerWeaponBonusDuration2 = 1600
+export const playerWeaponBonusBlinkInterval = 180
+
+export const playerFireRateBonusDuration1 = 3500
+export const playerFireRateBonusDuration2 = 1600
+export const playerFireRateBonusBlinkInterval = 180
+
+export const playerCannonballBonusDuration1 = 2500
+export const playerCannonballBonusDuration2 = 1250
+export const playerCannonballBonusBlinkInterval = 150
 
 export const invaderXMargin = 10
 export const invaderYMargin = 10

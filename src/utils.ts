@@ -1,4 +1,5 @@
-import { Projectile } from "./components/projectile"
+import { Sprite } from "pixi.js";
+import Timeout from "smart-timeout";
 
 export function shuffleArray(array: []) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -71,4 +72,13 @@ export class EventRateCalculator {
     const rate = timestampsWithinWindow.length / (this.windowSizeMS / 1000); // Convert window size to seconds
     return rate;
   }
+}
+
+export async function changeSpriteTint(tint: string, timeToWait: number, sprite: Sprite){
+  return new Promise<void>((resolve) => {
+    Timeout.instantiate(() => {
+      sprite.tint = tint
+      resolve()
+    }, timeToWait)
+  })
 }

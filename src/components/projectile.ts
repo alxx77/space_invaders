@@ -11,6 +11,8 @@ export class Projectile extends SmartContainer {
   speed: number
   shootSound: Howl
   private projectileType: number
+  indestructible = false
+  lethality = 1
   //creation timestamp
   createdAt: number
   constructor(position: { x: number; y: number }, speed: number, type: number) {
@@ -20,6 +22,12 @@ export class Projectile extends SmartContainer {
       utils.TextureCache[`projectile_${this.projectileType}`]
     )
     this.sprite.scale.set(1.5)
+
+    if (type === 3) {
+      this.sprite.scale.set(0.75)
+    }
+
+    this.sprite.anchor.set(0.5)
     this.addChild(this.sprite)
     this.speed = speed
     this.x = position.x
@@ -38,7 +46,7 @@ export class Projectile extends SmartContainer {
     this.createdAt = Date.now()
   }
 
-  rotate(deg:number){
+  rotate(deg: number) {
     this.sprite.angle = deg
   }
 
@@ -58,18 +66,20 @@ export class Projectile extends SmartContainer {
         bounds1.y + bounds1.height > bounds2.y
       ) {
         // Collision detected
-        invader.takeHit()
+        invader.takeHit(this.lethality)
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
           components.invaders.awardBonus(invader)
           state.triggerInvaderDestroyed()
         }
-        //projectile is immediately destroyed
-        const i = state.projectiles.findIndex((el) => el === this)
-        state.removeProjectile(i)
-        c.stopTween()
-        this.destroy()
-        return
+        //if not indestructible projectile is immediately destroyed
+        if (!this.indestructible) {
+          const i = state.projectiles.findIndex((el) => el === this)
+          state.removeProjectile(i)
+          c.stopTween()
+          this.destroy()
+          return
+        }
       }
     }
 
@@ -85,17 +95,19 @@ export class Projectile extends SmartContainer {
       ) {
         // Collision detected
         //damage invader projectile
-        invaderProjectile.takeHit()
+        invaderProjectile.takeHit(this.lethality)
         if (invaderProjectile.isTotallyDamaged()) {
           //remove invader projectile
           InvaderProjectile.removeProjectile(invaderProjectile)
         }
 
-        //remove players projectile immediately
-        const i = state.projectiles.findIndex((el) => el === this)
-        state.removeProjectile(i)
-        c.stopTween()
-        this.destroy()
+        //if not indestructible projectile is immediately destroyed
+        if (!this.indestructible) {
+          const i = state.projectiles.findIndex((el) => el === this)
+          state.removeProjectile(i)
+          c.stopTween()
+          this.destroy()
+        }
       }
     }
   }

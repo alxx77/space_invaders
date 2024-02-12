@@ -1,8 +1,8 @@
-import { Sprite, Texture, utils } from "pixi.js"
+import { Sprite, utils } from "pixi.js"
 import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
-import { playerFireControl, soundSource } from "../settings"
+import { soundSource } from "../settings"
 
 export class BonusItem extends SmartContainer {
   private sprite: Sprite
@@ -50,6 +50,12 @@ export class BonusItem extends SmartContainer {
       this.sprite.scale.set(1)
     }
 
+    //cannonball
+    if (itemType === 22) {
+      this.sprite = new Sprite(utils.TextureCache[`bonus_weapon_upgrade2`])
+      this.sprite.scale.set(1)
+    }
+
     this.addChild(this.sprite)
     this.speed = speed
     this.x = position.x
@@ -58,20 +64,20 @@ export class BonusItem extends SmartContainer {
 
     this.bonusCollectedSound = new Howl({
       src: [soundSource.bonusCollected],
-      volume: 0.5,
+      volume: 0.15,
       loop: false,
     })
 
     this.bonusCreatedSound = new Howl({
       src: [soundSource.bonusCreated],
-      volume: 0.5,
+      volume: 0.2,
       loop: false,
     })
   }
 
   //overload
-  async moveTo(xPos: number, yPos: number, speed?: number, onEnd? : Function){
-    super.moveTo(xPos,yPos,this.speed,onEnd)
+  async moveTo(xPos: number, yPos: number, speed?: number, onEnd?: Function) {
+    super.moveTo(xPos, yPos, this.speed, onEnd)
   }
 
   collisionTestPlayerWithBonusWeapon(c: SmartContainer) {
@@ -89,21 +95,7 @@ export class BonusItem extends SmartContainer {
     ) {
       // Collision detected
       if (this.itemType >= 1 && this.itemType <= 10) {
-        if (components.player.weapon < 3) {
-          components.player.weapon++
-          if(components.player.weapon === 3){
-            components.foreground.showWeaponBonusText(this.x, this.y)
-          }
-        }
-      }
-
-      if (components.player.weapon === 3) {
-        setTimeout(() => {
-          if (components.player.weapon === 3) {
-            components.player.weapon = 2
-            components.foreground.hideWeaponBonusText(true)
-          }
-        }, 8000)
+            components.player.incrementWeaponType()
       }
 
       if (this.itemType === 11 && !components.player.shieldEngaged) {
@@ -115,27 +107,17 @@ export class BonusItem extends SmartContainer {
       }
 
       if (this.itemType === 20) {
-        components.player.setFireControlParams(
-          playerFireControl.fireRate1.autofireInterval,
-          playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
-        )
+        components.player.engageFireRateBonus(1)
       }
 
       if (this.itemType === 21) {
-        components.player.setFireControlParams(
-          playerFireControl.fireRate2.autofireInterval,
-          playerFireControl.fireRate2.maxPlayerProjectilesFiredPerSecond
-        )
-        components.foreground.showFireRateBonusText(this.x, this.y)
 
-        //revert to rate1
-        setTimeout(() => {
-          components.player.setFireControlParams(
-            playerFireControl.fireRate1.autofireInterval,
-            playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
-          )
-          components.foreground.hideFireRateBonusText(true)
-        }, 10000)
+        components.player.engageFireRateBonus(2)
+
+      }
+
+      if (this.itemType === 22) {
+        components.player.engageCannonballBonus()
       }
 
       this.stopTween()

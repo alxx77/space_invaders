@@ -1,5 +1,5 @@
 import { action, makeAutoObservable, computed } from "mobx"
-import { Renderer, Ticker, TickerCallback } from "pixi.js"
+import { Renderer, Ticker } from "pixi.js"
 import { Layout } from "./components/layout"
 import { Game } from "./game"
 import { Player } from "./components/player"

@@ -9,8 +9,8 @@ import {
 import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
-import { projectileSpeed, soundSource } from "../settings"
-import { getRandomNumber, getRandomWebColor } from "../utils"
+import { soundSource } from "../settings"
+import { changeSpriteTint, getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 
 export class InvaderProjectile extends SmartContainer {
@@ -94,7 +94,9 @@ export class InvaderProjectile extends SmartContainer {
         this.maxDamage = 0.5 + getRandomNumber()
         this.speed = (speed + getRandomNumber()) * 1.5
         this.lethalFactor = 2
-        this.explosionSprite.scale.set(this.scaleFactor * (2.5 + getRandomNumber()*0.5))
+        this.explosionSprite.scale.set(
+          this.scaleFactor * (2.5 + getRandomNumber() * 0.5)
+        )
         break
       default:
         break
@@ -154,32 +156,15 @@ export class InvaderProjectile extends SmartContainer {
 
   async blink() {
     this.sprite.tint = "#771111"
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#FFFFFF"
-        resolve()
-      }, 50)
-    })
-
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#771111"
-        resolve()
-      }, 50)
-    })
-
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#FFFFFF"
-        resolve()
-      }, 50)
-    })
+    await changeSpriteTint("#FFFFFF", 50, this.sprite)
+    await changeSpriteTint("#771111", 50, this.sprite)
+    await changeSpriteTint("#FFFFFF", 50, this.sprite)
   }
 
-  takeHit() {
-    this.damage++
+  takeHit(h:number) {
+    this.damage += h
     this.lethalFactor -= 0.75
-    if(this.lethalFactor<0) this.lethalFactor = 0
+    if (this.lethalFactor < 0) this.lethalFactor = 0
     this.blink()
   }
 

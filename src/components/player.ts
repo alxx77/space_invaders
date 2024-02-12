@@ -14,7 +14,13 @@ import { SmartContainer } from "./smartContainer"
 import { IReactionDisposer, reaction } from "mobx"
 import {
   fontStyles,
+  playerCannonballBonusBlinkInterval,
+  playerCannonballBonusDuration1,
+  playerCannonballBonusDuration2,
   playerFireControl,
+  playerFireRateBonusBlinkInterval,
+  playerFireRateBonusDuration1,
+  playerFireRateBonusDuration2,
   playerHeight,
   playerMaxDamage,
   playerScaleFactor,
@@ -22,6 +28,9 @@ import {
   playerShieldDuration2,
   playerSlideInSpeed,
   playerSpeed,
+  playerWeaponBonusBlinkInterval,
+  playerWeaponBonusDuration1,
+  playerWeaponBonusDuration2,
   playerWidth,
   projectileSpeed,
   soundSource,
@@ -32,6 +41,7 @@ import { Projectile } from "./projectile"
 import { Howl } from "howler"
 import { InvaderProjectile } from "./invaderProjectile"
 import Timeout from "smart-timeout"
+import { changeSpriteTint } from "../utils"
 
 //single change of position
 type DeltaPosition = { dx: number; dy: number }
@@ -55,6 +65,12 @@ export class Player extends SmartContainer {
   autofireInterval: number
   maxPlayerProjectilesFiredPerSecond: number
   bonusApplied: number[]
+  private cannonballBonusOn = false
+  private weaponBonusOn = false
+  private fireRateBonusOn = false
+  weaponBonusBlinkInterval: NodeJS.Timeout | undefined
+  fireRateBonusBlinkInterval: NodeJS.Timeout | undefined
+  cannonballBonusBlinkInterval: NodeJS.Timeout | undefined
   constructor() {
     super()
     this.name = "Player"
@@ -153,12 +169,10 @@ export class Player extends SmartContainer {
           components.foreground.healthText.text = this.percentageToAsterisks(
             this.healthPercentage()
           )
-          if (components.foreground.weaponBonusTextInterval !== undefined) {
-            components.foreground.hideWeaponBonusText(false)
-          }
-          if (components.foreground.fireRateBonusTextInterval !== undefined) {
-            components.foreground.hideFireRateBonusText(false)
-          }
+          Timeout.reset("wb", 0)
+          Timeout.reset("frb", 0)
+          Timeout.reset("cbb", 0)
+
           this.disengageShield()
           this.stop()
           this.sprite.visible = false
@@ -213,7 +227,7 @@ export class Player extends SmartContainer {
 
     this.engineSound = new Howl({
       src: [soundSource.playerEngine],
-      volume: 0.3,
+      volume: 0.25,
       loop: true,
     })
 
@@ -295,26 +309,9 @@ export class Player extends SmartContainer {
 
   private async blink() {
     this.sprite.tint = "#771111"
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#FFFFFF"
-        resolve()
-      }, 50)
-    })
-
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#771111"
-        resolve()
-      }, 50)
-    })
-
-    await new Promise<void>((resolve) => {
-      Timeout.instantiate(() => {
-        this.sprite.tint = "#FFFFFF"
-        resolve()
-      }, 50)
-    })
+    await changeSpriteTint("#FFFFFF", 50, this.sprite)
+    await changeSpriteTint("#771111", 50, this.sprite)
+    await changeSpriteTint("#FFFFFF", 50, this.sprite)
   }
 
   private startShieldBlink() {
@@ -336,7 +333,8 @@ export class Player extends SmartContainer {
     projectileSpeed: number,
     projectileType: number,
     xDestination: number,
-    yDestination: number
+    yDestination: number,
+    indestructible: boolean = false
   ) {
     const projectile = new Projectile(
       {
@@ -346,6 +344,7 @@ export class Player extends SmartContainer {
       projectileSpeed,
       projectileType
     )
+    projectile.indestructible = indestructible
     components.foreground.container.addChild(projectile)
     state.addProjectile(projectile)
     projectile.moveTo(xDestination, yDestination, projectile.speed, () => {
@@ -364,7 +363,8 @@ export class Player extends SmartContainer {
       projectileSpeed,
       1,
       this.x,
-      -50
+      -50,
+      this.cannonballBonusOn
     )
   }
 
@@ -375,7 +375,8 @@ export class Player extends SmartContainer {
       projectileSpeed * 1.2,
       1,
       this.x - 12 * this.sprite.scale.x,
-      -50
+      -50,
+      this.cannonballBonusOn
     )
     this.fireProjectile(
       this.x + 12 * this.sprite.scale.x,
@@ -390,7 +391,7 @@ export class Player extends SmartContainer {
   private fireWeapon2() {
     this.fireProjectile(
       this.x - 20 * this.sprite.scale.x,
-      this.y * 0.97,
+      this.y * 0.96,
       projectileSpeed,
       1,
       this.x - 20 * this.sprite.scale.x,
@@ -398,26 +399,27 @@ export class Player extends SmartContainer {
     )
     this.fireProjectile(
       this.x + 20 * this.sprite.scale.x,
-      this.y * 0.97,
+      this.y * 0.96,
       projectileSpeed,
       1,
       this.x + 20 * this.sprite.scale.x,
       -50
     )
-    const pl = this.fireProjectile(
+    this.fireProjectile(
       this.x,
-      this.y * 0.95,
-      projectileSpeed * 2,
+      this.y * 0.94,
+      projectileSpeed,
       0,
       this.x,
-      -50
+      -50,
+      this.cannonballBonusOn
     )
   }
 
   private fireWeapon3() {
     this.fireProjectile(
       this.x - playerWidth * 0.75 * this.sprite.scale.x,
-      this.y * 0.97,
+      this.y * 0.98,
       projectileSpeed,
       0,
       this.x - playerWidth * 0.75 * this.sprite.scale.x,
@@ -426,7 +428,7 @@ export class Player extends SmartContainer {
 
     this.fireProjectile(
       this.x + playerWidth * 0.75 * this.sprite.scale.x,
-      this.y * 0.97,
+      this.y * 0.98,
       projectileSpeed,
       0,
       this.x + playerWidth * 0.75 * this.sprite.scale.x,
@@ -675,5 +677,136 @@ export class Player extends SmartContainer {
     this.positionCalculator = undefined
   }
 
-  updateLayout(width: number, height: number) {}
+  //weapon bonus
+  incrementWeaponType() {
+    if (components.player.weapon < 3) {
+      components.player.weapon++
+      if (components.player.weapon === 3) {
+        components.player.engageWeaponBonus()
+      }
+    }
+  }
+
+  async engageWeaponBonus() {
+    this.weaponBonusOn = true
+    components.foreground.weaponBonusSprite.visible = true
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "wb",
+        () => {
+          resolve()
+        },
+        playerWeaponBonusDuration1
+      )
+    })
+
+    this.weaponBonusBlinkInterval = setInterval(() => {
+      components.foreground.weaponBonusSprite.visible =
+        !components.foreground.weaponBonusSprite.visible
+    }, playerWeaponBonusBlinkInterval)
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "wb",
+        () => {
+          clearInterval(this.weaponBonusBlinkInterval)
+          components.foreground.weaponBonusSprite.visible = false
+          resolve()
+        },
+        playerWeaponBonusDuration2
+      )
+    })
+
+    components.player.weapon = 2
+
+    this.weaponBonusOn = false
+  }
+
+  //fire rate bonus
+  async engageFireRateBonus(stage: number) {
+    if (stage === 1) {
+      this.setFireControlParams(
+        playerFireControl.fireRate1.autofireInterval,
+        playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
+      )
+      return
+    }
+
+    this.fireRateBonusOn = true
+    components.foreground.fireRateBonusSprite.visible = true
+
+    this.setFireControlParams(
+      playerFireControl.fireRate2.autofireInterval,
+      playerFireControl.fireRate2.maxPlayerProjectilesFiredPerSecond
+    )
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "frb",
+        () => {
+          resolve()
+        },
+        playerFireRateBonusDuration1
+      )
+    })
+
+    this.fireRateBonusBlinkInterval = setInterval(() => {
+      components.foreground.fireRateBonusSprite.visible =
+        !components.foreground.fireRateBonusSprite.visible
+    }, playerFireRateBonusBlinkInterval)
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "frb",
+        () => {
+          clearInterval(this.fireRateBonusBlinkInterval)
+          components.foreground.fireRateBonusSprite.visible = false
+          resolve()
+        },
+        playerFireRateBonusDuration2
+      )
+    })
+
+    this.setFireControlParams(
+      playerFireControl.fireRate1.autofireInterval,
+      playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
+    )
+    this.fireRateBonusOn = false
+  }
+
+  //cannonball bonus
+  async engageCannonballBonus() {
+    this.cannonballBonusOn = true
+    components.foreground.cannonballBonusSprite.visible = true
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "cbb",
+        () => {
+          resolve()
+        },
+        playerCannonballBonusDuration1
+      )
+    })
+
+    this.cannonballBonusBlinkInterval = setInterval(() => {
+      components.foreground.cannonballBonusSprite.visible =
+        !components.foreground.cannonballBonusSprite.visible
+    }, playerCannonballBonusBlinkInterval)
+
+    await new Promise<void>((resolve) => {
+      Timeout.instantiate(
+        "cbb",
+        () => {
+          clearInterval(this.cannonballBonusBlinkInterval)
+          components.foreground.cannonballBonusSprite.visible = false
+          resolve()
+        },
+        playerCannonballBonusDuration2
+      )
+    })
+
+    this.cannonballBonusOn = false
+  }
 }

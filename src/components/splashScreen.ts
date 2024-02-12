@@ -1,6 +1,6 @@
-import { Container, Sprite, Text, Texture, utils } from "pixi.js"
-import { components, state } from "../state"
-import { stageWidth, stageHeight, fontStyles } from "../settings"
+import { Container, Sprite, Text, utils } from "pixi.js"
+import { state } from "../state"
+import { fontStyles } from "../settings"
 
 //root container
 export class SplashScreen extends Container {

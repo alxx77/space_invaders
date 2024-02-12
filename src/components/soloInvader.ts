@@ -1,7 +1,6 @@
 import Timeout from "smart-timeout"
 import * as TWEEN from "@tweenjs/tween.js"
 import {
-  invaderWidth,
   soloInvaderSpecsPerLevel,
   stageHeight,
   stageWidth,
@@ -13,11 +12,17 @@ import { InvaderProjectile } from "./invaderProjectile"
 
 export class SoloInvader extends Invader {
   public active: boolean
-  constructor(position: { x: number; y: number }, variety: number) {
+  private projectileSpeed:number
+  private speed: number
+  private movePause
+  constructor(position: { x: number; y: number }, variety: number, projectileSpeed:number, speed:number, movePause: number) {
     super({ x: position.x, y: position.y }, variety)
     this.active = true
     this.setEasingFunction(TWEEN.Easing.Quadratic.InOut)
     this.cbOnTweenUpdate = this.onTweenUpdate
+    this.projectileSpeed = projectileSpeed
+    this.speed = speed
+    this.movePause = movePause
   }
 
   async startMoving() {
@@ -28,7 +33,7 @@ export class SoloInvader extends Invader {
       await new Promise<void>((resolve) => {
         Timeout.instantiate(
           () => resolve(),
-          soloInvaderSpecsPerLevel[state.gameLevel][1] + getRandomNumber() * 250
+          this.movePause
         )
       })
 
@@ -36,7 +41,7 @@ export class SoloInvader extends Invader {
         await this.moveTo(
           x,
           y,
-          soloInvaderSpecsPerLevel[state.gameLevel][0] + getRandomNumber() * 3
+          this.speed
         )
       } else {
         break
@@ -156,7 +161,7 @@ export class SoloInvader extends Invader {
         x: this.x + this.width / 2,
         y: this.y + this.height / 2,
       },
-      soloInvaderSpecsPerLevel[state.gameLevel][2],
+      this.projectileSpeed,
       2
     )
     state.addInvaderProjectile(projectile)

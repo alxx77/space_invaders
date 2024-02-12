@@ -12,6 +12,7 @@ async function loadAssets() {
           { alias: "projectile_0", src: "assets/images/projectile_0.png" },
           { alias: "projectile_1", src: "assets/images/projectile_1.png" },
           { alias: "projectile_2", src: "assets/images/projectile_2.png" },
+          { alias: "projectile_3", src: "assets/images/projectile_3.png" },
           { alias: "space", src: "assets/images/space.png" },
           { alias: "player_explosion", src: "assets/images/explosion.json" },
           { alias: "splash", src: "assets/images/space_splash.jpg" },
@@ -25,6 +26,10 @@ async function loadAssets() {
             alias: "bonus_weapon_upgrade",
             src: "assets/images/shield_bonus_weapon_upgrade.png",
           },
+          {
+            alias: "bonus_weapon_upgrade2",
+            src: "assets/images/shield_bonus_weapon_upgrade_II.png",
+          },
         ],
       },
       {
@@ -36,6 +41,7 @@ async function loadAssets() {
           { alias: "invader4", src: "assets/images/enemy4.png" },
           { alias: "invader5", src: "assets/images/enemy5.png" },
           { alias: "invader6", src: "assets/images/enemy6.png" },
+          { alias: "invader7", src: "assets/images/enemy7.png" },
           {
             alias: "invader_projectile_0",
             src: "assets/images/invader_projectile_0.png",
