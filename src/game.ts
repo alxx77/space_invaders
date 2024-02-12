@@ -320,7 +320,7 @@ export class Game {
         await components.player.slideIn()
       }
 
-      components.player.weapon = 2
+      //components.player.weapon = 2
 
       //activate player & invaders
       state.setPlayerActive(true)

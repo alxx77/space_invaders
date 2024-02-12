@@ -16766,7 +16766,7 @@ class Game {
                 _state__WEBPACK_IMPORTED_MODULE_0__.components.player = new _components_player__WEBPACK_IMPORTED_MODULE_1__.Player();
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.player.slideIn();
             }
-            _state__WEBPACK_IMPORTED_MODULE_0__.components.player.weapon = 2;
+            //components.player.weapon = 2
             //activate player & invaders
             _state__WEBPACK_IMPORTED_MODULE_0__.state.setPlayerActive(true);
             _state__WEBPACK_IMPORTED_MODULE_0__.state.setInvadersActive(true);
@@ -50563,4 +50563,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle3403f3529eed3ec92c34.js.map
+//# sourceMappingURL=bundlef6c131d6e3e09630e518.js.map
