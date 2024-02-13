@@ -3,6 +3,7 @@ import { Ticker, Renderer, ICanvas } from "pixi.js"
 import { initAssets } from "./initAssets"
 import { Layout } from "./components/layout"
 import { components } from "./state"
+import { getRandomNumber } from "./utils"
 
 //initialize basic things needed
 //for game itself
@@ -36,9 +37,15 @@ export async function initGame() {
   const ticker = new Ticker()
   ticker.start()
 
+  let counter = 0
+
   const cb = function () {
     renderer.render(layout)
     TWEEN.update()
+    if (counter % 2 === 0) {
+      components.layout.crtfilter.seed = getRandomNumber() * 0.7
+    }
+    counter++
   }
 
   ticker.add(cb)

@@ -311,9 +311,9 @@ export class Invaders extends SmartContainer {
         soloInvaderSpecsPerLevel[state.gameLevel][1] + getRandomNumber() * 250
       //make extra spicy invader ;-)
       if (i === n - 1) {
-        projectileSpeed = Math.min(projectileSpeed + 4, 11)
-        speed = Math.min(speed + 4, 10)
-        movePause = Math.max(movePause / 2, 700)
+        projectileSpeed = Math.min(projectileSpeed + 2, 11)
+        speed = Math.min(speed + 2, 10)
+        movePause = Math.max(movePause / 1.5, 700)
         v = 7
       }
       const solo = new SoloInvader(

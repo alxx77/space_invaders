@@ -32,17 +32,17 @@ export const playerMaxDamage = 3
 //solo invader speed, pause MS, projectile speed
 export const soloInvaderSpecsPerLevel = [
   [0, 0, 0],
-  [5, 1500, 4],
-  [5, 1500, 5],
-  [5, 1500, 6],
-  [5, 1200, 6],
-  [6, 1200, 7],
-  [6, 1200, 7],
-  [6, 900, 8],
-  [7, 900, 8],
-  [7, 900, 8],
-  [7, 800, 9],
-  [10, 700, 11],
+  [4, 1500, 3],
+  [4, 1500, 3],
+  [4, 1500, 3],
+  [5, 1200, 4],
+  [5, 1200, 4],
+  [5, 1200, 4],
+  [6, 900, 5],
+  [6, 900, 5],
+  [6, 900, 5],
+  [7, 800, 6],
+  [10, 700, 7],
 ]
 
 export const playerFireControl = {
