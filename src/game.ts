@@ -284,6 +284,7 @@ export class Game {
     state.setWaitingForGameStart(true)
 
     state.setGameLevel(1)
+    components.foreground.updateLevelText(state.gameLevel)
     state.setScoreCounter(0)
 
     if (!state.playerAlive) {
@@ -342,6 +343,7 @@ export class Game {
         await components.foreground.showLevelCompletedText()
 
         state.setGameLevel(state.gameLevel + 1)
+        components.foreground.updateLevelText(state.gameLevel)
         if (state.gameLevel > finalLevel) {
           break
         }

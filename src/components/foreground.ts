@@ -1,10 +1,4 @@
-import {
-  Container,
-  Sprite,
-  Texture,
-  Text,
-  utils
-} from "pixi.js"
+import { Container, Sprite, Texture, Text, utils } from "pixi.js"
 import { components, state } from "../state"
 import {
   fontStyles,
@@ -26,7 +20,6 @@ export class Foreground extends Container {
   private smallPressSpaceToContinueText: Text
   private gameOverText: Text
   private gameCompletedText: Text
-  healthText: Text
   private levelCompletedSound: Howl
   private startSound: Howl
   private gameOverSound: Howl
@@ -35,6 +28,7 @@ export class Foreground extends Container {
   weaponBonusSprite: Sprite
   fireRateBonusSprite: Sprite
   cannonballBonusSprite: Sprite
+  levelText: Text
 
   constructor() {
     super()
@@ -57,20 +51,32 @@ export class Foreground extends Container {
     this.mask = mask
 
     //score
-    this.scoreText = new Text(`SCORE: 0`, fontStyles.scoreText)
+    this.scoreText = new Text(`SCORE: 0 `, fontStyles.scoreText)
     this.scoreText.scale.set(2)
-    this.scoreText.x = 10
-    this.scoreText.y = stageHeight * 0.02
+    this.scoreText.x = 115
+    this.scoreText.y = 40
+    this.scoreText.alpha = 0.7
 
     this.container.addChild(this.scoreText)
 
     //lives
-    this.livesText = new Text(`CREDIT: 0`, fontStyles.scoreText)
+    this.livesText = new Text(`CREDIT: 0 `, fontStyles.scoreText)
     this.livesText.scale.set(2)
-    this.livesText.x = stageWidth - 370
-    this.livesText.y = stageHeight * 0.02
+    this.livesText.x = 668
+    this.livesText.y = 40
+    this.livesText.alpha = 0.7
 
     this.container.addChild(this.livesText)
+
+    //level
+    this.levelText = new Text(`LEVEL 1`, fontStyles.scoreText)
+    this.levelText.scale.set(1.5)
+    this.levelText.anchor.set(0.5)
+    this.levelText.x = stageWidth * 0.85
+    this.levelText.y = stageHeight * 0.98
+    this.levelText.alpha = 0.4
+
+    this.container.addChild(this.levelText)
 
     //press space to play
     const startText = state.mobileDevice
@@ -134,19 +140,7 @@ export class Foreground extends Container {
 
     this.container.addChild(this.gameCompletedText)
 
-    //health
-    this.healthText = new Text(`*****`, fontStyles.healthText)
-    //this.healthText.anchor.set(0.5)
-    this.healthText.scale.set(2)
-
-    this.healthText.y = stageHeight * 0.14
-    this.healthText.x = 10
-    this.healthText.angle = -90
-    this.healthText.visible = true
-
-    this.container.addChild(this.healthText)
-
-    this.weaponBonusSprite = new Sprite(utils.TextureCache['axes_1'])
+    this.weaponBonusSprite = new Sprite(utils.TextureCache["axes_1"])
     this.weaponBonusSprite.scale.set(1.5)
     this.weaponBonusSprite.anchor.set(0.5)
     this.weaponBonusSprite.alpha = 0.5
@@ -157,17 +151,21 @@ export class Foreground extends Container {
     this.container.addChild(this.weaponBonusSprite)
 
     //fire rate bonus
-    this.fireRateBonusSprite = new Sprite(utils.TextureCache['bonus_weapon_upgrade'])
+    this.fireRateBonusSprite = new Sprite(
+      utils.TextureCache["bonus_weapon_upgrade"]
+    )
     this.fireRateBonusSprite.anchor.set(0.5)
     this.fireRateBonusSprite.alpha = 0.5
     this.fireRateBonusSprite.visible = false
     this.fireRateBonusSprite.x = 50
-    this.fireRateBonusSprite.y = stageHeight * 0.90
+    this.fireRateBonusSprite.y = stageHeight * 0.9
 
     this.container.addChild(this.fireRateBonusSprite)
 
     //cannonball bonus
-    this.cannonballBonusSprite = new Sprite(utils.TextureCache['bonus_weapon_upgrade2'])
+    this.cannonballBonusSprite = new Sprite(
+      utils.TextureCache["bonus_weapon_upgrade2"]
+    )
     this.cannonballBonusSprite.anchor.set(0.5)
     this.cannonballBonusSprite.alpha = 0.5
     this.cannonballBonusSprite.visible = false
@@ -227,11 +225,15 @@ export class Foreground extends Container {
   }
 
   updateScoreText(score: number) {
-    this.scoreText.text = `SCORE: ${score}`
+    this.scoreText.text = `SCORE: ${score} `
   }
 
   updateLivesText(lives: number) {
-    this.livesText.text = `CREDIT: ${lives}`
+    this.livesText.text = `CREDIT: ${lives} `
+  }
+
+  updateLevelText(level: number) {
+    this.levelText.text = `LEVEL: ${level} `
   }
 
   async showPressSpaceToPlayText() {

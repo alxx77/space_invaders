@@ -706,7 +706,7 @@ export class Invaders extends SmartContainer {
       return
     }
 
-    const bounds1 = components.player.getBounds()
+    const bounds1 = components.player.sprite.getBounds()
     for (const invader of state.invaders) {
       const bounds2 = invader.sprite.getBounds()
       // Check for collision using bounds

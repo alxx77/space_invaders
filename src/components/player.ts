@@ -71,6 +71,7 @@ export class Player extends SmartContainer {
   weaponBonusBlinkInterval: NodeJS.Timeout | undefined
   fireRateBonusBlinkInterval: NodeJS.Timeout | undefined
   cannonballBonusBlinkInterval: NodeJS.Timeout | undefined
+  private healthText: Text
   constructor() {
     super()
     this.name = "Player"
@@ -120,6 +121,15 @@ export class Player extends SmartContainer {
 
     this.addChild(this.shieldText)
 
+    //health
+    this.healthText = new Text(`*****`, fontStyles.healthText)
+    this.healthText.anchor.set(0.5)
+    this.healthText.y = 60 * playerScaleFactor
+    this.healthText.visible = true
+    this.healthText.alpha = 0.6
+
+    this.addChild(this.healthText)
+
     this.positionCalculator = undefined
     this.playerDirection = "none"
 
@@ -166,7 +176,7 @@ export class Player extends SmartContainer {
       (newVal) => {
         if (newVal === false) {
           this.damage = playerMaxDamage
-          components.foreground.healthText.text = this.percentageToAsterisks(
+          this.healthText.text = this.percentageToAsterisks(
             this.healthPercentage()
           )
           Timeout.reset("wb", 0)
@@ -231,7 +241,7 @@ export class Player extends SmartContainer {
       loop: true,
     })
 
-    components.foreground.healthText.text = this.percentageToAsterisks(
+    this.healthText.text = this.percentageToAsterisks(
       this.healthPercentage()
     )
   }
@@ -290,9 +300,10 @@ export class Player extends SmartContainer {
   async takeHitFromProjectile(ip: InvaderProjectile) {
     let damageFactor = this.shieldEngaged ? 0.25 : 1
     this.damage = this.damage + damageFactor * ip.lethalFactor
-    components.foreground.healthText.text = this.percentageToAsterisks(
+    this.healthText.text = this.percentageToAsterisks(
       this.healthPercentage()
     )
+
     return this.blink()
   }
 
@@ -302,7 +313,7 @@ export class Player extends SmartContainer {
 
   resetDamage() {
     this.damage = 0
-    components.foreground.healthText.text = this.percentageToAsterisks(
+    this.healthText.text = this.percentageToAsterisks(
       this.healthPercentage()
     )
   }

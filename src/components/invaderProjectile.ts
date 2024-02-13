@@ -186,7 +186,7 @@ export class InvaderProjectile extends SmartContainer {
   collisionTestPlayerWithInvaderProjectile(c: SmartContainer, elapsed: number) {
     this.onTweenUpdate(elapsed)
     if (!state.playerAlive) return
-    const bPl = components.player.getBounds()
+    const bPl = components.player.sprite.getBounds()
 
     const bSpr = this.sprite.getBounds()
     const bExp = this.explosionSprite.getBounds()

@@ -1,7 +1,6 @@
 import Timeout from "smart-timeout"
 import * as TWEEN from "@tweenjs/tween.js"
 import {
-  soloInvaderSpecsPerLevel,
   stageHeight,
   stageWidth,
 } from "../settings"
@@ -154,8 +153,7 @@ export class SoloInvader extends Invader {
   }
 
   //this will be handled by different method than for regular invaders
-  shootSolo() {
-    //if(!components.tweenTicker.started) return
+  async shootSolo() {
     const projectile = new InvaderProjectile(
       {
         x: this.x + this.width / 2,
@@ -164,9 +162,6 @@ export class SoloInvader extends Invader {
       this.projectileSpeed,
       2
     )
-    state.addInvaderProjectile(projectile)
-    components.foreground.container.addChild(projectile)
-    projectile.shootSound.play()
 
     const thirdPoint = this.calculateIntersectionInDirection(
       this.x,
@@ -177,7 +172,11 @@ export class SoloInvader extends Invader {
       stageHeight
     )
 
-    projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
+    state.addInvaderProjectile(projectile)
+    components.foreground.container.addChild(projectile)
+    projectile.shootSound.play()
+
+    return projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
       const i = state.invaderProjectiles.findIndex((el) => el === projectile)
       //if allready removed - return
       if (i < 0) return

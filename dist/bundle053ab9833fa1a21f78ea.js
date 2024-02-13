@@ -14313,17 +14313,27 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.addChild(mask);
         this.mask = mask;
         //score
-        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`SCORE: 0`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`SCORE: 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
         this.scoreText.scale.set(2);
-        this.scoreText.x = 10;
-        this.scoreText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.02;
+        this.scoreText.x = 115;
+        this.scoreText.y = 40;
+        this.scoreText.alpha = 0.7;
         this.container.addChild(this.scoreText);
         //lives
-        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`CREDIT: 0`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`CREDIT: 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
         this.livesText.scale.set(2);
-        this.livesText.x = _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth - 370;
-        this.livesText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.02;
+        this.livesText.x = 668;
+        this.livesText.y = 40;
+        this.livesText.alpha = 0.7;
         this.container.addChild(this.livesText);
+        //level
+        this.levelText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`LEVEL 1`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.levelText.scale.set(1.5);
+        this.levelText.anchor.set(0.5);
+        this.levelText.x = _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth * 0.85;
+        this.levelText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.98;
+        this.levelText.alpha = 0.4;
+        this.container.addChild(this.levelText);
         //press space to play
         const startText = _state__WEBPACK_IMPORTED_MODULE_1__.state.mobileDevice
             ? `Tap to Start`
@@ -14370,16 +14380,7 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.gameCompletedText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight / 2;
         this.gameCompletedText.visible = false;
         this.container.addChild(this.gameCompletedText);
-        //health
-        this.healthText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`*****`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.healthText);
-        //this.healthText.anchor.set(0.5)
-        this.healthText.scale.set(2);
-        this.healthText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.14;
-        this.healthText.x = 10;
-        this.healthText.angle = -90;
-        this.healthText.visible = true;
-        this.container.addChild(this.healthText);
-        this.weaponBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache['axes_1']);
+        this.weaponBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["axes_1"]);
         this.weaponBonusSprite.scale.set(1.5);
         this.weaponBonusSprite.anchor.set(0.5);
         this.weaponBonusSprite.alpha = 0.5;
@@ -14388,15 +14389,15 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.weaponBonusSprite.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.85;
         this.container.addChild(this.weaponBonusSprite);
         //fire rate bonus
-        this.fireRateBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache['bonus_weapon_upgrade']);
+        this.fireRateBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["bonus_weapon_upgrade"]);
         this.fireRateBonusSprite.anchor.set(0.5);
         this.fireRateBonusSprite.alpha = 0.5;
         this.fireRateBonusSprite.visible = false;
         this.fireRateBonusSprite.x = 50;
-        this.fireRateBonusSprite.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.90;
+        this.fireRateBonusSprite.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.9;
         this.container.addChild(this.fireRateBonusSprite);
         //cannonball bonus
-        this.cannonballBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache['bonus_weapon_upgrade2']);
+        this.cannonballBonusSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Sprite(pixi_js__WEBPACK_IMPORTED_MODULE_0__.utils.TextureCache["bonus_weapon_upgrade2"]);
         this.cannonballBonusSprite.anchor.set(0.5);
         this.cannonballBonusSprite.alpha = 0.5;
         this.cannonballBonusSprite.visible = false;
@@ -14440,10 +14441,13 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         });
     }
     updateScoreText(score) {
-        this.scoreText.text = `SCORE: ${score}`;
+        this.scoreText.text = `SCORE: ${score} `;
     }
     updateLivesText(lives) {
-        this.livesText.text = `CREDIT: ${lives}`;
+        this.livesText.text = `CREDIT: ${lives} `;
+    }
+    updateLevelText(level) {
+        this.levelText.text = `LEVEL: ${level} `;
     }
     async showPressSpaceToPlayText() {
         const self = this;
@@ -14877,7 +14881,7 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.onTweenUpdate(elapsed);
         if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
             return;
-        const bPl = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.getBounds();
+        const bPl = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.sprite.getBounds();
         const bSpr = this.sprite.getBounds();
         const bExp = this.explosionSprite.getBounds();
         let collisionA = false;
@@ -15451,7 +15455,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             _state__WEBPACK_IMPORTED_MODULE_1__.state.setInvadersActive(false);
             return;
         }
-        const bounds1 = _state__WEBPACK_IMPORTED_MODULE_1__.components.player.getBounds();
+        const bounds1 = _state__WEBPACK_IMPORTED_MODULE_1__.components.player.sprite.getBounds();
         for (const invader of _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders) {
             const bounds2 = invader.sprite.getBounds();
             // Check for collision using bounds
@@ -15660,6 +15664,13 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         this.shieldText.x = 6;
         this.shieldText.y = 85;
         this.addChild(this.shieldText);
+        //health
+        this.healthText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`*****`, _settings__WEBPACK_IMPORTED_MODULE_3__.fontStyles.healthText);
+        this.healthText.anchor.set(0.5);
+        this.healthText.y = 60 * _settings__WEBPACK_IMPORTED_MODULE_3__.playerScaleFactor;
+        this.healthText.visible = true;
+        this.healthText.alpha = 0.6;
+        this.addChild(this.healthText);
         this.positionCalculator = undefined;
         this.playerDirection = "none";
         this.disposerList = [];
@@ -15690,7 +15701,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         d = (0,mobx__WEBPACK_IMPORTED_MODULE_8__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_1__.state.playerAlive, (newVal) => {
             if (newVal === false) {
                 this.damage = _settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage;
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+                this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("wb", 0);
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("frb", 0);
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("cbb", 0);
@@ -15740,7 +15751,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             volume: 0.25,
             loop: true,
         });
-        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
     }
     percentageToAsterisks(percent) {
         // Ensure the percentage is within the range [0, 100]
@@ -15789,7 +15800,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     async takeHitFromProjectile(ip) {
         let damageFactor = this.shieldEngaged ? 0.25 : 1;
         this.damage = this.damage + damageFactor * ip.lethalFactor;
-        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
         return this.blink();
     }
     isTotallyDamaged() {
@@ -15797,7 +15808,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     }
     resetDamage() {
         this.damage = 0;
-        _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
     }
     async blink() {
         this.sprite.tint = "#771111";
@@ -16198,6 +16209,7 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                     _state__WEBPACK_IMPORTED_MODULE_1__.state.removeProjectile(i);
                     c.stopTween();
                     this.destroy();
+                    return;
                 }
             }
         }
@@ -16415,17 +16427,16 @@ class SoloInvader extends _invader__WEBPACK_IMPORTED_MODULE_5__.Invader {
         return intersections[maxDotProductIndex];
     }
     //this will be handled by different method than for regular invaders
-    shootSolo() {
-        //if(!components.tweenTicker.started) return
+    async shootSolo() {
         const projectile = new _invaderProjectile__WEBPACK_IMPORTED_MODULE_6__.InvaderProjectile({
             x: this.x + this.width / 2,
             y: this.y + this.height / 2,
         }, this.projectileSpeed, 2);
+        const thirdPoint = this.calculateIntersectionInDirection(this.x, this.y * 1.05, _state__WEBPACK_IMPORTED_MODULE_3__.components.player.x, _state__WEBPACK_IMPORTED_MODULE_3__.components.player.y, _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth, _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight);
         _state__WEBPACK_IMPORTED_MODULE_3__.state.addInvaderProjectile(projectile);
         _state__WEBPACK_IMPORTED_MODULE_3__.components.foreground.container.addChild(projectile);
         projectile.shootSound.play();
-        const thirdPoint = this.calculateIntersectionInDirection(this.x, this.y * 1.05, _state__WEBPACK_IMPORTED_MODULE_3__.components.player.x, _state__WEBPACK_IMPORTED_MODULE_3__.components.player.y, _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth, _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight);
-        projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
+        return projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
             const i = _state__WEBPACK_IMPORTED_MODULE_3__.state.invaderProjectiles.findIndex((el) => el === projectile);
             //if allready removed - return
             if (i < 0)
@@ -16754,6 +16765,7 @@ class Game {
         this.updateView();
         _state__WEBPACK_IMPORTED_MODULE_0__.state.setWaitingForGameStart(true);
         _state__WEBPACK_IMPORTED_MODULE_0__.state.setGameLevel(1);
+        _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.updateLevelText(_state__WEBPACK_IMPORTED_MODULE_0__.state.gameLevel);
         _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(0);
         if (!_state__WEBPACK_IMPORTED_MODULE_0__.state.playerAlive) {
             _state__WEBPACK_IMPORTED_MODULE_0__.components.player = new _components_player__WEBPACK_IMPORTED_MODULE_1__.Player();
@@ -16798,6 +16810,7 @@ class Game {
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.player.slideToCenter();
                 await _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.showLevelCompletedText();
                 _state__WEBPACK_IMPORTED_MODULE_0__.state.setGameLevel(_state__WEBPACK_IMPORTED_MODULE_0__.state.gameLevel + 1);
+                _state__WEBPACK_IMPORTED_MODULE_0__.components.foreground.updateLevelText(_state__WEBPACK_IMPORTED_MODULE_0__.state.gameLevel);
                 if (_state__WEBPACK_IMPORTED_MODULE_0__.state.gameLevel > _settings__WEBPACK_IMPORTED_MODULE_6__.finalLevel) {
                     break;
                 }
@@ -17145,20 +17158,22 @@ const finalLevel = 11;
 //font styles
 const fontStyles = {
     scoreText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
-        fontFamily: "Arcade",
-        fontSize: "42px",
+        fontFamily: "Troika",
+        fontStyle: "italic",
+        fontSize: "36px",
         fill: "#d69b33",
         dropShadow: false,
         dropShadowColor: "red",
         dropShadowDistance: 5,
     }),
     startText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
-        fontFamily: "Arcade",
-        fontSize: "58px",
+        fontFamily: "Troika",
+        fontSize: "48px",
+        fontStyle: "italic",
         fill: "white",
         dropShadow: true,
         dropShadowColor: "blue",
-        dropShadowDistance: 3,
+        dropShadowDistance: 5,
     }),
     levelCompletedText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
         fontFamily: "Troika",
@@ -17209,22 +17224,6 @@ const fontStyles = {
         dropShadow: false,
         dropShadowColor: "white",
         dropShadowDistance: 3,
-    }),
-    bonus1Text: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
-        fontFamily: "Arcade",
-        fontSize: "36px",
-        fill: "red",
-        dropShadow: true,
-        dropShadowColor: "gray",
-        dropShadowDistance: 2,
-    }),
-    bonus2Text: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
-        fontFamily: "Arcade",
-        fontSize: "36px",
-        fill: "orange",
-        dropShadow: true,
-        dropShadowColor: "gray",
-        dropShadowDistance: 2,
     }),
 };
 const soundSource = {
@@ -53584,4 +53583,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundleb86a6ab51b431c00619b.js.map
+//# sourceMappingURL=bundle053ab9833fa1a21f78ea.js.map

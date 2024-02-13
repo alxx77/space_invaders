@@ -89,20 +89,22 @@ export const finalLevel = 11
 //font styles
 export const fontStyles = {
   scoreText: new TextStyle({
-    fontFamily: "Arcade",
-    fontSize: "42px",
+    fontFamily: "Troika",
+    fontStyle: "italic",
+    fontSize: "36px",
     fill: "#d69b33",
     dropShadow: false,
     dropShadowColor: "red",
     dropShadowDistance: 5,
   }),
   startText: new TextStyle({
-    fontFamily: "Arcade",
-    fontSize: "58px",
+    fontFamily: "Troika",
+    fontSize: "48px",
+    fontStyle: "italic",
     fill: "white",
     dropShadow: true,
     dropShadowColor: "blue",
-    dropShadowDistance: 3,
+    dropShadowDistance: 5,
   }),
 
   levelCompletedText: new TextStyle({
@@ -154,22 +156,6 @@ export const fontStyles = {
     dropShadow: false,
     dropShadowColor: "white",
     dropShadowDistance: 3,
-  }),
-  bonus1Text: new TextStyle({
-    fontFamily: "Arcade",
-    fontSize: "36px",
-    fill: "red",
-    dropShadow: true,
-    dropShadowColor: "gray",
-    dropShadowDistance: 2,
-  }),
-  bonus2Text: new TextStyle({
-    fontFamily: "Arcade",
-    fontSize: "36px",
-    fill: "orange",
-    dropShadow: true,
-    dropShadowColor: "gray",
-    dropShadowDistance: 2,
   }),
 }
 

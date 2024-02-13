@@ -107,6 +107,7 @@ export class Projectile extends SmartContainer {
           state.removeProjectile(i)
           c.stopTween()
           this.destroy()
+          return
         }
       }
     }
