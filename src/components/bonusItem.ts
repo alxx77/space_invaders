@@ -121,7 +121,7 @@ export class BonusItem extends SmartContainer {
       this.collected = true
     }
 
-    if (this.itemType === 22) {
+    if (this.itemType === 22 && !components.player.cannonballBonusOn) {
       components.player.engageCannonballBonus()
       this.collected = true
     }

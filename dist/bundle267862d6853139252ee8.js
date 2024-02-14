@@ -14262,7 +14262,7 @@ class BonusItem extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContai
             _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageFireRateBonus(2);
             this.collected = true;
         }
-        if (this.itemType === 22) {
+        if (this.itemType === 22 && !_state__WEBPACK_IMPORTED_MODULE_2__.components.player.cannonballBonusOn) {
             _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageCannonballBonus();
             this.collected = true;
         }
@@ -15939,9 +15939,21 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     }
     //fire rate bonus
     async engageFireRateBonus(stage) {
+        //if stage is 1 there is no real need to check anything
+        //just set firerate to 1
         if (stage === 1) {
             this.setFireControlParams(_settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate1.autofireInterval, _settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond);
             return;
+        }
+        //in order to use firerate stage 2 current rate must be 1
+        //and fireRateBonus must be false (bonus not already in effect)
+        if (stage === 2) {
+            if (!(this.autofireInterval ===
+                _settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate1.autofireInterval &&
+                this.maxPlayerProjectilesFiredPerSecond ===
+                    _settings__WEBPACK_IMPORTED_MODULE_3__.playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond &&
+                this.fireRateBonusOn === false))
+                return;
         }
         this.fireRateBonusOn = true;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.fireRateBonusSprite.visible = true;
@@ -15967,6 +15979,8 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     }
     //cannonball bonus
     async engageCannonballBonus() {
+        if (this.cannonballBonusOn === true)
+            return;
         this.cannonballBonusOn = true;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.cannonballBonusSprite.visible = true;
         await new Promise((resolve) => {
@@ -53614,4 +53628,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle02721df0b615e43828c9.js.map
+//# sourceMappingURL=bundle267862d6853139252ee8.js.map

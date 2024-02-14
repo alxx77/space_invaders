@@ -65,9 +65,9 @@ export class Player extends SmartContainer {
   autofireInterval: number
   maxPlayerProjectilesFiredPerSecond: number
   bonusApplied: number[]
-  private cannonballBonusOn = false
-  private weaponBonusOn = false
-  private fireRateBonusOn = false
+  cannonballBonusOn = false
+  weaponBonusOn = false
+  fireRateBonusOn = false
   weaponBonusBlinkInterval: NodeJS.Timeout | undefined
   fireRateBonusBlinkInterval: NodeJS.Timeout | undefined
   cannonballBonusBlinkInterval: NodeJS.Timeout | undefined
@@ -752,12 +752,29 @@ export class Player extends SmartContainer {
 
   //fire rate bonus
   async engageFireRateBonus(stage: number) {
+    //if stage is 1 there is no real need to check anything
+    //just set firerate to 1
     if (stage === 1) {
       this.setFireControlParams(
         playerFireControl.fireRate1.autofireInterval,
         playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond
       )
       return
+    }
+
+    //in order to use firerate stage 2 current rate must be 1
+    //and fireRateBonus must be false (bonus not already in effect)
+    if (stage === 2) {
+      if (
+        !(
+          this.autofireInterval ===
+            playerFireControl.fireRate1.autofireInterval &&
+          this.maxPlayerProjectilesFiredPerSecond ===
+            playerFireControl.fireRate1.maxPlayerProjectilesFiredPerSecond &&
+          this.fireRateBonusOn === false
+        )
+      )
+        return
     }
 
     this.fireRateBonusOn = true
@@ -804,6 +821,7 @@ export class Player extends SmartContainer {
 
   //cannonball bonus
   async engageCannonballBonus() {
+    if (this.cannonballBonusOn === true) return
     this.cannonballBonusOn = true
     components.foreground.cannonballBonusSprite.visible = true
 
