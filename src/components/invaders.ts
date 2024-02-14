@@ -18,8 +18,9 @@ import { getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 import { InvaderProjectile } from "./invaderProjectile"
 import { SoloInvader } from "./soloInvader"
+import { getLevelData } from "../levelData"
 
-type InvaderData = {
+export type InvaderData = {
   x: number
   y: number
   variety: number
@@ -34,14 +35,12 @@ export class Invaders extends SmartContainer {
   private initialContainerWidth: number
   private intervalRegular: NodeJS.Timeout | undefined
   private intervalSolo: NodeJS.Timeout | undefined
-  private initialInvadersCount: number
+  initialInvadersCount: number
   static shootCounter: number
   static shotsEnded: number
-  private lastBonusTimeStamp: number
   constructor() {
     super()
     this.name = "Invaders"
-    this.lastBonusTimeStamp = 0
 
     //container
     this.container = new Container()
@@ -248,9 +247,9 @@ export class Invaders extends SmartContainer {
     //in case of playing game again
     this.clearAllInvaders()
 
-    this.lastBonusTimeStamp = 0
+    state.setLastBonusTimeStamp(0)
 
-    const gen = this.getLevelData(state.gameLevel, this)
+    const gen = getLevelData(state.gameLevel, this)
     for (const invaderData of gen) {
       const invader = new Invader(
         { x: invaderData.x, y: invaderData.y },
@@ -374,133 +373,7 @@ export class Invaders extends SmartContainer {
     return count
   }
 
-  awardBonus(invader: Invader) {
-    //create bonus weapon
-    const percentageInvadersDestroyed =
-      1 - state.invaders.length / this.initialInvadersCount
-    const r = getRandomNumber()
-    const p = r <= percentageInvadersDestroyed
-    let bonusAwarded = false
 
-    let bonusFactor = 1
-
-    switch (state.gameLevel) {
-      case 5:
-      case 6:
-        bonusFactor = 1.2
-
-        break
-
-      case 7:
-      case 8:
-        bonusFactor = 1.4
-
-        break
-
-      case 9:
-      case 10:
-        bonusFactor = 1.6
-
-        break
-
-      case 11:
-        bonusFactor = 1.8
-
-        break
-
-      default:
-        break
-    }
-
-    //weapon bonus
-    if (
-      p &&
-      !bonusAwarded &&
-      components.player.weapon < 3 &&
-      //do not allow too frequent bonus (7 sec minimum from last one)
-      //but excluding start of the level
-      (Date.now() - this.lastBonusTimeStamp > 7000 ||
-        this.lastBonusTimeStamp === 0)
-    ) {
-      if (
-        getRandomNumber() <
-        0.12 * bonusFactor + (components.player.weapon === 0 ? 0.3 : 0)
-      ) {
-        invader.createBonusWeapon(1)
-        components.player.bonusApplied.push(1)
-        bonusAwarded = true
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-
-    //shield
-    if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
-      if (getRandomNumber() < 0.2 * bonusFactor) {
-        invader.createBonusWeapon(11)
-        components.player.bonusApplied.push(11)
-        bonusAwarded = true
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-
-    //health
-    if (
-      p &&
-      state.gameLevel > 3 &&
-      Date.now() - this.lastBonusTimeStamp > 7000
-    ) {
-      if (getRandomNumber() < 0.2 * bonusFactor) {
-        invader.createBonusWeapon(15)
-        components.player.bonusApplied.push(15)
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-
-    //fire rate 1
-    if (
-      p &&
-      !bonusAwarded &&
-      !components.player.bonusApplied.includes(20) &&
-      !components.player.bonusApplied.includes(21) &&
-      Date.now() - this.lastBonusTimeStamp > 5000
-    ) {
-      if (
-        getRandomNumber() <
-        0.2 * bonusFactor + (components.game.autofire === undefined ? 0.45 : 0)
-      ) {
-        invader.createBonusWeapon(20)
-        components.player.bonusApplied.push(20)
-        bonusAwarded = true
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-
-    //fire rate 2
-    if (
-      p &&
-      !bonusAwarded &&
-      !components.player.bonusApplied.includes(21) &&
-      components.player.bonusApplied.includes(20) &&
-      Date.now() - this.lastBonusTimeStamp > 12000
-    ) {
-      if (getRandomNumber() < 0.12 * bonusFactor) {
-        invader.createBonusWeapon(21)
-        components.player.bonusApplied.push(21)
-        bonusAwarded = true
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-
-    //cannonball
-    if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 12000) {
-      if (getRandomNumber() < 0.12 * bonusFactor) {
-        invader.createBonusWeapon(22)
-        components.player.bonusApplied.push(22)
-        bonusAwarded = true
-        this.lastBonusTimeStamp = Date.now()
-      }
-    }
-  }
 
   removeInvader(invader: Invader) {
     const i = state.invaders.findIndex((el) => el === invader)
@@ -520,154 +393,6 @@ export class Invaders extends SmartContainer {
     invader.explosionSound.play()
     invader.explosionSprite.onComplete = () => {
       invader.destroy()
-    }
-  }
-
-  getLevelData = function* (
-    level: number,
-    self: Invaders
-  ): Generator<InvaderData, void, void> {
-    let levelData = []
-    switch (level) {
-      case 1:
-        levelData.push("1,1,1,0,0,0,0,0,1,1,1")
-        levelData.push("2,2,1,1,1,1,1,1,1,2,2")
-        levelData.push("2,2,2,2,2,2,2,2,2,2,2")
-        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
-        levelData.push("0,0,0,3,3,3,3,3,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-
-        break
-
-      case 2:
-        levelData.push("4,4,4,0,0,0,4,4,4")
-        levelData.push("2,2,4,4,4,4,4,2,2")
-        levelData.push("0,2,2,2,2,2,2,2,0")
-        levelData.push("0,0,1,1,1,1,1,0,0")
-        levelData.push("0,2,2,2,2,2,2,2,0")
-        levelData.push("2,2,0,0,0,0,0,2,2")
-        levelData.push("4,4,0,0,0,0,0,4,4")
-
-        yield* self.prepareLevelData(levelData)
-
-        break
-
-      case 3:
-        levelData.push("4,4,4,4,0,4,4,4,4")
-        levelData.push("0,3,3,3,4,3,3,3,0")
-        levelData.push("0,0,0,3,4,3,0,0,0")
-        levelData.push("0,0,3,4,1,4,3,0,0")
-        levelData.push("0,3,4,1,4,1,4,3,0")
-        levelData.push("3,4,1,4,1,4,1,4,3")
-        levelData.push("0,3,4,1,4,1,4,3,0")
-        levelData.push("0,0,3,4,1,4,3,0,0")
-        levelData.push("0,0,0,3,4,3,0,0,0")
-        levelData.push("0,0,0,0,3,0,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-
-        break
-
-      case 4:
-        levelData.push("1,1,1,1,4,4,4,1,1,1,1")
-        levelData.push("2,2,2,2,2,4,2,2,2,2,2")
-        levelData.push("0,3,3,3,3,3,3,3,3,3,0")
-        levelData.push("0,0,0,0,4,3,4,0,0,0,0")
-        levelData.push("0,1,1,1,1,1,1,1,1,1,0")
-        levelData.push("2,2,2,2,2,0,2,2,2,2,2")
-        levelData.push("3,3,3,3,0,0,0,3,3,3,3")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 5:
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("0,2,2,2,2,0,2,2,2,2,0")
-        levelData.push("0,0,3,3,3,3,3,3,3,0,0")
-        levelData.push("0,0,0,2,2,2,2,2,0,0,0")
-        levelData.push("0,0,0,0,1,1,1,0,0,0,0")
-        levelData.push("0,0,0,0,0,1,0,0,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 6:
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("3,4,3,4,3,4,3,4,3,4,3")
-        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
-        levelData.push("1,3,1,3,1,3,1,3,1,3,1")
-        levelData.push("0,1,0,1,0,1,0,1,0,1,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 7:
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("4,4,4,4,4,4,4,4,4,4,4")
-        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
-        levelData.push("3,3,3,3,3,3,3,3,3,3,3")
-        levelData.push("2,2,2,2,2,2,2,2,2,2,2")
-        levelData.push("0,2,2,2,2,2,2,2,2,2,0")
-        levelData.push("0,0,1,1,1,1,1,1,1,0,0")
-        levelData.push("0,0,0,1,1,1,1,1,0,0,0")
-        levelData.push("0,0,0,0,1,1,1,0,0,0,0")
-        levelData.push("0,0,0,0,0,1,0,0,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 8:
-        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
-        levelData.push("0,0,0,0,3,3,3,0,0,0,0")
-        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
-        levelData.push("0,0,0,0,3,3,3,0,0,0,0")
-        levelData.push("0,0,0,0,0,3,0,0,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 9:
-        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-        levelData.push("0,0,0,3,3,2,3,3,0,0,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 10:
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("3,3,2,2,4,1,4,3,2,3,3")
-        levelData.push("0,3,3,2,2,4,2,2,3,3,0")
-        levelData.push("0,0,3,3,2,2,2,3,3,0,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      case 11:
-        levelData.push("0,4,0,4,0,4,0,4,0,4,0")
-        levelData.push("4,3,4,3,4,3,4,3,4,3,4")
-        levelData.push("0,4,0,4,0,4,0,4,0,4,0")
-
-        yield* self.prepareLevelData(levelData)
-        break
-
-      default:
-        break
     }
   }
 
@@ -724,6 +449,4 @@ export class Invaders extends SmartContainer {
       }
     }
   }
-
-  updateLayout(width: number, height: number) {}
 }

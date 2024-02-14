@@ -38,6 +38,7 @@ class Store {
   _mobileDevice: boolean
   _toggleTWEEN: boolean
   _screenTapped: boolean
+  _lastBonusTimeStamp: number
 
   constructor() {
     this._LEFT_keyPressed = false
@@ -64,6 +65,7 @@ class Store {
     this._mobileDevice = false
     this._toggleTWEEN = true
     this._screenTapped = false
+    this._lastBonusTimeStamp = 0
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
@@ -383,6 +385,16 @@ class Store {
   @computed
   get screenTapped() {
     return this._screenTapped
+  }
+
+  @action
+  setLastBonusTimeStamp(value: number) {
+    this._lastBonusTimeStamp = value
+  }
+
+  @computed
+  get lastBonusTimeStamp() {
+    return this._lastBonusTimeStamp
   }
 }
 

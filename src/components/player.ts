@@ -177,7 +177,7 @@ export class Player extends SmartContainer {
         if (newVal === false) {
           this.damage = playerMaxDamage
           this.healthText.text = this.percentageToAsterisks(
-            this.healthPercentage()
+            this.getHealthPercentage()
           )
           Timeout.reset("wb", 0)
           Timeout.reset("frb", 0)
@@ -242,7 +242,7 @@ export class Player extends SmartContainer {
     })
 
     this.healthText.text = this.percentageToAsterisks(
-      this.healthPercentage()
+      this.getHealthPercentage()
     )
   }
 
@@ -257,7 +257,7 @@ export class Player extends SmartContainer {
     return "*".repeat(numAsterisks)
   }
 
-  private healthPercentage() {
+  getHealthPercentage() {
     return (100 / playerMaxDamage) * (playerMaxDamage - this.damage)
   }
 
@@ -301,7 +301,7 @@ export class Player extends SmartContainer {
     let damageFactor = this.shieldEngaged ? 0.25 : 1
     this.damage = this.damage + damageFactor * ip.lethalFactor
     this.healthText.text = this.percentageToAsterisks(
-      this.healthPercentage()
+      this.getHealthPercentage()
     )
 
     return this.blink()
@@ -314,7 +314,7 @@ export class Player extends SmartContainer {
   resetDamage() {
     this.damage = 0
     this.healthText.text = this.percentageToAsterisks(
-      this.healthPercentage()
+      this.getHealthPercentage()
     )
   }
 
@@ -345,7 +345,8 @@ export class Player extends SmartContainer {
     projectileType: number,
     xDestination: number,
     yDestination: number,
-    indestructible: boolean = false
+    indestructible: boolean = false,
+    emitSound: boolean
   ) {
     const projectile = new Projectile(
       {
@@ -353,7 +354,8 @@ export class Player extends SmartContainer {
         y: y,
       },
       projectileSpeed,
-      projectileType
+      projectileType,
+      emitSound
     )
     projectile.indestructible = indestructible
     components.foreground.container.addChild(projectile)
@@ -375,19 +377,21 @@ export class Player extends SmartContainer {
       1,
       this.x,
       -50,
-      this.cannonballBonusOn
+      this.cannonballBonusOn,
+      true
     )
   }
 
   private fireWeapon1() {
-    const pl = this.fireProjectile(
+    this.fireProjectile(
       this.x - 12 * this.sprite.scale.x,
       this.y * 0.97,
       projectileSpeed * 1.2,
       1,
       this.x - 12 * this.sprite.scale.x,
       -50,
-      this.cannonballBonusOn
+      this.cannonballBonusOn,
+      true
     )
     this.fireProjectile(
       this.x + 12 * this.sprite.scale.x,
@@ -395,7 +399,9 @@ export class Player extends SmartContainer {
       projectileSpeed * 1.2,
       1,
       this.x + 12 * this.sprite.scale.x,
-      -50
+      -50,
+      false,
+      false
     )
   }
 
@@ -406,7 +412,9 @@ export class Player extends SmartContainer {
       projectileSpeed,
       1,
       this.x - 20 * this.sprite.scale.x,
-      -50
+      -50,
+      false,
+      false
     )
     this.fireProjectile(
       this.x + 20 * this.sprite.scale.x,
@@ -414,7 +422,9 @@ export class Player extends SmartContainer {
       projectileSpeed,
       1,
       this.x + 20 * this.sprite.scale.x,
-      -50
+      -50,
+      false,
+      false
     )
     this.fireProjectile(
       this.x,
@@ -423,7 +433,8 @@ export class Player extends SmartContainer {
       0,
       this.x,
       -50,
-      this.cannonballBonusOn
+      this.cannonballBonusOn,
+      true
     )
   }
 
@@ -434,7 +445,9 @@ export class Player extends SmartContainer {
       projectileSpeed,
       0,
       this.x - playerWidth * 0.75 * this.sprite.scale.x,
-      -50
+      -50,
+      false,
+      false
     )
 
     this.fireProjectile(
@@ -443,7 +456,9 @@ export class Player extends SmartContainer {
       projectileSpeed,
       0,
       this.x + playerWidth * 0.75 * this.sprite.scale.x,
-      -50
+      -50,
+      false,
+      false
     )
   }
 
@@ -466,6 +481,7 @@ export class Player extends SmartContainer {
         break
     }
 
+    //add an event, so fire rate per second can be calculated
     components.game.firingRateCalculator.addEvent()
   }
 

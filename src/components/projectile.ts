@@ -15,7 +15,7 @@ export class Projectile extends SmartContainer {
   lethality = 1
   //creation timestamp
   createdAt: number
-  constructor(position: { x: number; y: number }, speed: number, type: number) {
+  constructor(position: { x: number; y: number }, speed: number, type: number, emitSound:boolean ) {
     super()
     this.projectileType = type
     this.sprite = new Sprite(
@@ -41,7 +41,10 @@ export class Projectile extends SmartContainer {
       loop: false,
     })
     this.shootSound.volume(0.2 + Math.random() * 0.4)
-    this.shootSound.play()
+
+    if(emitSound){
+      this.shootSound.play()
+    }
 
     this.createdAt = Date.now()
   }
@@ -69,7 +72,7 @@ export class Projectile extends SmartContainer {
         invader.takeHit(this.lethality)
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
-          components.invaders.awardBonus(invader)
+          invader.awardBonus()
           state.triggerInvaderDestroyed()
         }
         //if not indestructible projectile is immediately destroyed
@@ -111,9 +114,5 @@ export class Projectile extends SmartContainer {
         }
       }
     }
-  }
-
-  updateLayout(width: number, height: number) {
-    //this.speed = projectileSpeed * components.background.scale.x
   }
 }

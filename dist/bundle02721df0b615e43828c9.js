@@ -14217,12 +14217,12 @@ class BonusItem extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContai
         this.cbOnTweenUpdate = this.collisionTestPlayerWithBonusWeapon;
         this.bonusCollectedSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.bonusCollected],
-            volume: 0.15,
+            volume: 0.12,
             loop: false,
         });
         this.bonusCreatedSound = new howler__WEBPACK_IMPORTED_MODULE_3__.Howl({
             src: [_settings__WEBPACK_IMPORTED_MODULE_4__.soundSource.bonusCreated],
-            volume: 0.2,
+            volume: 0.175,
             loop: false,
         });
     }
@@ -14231,38 +14231,44 @@ class BonusItem extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.SmartContai
         super.moveTo(xPos, yPos, this.speed, onEnd);
     }
     collisionTestPlayerWithBonusWeapon(c) {
-        //console.log(this.x,this.y)
         if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
             return;
         const bounds1 = _state__WEBPACK_IMPORTED_MODULE_2__.components.player.sprite.getBounds();
         const bounds2 = this.sprite.getBounds();
-        // Check for collision using bounds
-        if (bounds1.x < bounds2.x + bounds2.width &&
+        const collided = bounds1.x < bounds2.x + bounds2.width &&
             bounds1.x + bounds1.width > bounds2.x &&
             bounds1.y < bounds2.y + bounds2.height &&
-            bounds1.y + bounds1.height > bounds2.y) {
-            // Collision detected
-            if (this.itemType >= 1 && this.itemType <= 10) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.incrementWeaponType();
-            }
-            if (this.itemType === 11 && !_state__WEBPACK_IMPORTED_MODULE_2__.components.player.shieldEngaged) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.powerUpShield();
-            }
-            if (this.itemType === 15) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.resetDamage();
-            }
-            if (this.itemType === 20) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageFireRateBonus(1);
-            }
-            if (this.itemType === 21) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageFireRateBonus(2);
-            }
-            if (this.itemType === 22) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageCannonballBonus();
-            }
+            bounds1.y + bounds1.height > bounds2.y;
+        //if no collision exit early
+        if (!collided)
+            return;
+        if (this.itemType >= 1 && this.itemType <= 10 && _state__WEBPACK_IMPORTED_MODULE_2__.components.player.weapon < 3) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.incrementWeaponType();
+            this.collected = true;
+        }
+        if (this.itemType === 11 && !_state__WEBPACK_IMPORTED_MODULE_2__.components.player.shieldEngaged) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.powerUpShield();
+            this.collected = true;
+        }
+        if (this.itemType === 15 && _state__WEBPACK_IMPORTED_MODULE_2__.components.player.getHealthPercentage() < 100) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.resetDamage();
+            this.collected = true;
+        }
+        if (this.itemType === 20) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageFireRateBonus(1);
+            this.collected = true;
+        }
+        if (this.itemType === 21) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageFireRateBonus(2);
+            this.collected = true;
+        }
+        if (this.itemType === 22) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.engageCannonballBonus();
+            this.collected = true;
+        }
+        if (this.collected) {
             this.stopTween();
             this.bonusCollectedSound.play();
-            this.collected = true;
             this.destroy();
         }
     }
@@ -14328,10 +14334,10 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.container.addChild(this.livesText);
         //level
         this.levelText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`LEVEL 1`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
-        this.levelText.scale.set(1.5);
+        this.levelText.scale.set(1.9);
         this.levelText.anchor.set(0.5);
         this.levelText.x = _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth * 0.85;
-        this.levelText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.98;
+        this.levelText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.97;
         this.levelText.alpha = 0.4;
         this.container.addChild(this.levelText);
         //press space to play
@@ -14624,7 +14630,7 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
                 this.maxDamage = 5;
                 break;
             case 7:
-                this.maxDamage = 10;
+                this.maxDamage = 7;
                 break;
             default:
                 break;
@@ -14693,6 +14699,102 @@ class Invader extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContaine
                 bonus.destroy();
             }
         });
+    }
+    awardBonus() {
+        //create bonus weapon
+        const percentageInvadersDestroyed = 1 - _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.initialInvadersCount;
+        const r = (0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)();
+        const p = r <= percentageInvadersDestroyed;
+        let bonusAwarded = false;
+        let bonusFactor = 1;
+        switch (_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel) {
+            case 5:
+            case 6:
+                bonusFactor = 1.2;
+                break;
+            case 7:
+            case 8:
+                bonusFactor = 1.4;
+                break;
+            case 9:
+            case 10:
+                bonusFactor = 1.6;
+                break;
+            case 11:
+                bonusFactor = 1.8;
+                break;
+            default:
+                break;
+        }
+        const timeSinceLastBonus = Date.now() - _state__WEBPACK_IMPORTED_MODULE_1__.state.lastBonusTimeStamp;
+        //weapon bonus
+        if (p &&
+            !bonusAwarded &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon < 3 &&
+            //do not allow too frequent bonus (7 sec minimum from last one)
+            //but excluding start of the level
+            (timeSinceLastBonus > 7000 || _state__WEBPACK_IMPORTED_MODULE_1__.state.lastBonusTimeStamp === 0)) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() <
+                0.12 * bonusFactor + (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 0 ? 0.3 : 0)) {
+                this.createBonusWeapon(1);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(1);
+                bonusAwarded = true;
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
+        //shield
+        if (p && !bonusAwarded && timeSinceLastBonus > 15000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() < 0.2 * bonusFactor) {
+                this.createBonusWeapon(11);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(11);
+                bonusAwarded = true;
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
+        //health
+        if (p && _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel > 3 && timeSinceLastBonus > 7000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() < 0.2 * bonusFactor) {
+                this.createBonusWeapon(15);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(15);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
+        //fire rate 1
+        if (p &&
+            !bonusAwarded &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
+            timeSinceLastBonus > 5000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() <
+                0.2 * bonusFactor + (_state__WEBPACK_IMPORTED_MODULE_1__.components.game.autofire === undefined ? 0.45 : 0)) {
+                this.createBonusWeapon(20);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(20);
+                bonusAwarded = true;
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
+        //fire rate 2
+        if (p &&
+            !bonusAwarded &&
+            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
+            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
+            timeSinceLastBonus > 12000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() < 0.12 * bonusFactor) {
+                this.createBonusWeapon(21);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(21);
+                bonusAwarded = true;
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
+        //cannonball
+        if (p && !bonusAwarded && timeSinceLastBonus > 12000) {
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_8__.getRandomNumber)() < 0.12 * bonusFactor) {
+                this.createBonusWeapon(22);
+                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(22);
+                bonusAwarded = true;
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(Date.now());
+            }
+        }
     }
     blink() {
         this.sprite.tint = "#771111";
@@ -14775,7 +14877,7 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
         this.scale.set(this.scaleFactor);
         this.x = position.x;
         this.y = position.y;
-        this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile;
+        this.cbOnTweenUpdate = this.collisionTestWithPlayer;
         const sheet = pixi_js__WEBPACK_IMPORTED_MODULE_0__.Assets.cache.get("invader_explosion");
         const textures = Object.values(sheet.textures);
         this.explosionSprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.AnimatedSprite(textures);
@@ -14877,7 +14979,7 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
             InvaderProjectile.projectileMiss++;
         }
     }
-    collisionTestPlayerWithInvaderProjectile(c, elapsed) {
+    collisionTestWithPlayer(c, elapsed) {
         this.onTweenUpdate(elapsed);
         if (!_state__WEBPACK_IMPORTED_MODULE_2__.state.playerAlive)
             return;
@@ -14898,22 +15000,21 @@ class InvaderProjectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_1__.Sma
                 bPl.x + bPl.width > bExp.x &&
                 bPl.y < bExp.y + bExp.height &&
                 bPl.y + bPl.height > bExp.y;
-        if (collisionA || (collisionB && this.detonationStatus === 1)) {
-            // Collision detected
-            //check if projectile is "live"
-            //if yes do damage, otherwise not
-            if (this.detonationStatus === 0) {
-                _state__WEBPACK_IMPORTED_MODULE_2__.components.player.takeHitFromProjectile(this);
-                InvaderProjectile.removeProjectile(this);
-                InvaderProjectile.projectileHit++;
-                if (_state__WEBPACK_IMPORTED_MODULE_2__.components.player.isTotallyDamaged()) {
-                    _state__WEBPACK_IMPORTED_MODULE_2__.state.setPlayerAlive(false);
-                    _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
-                }
+        //if no collision exit
+        if (!(collisionA || (collisionB && this.detonationStatus === 1)))
+            return;
+        //check if projectile is "live"
+        //if yes do damage, otherwise not
+        if (this.detonationStatus === 0) {
+            _state__WEBPACK_IMPORTED_MODULE_2__.components.player.takeHitFromProjectile(this);
+            InvaderProjectile.removeProjectile(this);
+            InvaderProjectile.projectileHit++;
+            if (_state__WEBPACK_IMPORTED_MODULE_2__.components.player.isTotallyDamaged()) {
+                _state__WEBPACK_IMPORTED_MODULE_2__.state.setPlayerAlive(false);
+                _state__WEBPACK_IMPORTED_MODULE_2__.state.setInvadersActive(false);
             }
         }
     }
-    updateLayout(width, height) { }
 }
 
 
@@ -14935,12 +15036,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _smartContainer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./smartContainer */ "./src/components/smartContainer.ts");
 /* harmony import */ var _invader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./invader */ "./src/components/invader.ts");
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../settings */ "./src/settings.ts");
-/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
+/* harmony import */ var mobx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! mobx */ "./node_modules/mobx/dist/mobx.esm.js");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! smart-timeout */ "./node_modules/smart-timeout/index.js");
 /* harmony import */ var smart_timeout__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(smart_timeout__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var _invaderProjectile__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./invaderProjectile */ "./src/components/invaderProjectile.ts");
 /* harmony import */ var _soloInvader__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./soloInvader */ "./src/components/soloInvader.ts");
+/* harmony import */ var _levelData__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../levelData */ "./src/levelData.ts");
+
 
 
 
@@ -14969,125 +15072,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 }
             }
         };
-        this.getLevelData = function* (level, self) {
-            let levelData = [];
-            switch (level) {
-                case 1:
-                    levelData.push("1,1,1,0,0,0,0,0,1,1,1");
-                    levelData.push("2,2,1,1,1,1,1,1,1,2,2");
-                    levelData.push("2,2,2,2,2,2,2,2,2,2,2");
-                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
-                    levelData.push("0,0,0,3,3,3,3,3,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 2:
-                    levelData.push("4,4,4,0,0,0,4,4,4");
-                    levelData.push("2,2,4,4,4,4,4,2,2");
-                    levelData.push("0,2,2,2,2,2,2,2,0");
-                    levelData.push("0,0,1,1,1,1,1,0,0");
-                    levelData.push("0,2,2,2,2,2,2,2,0");
-                    levelData.push("2,2,0,0,0,0,0,2,2");
-                    levelData.push("4,4,0,0,0,0,0,4,4");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 3:
-                    levelData.push("4,4,4,4,0,4,4,4,4");
-                    levelData.push("0,3,3,3,4,3,3,3,0");
-                    levelData.push("0,0,0,3,4,3,0,0,0");
-                    levelData.push("0,0,3,4,1,4,3,0,0");
-                    levelData.push("0,3,4,1,4,1,4,3,0");
-                    levelData.push("3,4,1,4,1,4,1,4,3");
-                    levelData.push("0,3,4,1,4,1,4,3,0");
-                    levelData.push("0,0,3,4,1,4,3,0,0");
-                    levelData.push("0,0,0,3,4,3,0,0,0");
-                    levelData.push("0,0,0,0,3,0,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 4:
-                    levelData.push("1,1,1,1,4,4,4,1,1,1,1");
-                    levelData.push("2,2,2,2,2,4,2,2,2,2,2");
-                    levelData.push("0,3,3,3,3,3,3,3,3,3,0");
-                    levelData.push("0,0,0,0,4,3,4,0,0,0,0");
-                    levelData.push("0,1,1,1,1,1,1,1,1,1,0");
-                    levelData.push("2,2,2,2,2,0,2,2,2,2,2");
-                    levelData.push("3,3,3,3,0,0,0,3,3,3,3");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 5:
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("0,2,2,2,2,0,2,2,2,2,0");
-                    levelData.push("0,0,3,3,3,3,3,3,3,0,0");
-                    levelData.push("0,0,0,2,2,2,2,2,0,0,0");
-                    levelData.push("0,0,0,0,1,1,1,0,0,0,0");
-                    levelData.push("0,0,0,0,0,1,0,0,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 6:
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("3,4,3,4,3,4,3,4,3,4,3");
-                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
-                    levelData.push("1,3,1,3,1,3,1,3,1,3,1");
-                    levelData.push("0,1,0,1,0,1,0,1,0,1,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 7:
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("4,4,4,4,4,4,4,4,4,4,4");
-                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
-                    levelData.push("3,3,3,3,3,3,3,3,3,3,3");
-                    levelData.push("2,2,2,2,2,2,2,2,2,2,2");
-                    levelData.push("0,2,2,2,2,2,2,2,2,2,0");
-                    levelData.push("0,0,1,1,1,1,1,1,1,0,0");
-                    levelData.push("0,0,0,1,1,1,1,1,0,0,0");
-                    levelData.push("0,0,0,0,1,1,1,0,0,0,0");
-                    levelData.push("0,0,0,0,0,1,0,0,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 8:
-                    levelData.push("0,0,0,0,0,3,0,0,0,0,0");
-                    levelData.push("0,0,0,0,3,3,3,0,0,0,0");
-                    levelData.push("0,0,0,3,3,2,3,3,0,0,0");
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("3,3,2,2,4,1,4,3,2,3,3");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    levelData.push("0,0,0,3,3,2,3,3,0,0,0");
-                    levelData.push("0,0,0,0,3,3,3,0,0,0,0");
-                    levelData.push("0,0,0,0,0,3,0,0,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 9:
-                    levelData.push("0,0,0,3,3,2,3,3,0,0,0");
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("3,3,2,2,4,1,4,3,2,3,3");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    levelData.push("0,0,0,3,3,2,3,3,0,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 10:
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("3,3,2,2,4,1,4,3,2,3,3");
-                    levelData.push("0,3,3,2,2,4,2,2,3,3,0");
-                    levelData.push("0,0,3,3,2,2,2,3,3,0,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                case 11:
-                    levelData.push("0,4,0,4,0,4,0,4,0,4,0");
-                    levelData.push("4,3,4,3,4,3,4,3,4,3,4");
-                    levelData.push("0,4,0,4,0,4,0,4,0,4,0");
-                    yield* self.prepareLevelData(levelData);
-                    break;
-                default:
-                    break;
-            }
-        };
         this.prepareLevelData = function* (levelData) {
             let rowCounter = 0;
             for (const row of levelData) {
@@ -15109,7 +15093,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         };
         this.name = "Invaders";
-        this.lastBonusTimeStamp = 0;
         //container
         this.container = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container();
         this.addChild(this.container);
@@ -15118,7 +15101,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         this.initialContainerWidth = 0;
         //when all invaders are destroyed
         //while player is active & alive
-        (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => ({
+        (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => ({
             invadersLength: _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length,
             invaderProjectiles: _state__WEBPACK_IMPORTED_MODULE_1__.state.invaderProjectiles.length,
         }), (newVal) => {
@@ -15136,7 +15119,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         });
         //when invaders should stop
-        (0,mobx__WEBPACK_IMPORTED_MODULE_9__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_1__.state.invadersActive, (newVal) => {
+        (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_1__.state.invadersActive, (newVal) => {
             if (newVal === false) {
                 this.stopMove();
                 this.stopShooting();
@@ -15245,8 +15228,8 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         //clear invaders first
         //in case of playing game again
         this.clearAllInvaders();
-        this.lastBonusTimeStamp = 0;
-        const gen = this.getLevelData(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
+        _state__WEBPACK_IMPORTED_MODULE_1__.state.setLastBonusTimeStamp(0);
+        const gen = (0,_levelData__WEBPACK_IMPORTED_MODULE_9__.getLevelData)(_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel, this);
         for (const invaderData of gen) {
             const invader = new _invader__WEBPACK_IMPORTED_MODULE_3__.Invader({ x: invaderData.x, y: invaderData.y }, invaderData.variety);
             _state__WEBPACK_IMPORTED_MODULE_1__.state.addInvader(invader);
@@ -15329,104 +15312,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
         await Promise.all(promises);
         return count;
     }
-    awardBonus(invader) {
-        //create bonus weapon
-        const percentageInvadersDestroyed = 1 - _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.length / this.initialInvadersCount;
-        const r = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)();
-        const p = r <= percentageInvadersDestroyed;
-        let bonusAwarded = false;
-        let bonusFactor = 1;
-        switch (_state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel) {
-            case 5:
-            case 6:
-                bonusFactor = 1.2;
-                break;
-            case 7:
-            case 8:
-                bonusFactor = 1.4;
-                break;
-            case 9:
-            case 10:
-                bonusFactor = 1.6;
-                break;
-            case 11:
-                bonusFactor = 1.8;
-                break;
-            default:
-                break;
-        }
-        //weapon bonus
-        if (p &&
-            !bonusAwarded &&
-            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon < 3 &&
-            //do not allow too frequent bonus (7 sec minimum from last one)
-            //but excluding start of the level
-            (Date.now() - this.lastBonusTimeStamp > 7000 ||
-                this.lastBonusTimeStamp === 0)) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() <
-                0.12 * bonusFactor + (_state__WEBPACK_IMPORTED_MODULE_1__.components.player.weapon === 0 ? 0.3 : 0)) {
-                invader.createBonusWeapon(1);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(1);
-                bonusAwarded = true;
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-        //shield
-        if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 15000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.2 * bonusFactor) {
-                invader.createBonusWeapon(11);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(11);
-                bonusAwarded = true;
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-        //health
-        if (p &&
-            _state__WEBPACK_IMPORTED_MODULE_1__.state.gameLevel > 3 &&
-            Date.now() - this.lastBonusTimeStamp > 7000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.2 * bonusFactor) {
-                invader.createBonusWeapon(15);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(15);
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-        //fire rate 1
-        if (p &&
-            !bonusAwarded &&
-            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
-            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
-            Date.now() - this.lastBonusTimeStamp > 5000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() <
-                0.2 * bonusFactor + (_state__WEBPACK_IMPORTED_MODULE_1__.components.game.autofire === undefined ? 0.45 : 0)) {
-                invader.createBonusWeapon(20);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(20);
-                bonusAwarded = true;
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-        //fire rate 2
-        if (p &&
-            !bonusAwarded &&
-            !_state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(21) &&
-            _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.includes(20) &&
-            Date.now() - this.lastBonusTimeStamp > 12000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.12 * bonusFactor) {
-                invader.createBonusWeapon(21);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(21);
-                bonusAwarded = true;
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-        //cannonball
-        if (p && !bonusAwarded && Date.now() - this.lastBonusTimeStamp > 12000) {
-            if ((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getRandomNumber)() < 0.12 * bonusFactor) {
-                invader.createBonusWeapon(22);
-                _state__WEBPACK_IMPORTED_MODULE_1__.components.player.bonusApplied.push(22);
-                bonusAwarded = true;
-                this.lastBonusTimeStamp = Date.now();
-            }
-        }
-    }
     removeInvader(invader) {
         const i = _state__WEBPACK_IMPORTED_MODULE_1__.state.invaders.findIndex((el) => el === invader);
         if (invader.constructor.name === "SoloInvader") {
@@ -15471,7 +15356,6 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
             }
         }
     }
-    updateLayout(width, height) { }
 }
 
 
@@ -15504,7 +15388,7 @@ class Layout extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.height = document.documentElement.clientHeight;
         this.crtfilter = new pixi_filters__WEBPACK_IMPORTED_MODULE_1__.CRTFilter({
             curvature: 1,
-            lineWidth: 3,
+            lineWidth: 2,
             lineContrast: 0.3,
             noise: 0.2,
             noiseSize: 1,
@@ -15701,7 +15585,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         d = (0,mobx__WEBPACK_IMPORTED_MODULE_8__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_1__.state.playerAlive, (newVal) => {
             if (newVal === false) {
                 this.damage = _settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage;
-                this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+                this.healthText.text = this.percentageToAsterisks(this.getHealthPercentage());
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("wb", 0);
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("frb", 0);
                 smart_timeout__WEBPACK_IMPORTED_MODULE_6___default().reset("cbb", 0);
@@ -15751,7 +15635,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             volume: 0.25,
             loop: true,
         });
-        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.getHealthPercentage());
     }
     percentageToAsterisks(percent) {
         // Ensure the percentage is within the range [0, 100]
@@ -15761,7 +15645,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         // Generate the asterisk string
         return "*".repeat(numAsterisks);
     }
-    healthPercentage() {
+    getHealthPercentage() {
         return (100 / _settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage) * (_settings__WEBPACK_IMPORTED_MODULE_3__.playerMaxDamage - this.damage);
     }
     setFireControlParams(interval, maxRate) {
@@ -15800,7 +15684,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     async takeHitFromProjectile(ip) {
         let damageFactor = this.shieldEngaged ? 0.25 : 1;
         this.damage = this.damage + damageFactor * ip.lethalFactor;
-        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.getHealthPercentage());
         return this.blink();
     }
     isTotallyDamaged() {
@@ -15808,7 +15692,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
     }
     resetDamage() {
         this.damage = 0;
-        this.healthText.text = this.percentageToAsterisks(this.healthPercentage());
+        this.healthText.text = this.percentageToAsterisks(this.getHealthPercentage());
     }
     async blink() {
         this.sprite.tint = "#771111";
@@ -15827,11 +15711,11 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         this.shieldSprite.visible = false;
         this.shieldText.visible = false;
     }
-    fireProjectile(x, y, projectileSpeed, projectileType, xDestination, yDestination, indestructible = false) {
+    fireProjectile(x, y, projectileSpeed, projectileType, xDestination, yDestination, indestructible = false, emitSound) {
         const projectile = new _projectile__WEBPACK_IMPORTED_MODULE_4__.Projectile({
             x: x,
             y: y,
-        }, projectileSpeed, projectileType);
+        }, projectileSpeed, projectileType, emitSound);
         projectile.indestructible = indestructible;
         _state__WEBPACK_IMPORTED_MODULE_1__.components.foreground.container.addChild(projectile);
         _state__WEBPACK_IMPORTED_MODULE_1__.state.addProjectile(projectile);
@@ -15843,20 +15727,20 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
         return projectile;
     }
     fireWeapon0() {
-        const pl = this.fireProjectile(this.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x, -50, this.cannonballBonusOn);
+        const pl = this.fireProjectile(this.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x, -50, this.cannonballBonusOn, true);
     }
     fireWeapon1() {
-        const pl = this.fireProjectile(this.x - 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x - 12 * this.sprite.scale.x, -50, this.cannonballBonusOn);
-        this.fireProjectile(this.x + 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x + 12 * this.sprite.scale.x, -50);
+        this.fireProjectile(this.x - 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x - 12 * this.sprite.scale.x, -50, this.cannonballBonusOn, true);
+        this.fireProjectile(this.x + 12 * this.sprite.scale.x, this.y * 0.97, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed * 1.2, 1, this.x + 12 * this.sprite.scale.x, -50, false, false);
     }
     fireWeapon2() {
-        this.fireProjectile(this.x - 20 * this.sprite.scale.x, this.y * 0.96, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x - 20 * this.sprite.scale.x, -50);
-        this.fireProjectile(this.x + 20 * this.sprite.scale.x, this.y * 0.96, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x + 20 * this.sprite.scale.x, -50);
-        this.fireProjectile(this.x, this.y * 0.94, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x, -50, this.cannonballBonusOn);
+        this.fireProjectile(this.x - 20 * this.sprite.scale.x, this.y * 0.96, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x - 20 * this.sprite.scale.x, -50, false, false);
+        this.fireProjectile(this.x + 20 * this.sprite.scale.x, this.y * 0.96, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 1, this.x + 20 * this.sprite.scale.x, -50, false, false);
+        this.fireProjectile(this.x, this.y * 0.94, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x, -50, this.cannonballBonusOn, true);
     }
     fireWeapon3() {
-        this.fireProjectile(this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.98, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50);
-        this.fireProjectile(this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.98, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50);
+        this.fireProjectile(this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.98, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x - _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50, false, false);
+        this.fireProjectile(this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, this.y * 0.98, _settings__WEBPACK_IMPORTED_MODULE_3__.projectileSpeed, 0, this.x + _settings__WEBPACK_IMPORTED_MODULE_3__.playerWidth * 0.75 * this.sprite.scale.x, -50, false, false);
     }
     async shoot() {
         switch (this.weapon) {
@@ -15876,6 +15760,7 @@ class Player extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer
             default:
                 break;
         }
+        //add an event, so fire rate per second can be calculated
         _state__WEBPACK_IMPORTED_MODULE_1__.components.game.firingRateCalculator.addEvent();
     }
     engageShield() {
@@ -16133,7 +16018,7 @@ __webpack_require__.r(__webpack_exports__);
 
 //root container
 class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContainer {
-    constructor(position, speed, type) {
+    constructor(position, speed, type, emitSound) {
         super();
         this.indestructible = false;
         this.lethality = 1;
@@ -16155,7 +16040,9 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
             loop: false,
         });
         this.shootSound.volume(0.2 + Math.random() * 0.4);
-        this.shootSound.play();
+        if (emitSound) {
+            this.shootSound.play();
+        }
         this.createdAt = Date.now();
     }
     rotate(deg) {
@@ -16175,7 +16062,7 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                 invader.takeHit(this.lethality);
                 if (invader.isTotallyDamaged()) {
                     _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.removeInvader(invader);
-                    _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.awardBonus(invader);
+                    invader.awardBonus();
                     _state__WEBPACK_IMPORTED_MODULE_1__.state.triggerInvaderDestroyed();
                 }
                 //if not indestructible projectile is immediately destroyed
@@ -16213,9 +16100,6 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                 }
             }
         }
-    }
-    updateLayout(width, height) {
-        //this.speed = projectileSpeed * components.background.scale.x
     }
 }
 
@@ -17043,6 +16927,140 @@ async function initGame() {
 
 /***/ }),
 
+/***/ "./src/levelData.ts":
+/*!**************************!*\
+  !*** ./src/levelData.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getLevelData: () => (/* binding */ getLevelData)
+/* harmony export */ });
+function* getLevelData(level, self) {
+    let levelData = [];
+    switch (level) {
+        case 1:
+            levelData.push("1,1,1,0,0,0,0,0,1,1,1");
+            levelData.push("2,2,1,1,1,1,1,1,1,2,2");
+            levelData.push("2,2,2,2,2,2,2,2,2,2,2");
+            levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+            levelData.push("0,0,0,3,3,3,3,3,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 2:
+            levelData.push("4,4,4,0,0,0,4,4,4");
+            levelData.push("2,2,4,4,4,4,4,2,2");
+            levelData.push("0,2,2,2,2,2,2,2,0");
+            levelData.push("0,0,1,1,1,1,1,0,0");
+            levelData.push("0,2,2,2,2,2,2,2,0");
+            levelData.push("2,2,0,0,0,0,0,2,2");
+            levelData.push("4,4,0,0,0,0,0,4,4");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 3:
+            levelData.push("4,4,4,4,0,4,4,4,4");
+            levelData.push("0,3,3,3,4,3,3,3,0");
+            levelData.push("0,0,0,3,4,3,0,0,0");
+            levelData.push("0,0,3,4,1,4,3,0,0");
+            levelData.push("0,3,4,1,4,1,4,3,0");
+            levelData.push("3,4,1,4,1,4,1,4,3");
+            levelData.push("0,3,4,1,4,1,4,3,0");
+            levelData.push("0,0,3,4,1,4,3,0,0");
+            levelData.push("0,0,0,3,4,3,0,0,0");
+            levelData.push("0,0,0,0,3,0,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 4:
+            levelData.push("1,1,1,1,4,4,4,1,1,1,1");
+            levelData.push("2,2,2,2,2,4,2,2,2,2,2");
+            levelData.push("0,3,3,3,3,3,3,3,3,3,0");
+            levelData.push("0,0,0,0,4,3,4,0,0,0,0");
+            levelData.push("0,1,1,1,1,1,1,1,1,1,0");
+            levelData.push("2,2,2,2,2,0,2,2,2,2,2");
+            levelData.push("3,3,3,3,0,0,0,3,3,3,3");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 5:
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("0,2,2,2,2,0,2,2,2,2,0");
+            levelData.push("0,0,3,3,3,3,3,3,3,0,0");
+            levelData.push("0,0,0,2,2,2,2,2,0,0,0");
+            levelData.push("0,0,0,0,1,1,1,0,0,0,0");
+            levelData.push("0,0,0,0,0,1,0,0,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 6:
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("3,4,3,4,3,4,3,4,3,4,3");
+            levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+            levelData.push("1,3,1,3,1,3,1,3,1,3,1");
+            levelData.push("0,1,0,1,0,1,0,1,0,1,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 7:
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("4,4,4,4,4,4,4,4,4,4,4");
+            levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+            levelData.push("3,3,3,3,3,3,3,3,3,3,3");
+            levelData.push("2,2,2,2,2,2,2,2,2,2,2");
+            levelData.push("0,2,2,2,2,2,2,2,2,2,0");
+            levelData.push("0,0,1,1,1,1,1,1,1,0,0");
+            levelData.push("0,0,0,1,1,1,1,1,0,0,0");
+            levelData.push("0,0,0,0,1,1,1,0,0,0,0");
+            levelData.push("0,0,0,0,0,1,0,0,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 8:
+            levelData.push("0,0,0,0,0,3,0,0,0,0,0");
+            levelData.push("0,0,0,0,3,3,3,0,0,0,0");
+            levelData.push("0,0,0,3,3,2,3,3,0,0,0");
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("3,3,2,2,4,1,4,3,2,3,3");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            levelData.push("0,0,0,3,3,2,3,3,0,0,0");
+            levelData.push("0,0,0,0,3,3,3,0,0,0,0");
+            levelData.push("0,0,0,0,0,3,0,0,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 9:
+            levelData.push("0,0,0,3,3,2,3,3,0,0,0");
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("3,3,2,2,4,1,4,3,2,3,3");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            levelData.push("0,0,0,3,3,2,3,3,0,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 10:
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("3,3,2,2,4,1,4,3,2,3,3");
+            levelData.push("0,3,3,2,2,4,2,2,3,3,0");
+            levelData.push("0,0,3,3,2,2,2,3,3,0,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        case 11:
+            levelData.push("0,4,0,4,0,4,0,4,0,4,0");
+            levelData.push("4,3,4,3,4,3,4,3,4,3,4");
+            levelData.push("0,4,0,4,0,4,0,4,0,4,0");
+            yield* self.prepareLevelData(levelData);
+            break;
+        default:
+            break;
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/settings.ts":
 /*!*************************!*\
   !*** ./src/settings.ts ***!
@@ -17219,7 +17237,7 @@ const fontStyles = {
     }),
     healthText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
         fontFamily: "Troika",
-        fontSize: "60px",
+        fontSize: "64px",
         fill: "yellow",
         dropShadow: false,
         dropShadowColor: "white",
@@ -17291,6 +17309,7 @@ class Store {
         this._mobileDevice = false;
         this._toggleTWEEN = true;
         this._screenTapped = false;
+        this._lastBonusTimeStamp = 0;
         (0,mobx__WEBPACK_IMPORTED_MODULE_0__.makeAutoObservable)(this, {}, { autoBind: true });
     }
     //A key
@@ -17496,6 +17515,12 @@ class Store {
     get screenTapped() {
         return this._screenTapped;
     }
+    setLastBonusTimeStamp(value) {
+        this._lastBonusTimeStamp = value;
+    }
+    get lastBonusTimeStamp() {
+        return this._lastBonusTimeStamp;
+    }
 }
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.action
@@ -17653,6 +17678,12 @@ __decorate([
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.computed
 ], Store.prototype, "screenTapped", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.action
+], Store.prototype, "setLastBonusTimeStamp", null);
+__decorate([
+    mobx__WEBPACK_IMPORTED_MODULE_0__.computed
+], Store.prototype, "lastBonusTimeStamp", null);
 const state = new Store();
 const components = {};
 
@@ -53583,4 +53614,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle053ab9833fa1a21f78ea.js.map
+//# sourceMappingURL=bundle02721df0b615e43828c9.js.map

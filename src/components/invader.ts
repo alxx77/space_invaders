@@ -50,7 +50,7 @@ export class Invader extends SmartContainer {
         this.maxDamage = 5
         break
       case 7:
-        this.maxDamage = 10
+        this.maxDamage = 7
         break
 
       default:
@@ -139,6 +139,131 @@ export class Invader extends SmartContainer {
         bonus.destroy()
       }
     })
+  }
+
+  awardBonus() {
+    //create bonus weapon
+    const percentageInvadersDestroyed =
+      1 - state.invaders.length / components.invaders.initialInvadersCount
+    const r = getRandomNumber()
+    const p = r <= percentageInvadersDestroyed
+    let bonusAwarded = false
+
+    let bonusFactor = 1
+
+    switch (state.gameLevel) {
+      case 5:
+      case 6:
+        bonusFactor = 1.2
+
+        break
+
+      case 7:
+      case 8:
+        bonusFactor = 1.4
+
+        break
+
+      case 9:
+      case 10:
+        bonusFactor = 1.6
+
+        break
+
+      case 11:
+        bonusFactor = 1.8
+
+        break
+
+      default:
+        break
+    }
+
+    const timeSinceLastBonus = Date.now() - state.lastBonusTimeStamp
+
+    //weapon bonus
+    if (
+      p &&
+      !bonusAwarded &&
+      components.player.weapon < 3 &&
+      //do not allow too frequent bonus (7 sec minimum from last one)
+      //but excluding start of the level
+      (timeSinceLastBonus > 7000 || state.lastBonusTimeStamp === 0)
+    ) {
+      if (
+        getRandomNumber() <
+        0.12 * bonusFactor + (components.player.weapon === 0 ? 0.3 : 0)
+      ) {
+        this.createBonusWeapon(1)
+        components.player.bonusApplied.push(1)
+        bonusAwarded = true
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
+
+    //shield
+    if (p && !bonusAwarded && timeSinceLastBonus > 15000) {
+      if (getRandomNumber() < 0.2 * bonusFactor) {
+        this.createBonusWeapon(11)
+        components.player.bonusApplied.push(11)
+        bonusAwarded = true
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
+
+    //health
+    if (p && state.gameLevel > 3 && timeSinceLastBonus > 7000) {
+      if (getRandomNumber() < 0.2 * bonusFactor) {
+        this.createBonusWeapon(15)
+        components.player.bonusApplied.push(15)
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
+
+    //fire rate 1
+    if (
+      p &&
+      !bonusAwarded &&
+      !components.player.bonusApplied.includes(20) &&
+      !components.player.bonusApplied.includes(21) &&
+      timeSinceLastBonus > 5000
+    ) {
+      if (
+        getRandomNumber() <
+        0.2 * bonusFactor + (components.game.autofire === undefined ? 0.45 : 0)
+      ) {
+        this.createBonusWeapon(20)
+        components.player.bonusApplied.push(20)
+        bonusAwarded = true
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
+
+    //fire rate 2
+    if (
+      p &&
+      !bonusAwarded &&
+      !components.player.bonusApplied.includes(21) &&
+      components.player.bonusApplied.includes(20) &&
+      timeSinceLastBonus > 12000
+    ) {
+      if (getRandomNumber() < 0.12 * bonusFactor) {
+        this.createBonusWeapon(21)
+        components.player.bonusApplied.push(21)
+        bonusAwarded = true
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
+
+    //cannonball
+    if (p && !bonusAwarded && timeSinceLastBonus > 12000) {
+      if (getRandomNumber() < 0.12 * bonusFactor) {
+        this.createBonusWeapon(22)
+        components.player.bonusApplied.push(22)
+        bonusAwarded = true
+        state.setLastBonusTimeStamp(Date.now())
+      }
+    }
   }
 
   blink() {

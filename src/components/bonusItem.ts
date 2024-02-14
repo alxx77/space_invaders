@@ -64,13 +64,13 @@ export class BonusItem extends SmartContainer {
 
     this.bonusCollectedSound = new Howl({
       src: [soundSource.bonusCollected],
-      volume: 0.15,
+      volume: 0.12,
       loop: false,
     })
 
     this.bonusCreatedSound = new Howl({
       src: [soundSource.bonusCreated],
-      volume: 0.2,
+      volume: 0.175,
       loop: false,
     })
   }
@@ -81,48 +81,54 @@ export class BonusItem extends SmartContainer {
   }
 
   collisionTestPlayerWithBonusWeapon(c: SmartContainer) {
-    //console.log(this.x,this.y)
-    if (!state.playerAlive) return
-    const bounds1 = components.player.sprite.getBounds()
 
+    if (!state.playerAlive) return
+
+    const bounds1 = components.player.sprite.getBounds()
     const bounds2 = this.sprite.getBounds()
-    // Check for collision using bounds
-    if (
+
+    const collided =
       bounds1.x < bounds2.x + bounds2.width &&
       bounds1.x + bounds1.width > bounds2.x &&
       bounds1.y < bounds2.y + bounds2.height &&
       bounds1.y + bounds1.height > bounds2.y
-    ) {
-      // Collision detected
-      if (this.itemType >= 1 && this.itemType <= 10) {
-            components.player.incrementWeaponType()
-      }
 
-      if (this.itemType === 11 && !components.player.shieldEngaged) {
-        components.player.powerUpShield()
-      }
+    //if no collision exit early
+    if (!collided) return
 
-      if (this.itemType === 15) {
-        components.player.resetDamage()
-      }
+    if (this.itemType >= 1 && this.itemType <= 10 && components.player.weapon < 3) {
+      components.player.incrementWeaponType()
+      this.collected = true
+    }
 
-      if (this.itemType === 20) {
-        components.player.engageFireRateBonus(1)
-      }
+    if (this.itemType === 11 && !components.player.shieldEngaged) {
+      components.player.powerUpShield()
+      this.collected = true
+    }
 
-      if (this.itemType === 21) {
+    if (this.itemType === 15 && components.player.getHealthPercentage() < 100) {
+      components.player.resetDamage()
+      this.collected = true
+    }
 
-        components.player.engageFireRateBonus(2)
+    if (this.itemType === 20) {
+      components.player.engageFireRateBonus(1)
+      this.collected = true
+    }
 
-      }
+    if (this.itemType === 21) {
+      components.player.engageFireRateBonus(2)
+      this.collected = true
+    }
 
-      if (this.itemType === 22) {
-        components.player.engageCannonballBonus()
-      }
+    if (this.itemType === 22) {
+      components.player.engageCannonballBonus()
+      this.collected = true
+    }
 
+    if(this.collected){
       this.stopTween()
       this.bonusCollectedSound.play()
-      this.collected = true
       this.destroy()
     }
   }

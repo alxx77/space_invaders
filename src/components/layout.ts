@@ -14,7 +14,7 @@ export class Layout extends Container {
     this.height = document.documentElement.clientHeight
     this.crtfilter = new CRTFilter({
       curvature: 1,
-      lineWidth: 3,
+      lineWidth: 2,
       lineContrast: 0.3,
       noise: 0.2,
       noiseSize: 1,

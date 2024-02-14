@@ -151,7 +151,7 @@ export const fontStyles = {
   }),
   healthText: new TextStyle({
     fontFamily: "Troika",
-    fontSize: "60px",
+    fontSize: "64px",
     fill: "yellow",
     dropShadow: false,
     dropShadowColor: "white",

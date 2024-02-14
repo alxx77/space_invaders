@@ -61,7 +61,7 @@ export class InvaderProjectile extends SmartContainer {
 
     this.x = position.x
     this.y = position.y
-    this.cbOnTweenUpdate = this.collisionTestPlayerWithInvaderProjectile
+    this.cbOnTweenUpdate = this.collisionTestWithPlayer
 
     const sheet = Assets.cache.get("invader_explosion")
     const textures: Texture<Resource>[] = Object.values(sheet.textures)
@@ -161,7 +161,7 @@ export class InvaderProjectile extends SmartContainer {
     await changeSpriteTint("#FFFFFF", 50, this.sprite)
   }
 
-  takeHit(h:number) {
+  takeHit(h: number) {
     this.damage += h
     this.lethalFactor -= 0.75
     if (this.lethalFactor < 0) this.lethalFactor = 0
@@ -183,7 +183,7 @@ export class InvaderProjectile extends SmartContainer {
     }
   }
 
-  collisionTestPlayerWithInvaderProjectile(c: SmartContainer, elapsed: number) {
+  collisionTestWithPlayer(c: SmartContainer, elapsed: number) {
     this.onTweenUpdate(elapsed)
     if (!state.playerAlive) return
     const bPl = components.player.sprite.getBounds()
@@ -208,22 +208,20 @@ export class InvaderProjectile extends SmartContainer {
       bPl.y < bExp.y + bExp.height &&
       bPl.y + bPl.height > bExp.y
 
-    if (collisionA || (collisionB && this.detonationStatus === 1)) {
-      // Collision detected
+    //if no collision exit
+    if (!(collisionA || (collisionB && this.detonationStatus === 1))) return
 
-      //check if projectile is "live"
-      //if yes do damage, otherwise not
-      if (this.detonationStatus === 0) {
-        components.player.takeHitFromProjectile(this)
-        InvaderProjectile.removeProjectile(this)
-        InvaderProjectile.projectileHit++
-        if (components.player.isTotallyDamaged()) {
-          state.setPlayerAlive(false)
-          state.setInvadersActive(false)
-        }
+    //check if projectile is "live"
+    //if yes do damage, otherwise not
+    if (this.detonationStatus === 0) {
+      components.player.takeHitFromProjectile(this)
+      InvaderProjectile.removeProjectile(this)
+      InvaderProjectile.projectileHit++
+      if (components.player.isTotallyDamaged()) {
+        state.setPlayerAlive(false)
+        state.setInvadersActive(false)
       }
     }
   }
 
-  updateLayout(width: number, height: number) {}
 }

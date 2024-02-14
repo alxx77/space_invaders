@@ -70,10 +70,10 @@ export class Foreground extends Container {
 
     //level
     this.levelText = new Text(`LEVEL 1`, fontStyles.scoreText)
-    this.levelText.scale.set(1.5)
+    this.levelText.scale.set(1.9)
     this.levelText.anchor.set(0.5)
     this.levelText.x = stageWidth * 0.85
-    this.levelText.y = stageHeight * 0.98
+    this.levelText.y = stageHeight * 0.97
     this.levelText.alpha = 0.4
 
     this.container.addChild(this.levelText)
