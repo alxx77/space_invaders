@@ -7,8 +7,21 @@ import { soundSource } from "../settings"
 export class BonusItem extends SmartContainer {
   private sprite: Sprite
   private speed: number
-  bonusCreatedSound: Howl
-  private bonusCollectedSound: Howl
+  static bonusCreatedSound: Howl
+  private static bonusCollectedSound: Howl
+  static {
+    this.bonusCollectedSound = new Howl({
+      src: [soundSource.bonusCollected],
+      volume: 0.12,
+      loop: false,
+    })
+
+    this.bonusCreatedSound = new Howl({
+      src: [soundSource.bonusCreated],
+      volume: 0.175,
+      loop: false,
+    })
+  }
   private itemType: number
   collected: boolean
   constructor(
@@ -61,18 +74,6 @@ export class BonusItem extends SmartContainer {
     this.x = position.x
     this.y = position.y
     this.cbOnTweenUpdate = this.collisionTestPlayerWithBonusWeapon
-
-    this.bonusCollectedSound = new Howl({
-      src: [soundSource.bonusCollected],
-      volume: 0.12,
-      loop: false,
-    })
-
-    this.bonusCreatedSound = new Howl({
-      src: [soundSource.bonusCreated],
-      volume: 0.175,
-      loop: false,
-    })
   }
 
   //overload
@@ -81,7 +82,6 @@ export class BonusItem extends SmartContainer {
   }
 
   collisionTestPlayerWithBonusWeapon(c: SmartContainer) {
-
     if (!state.playerAlive) return
 
     const bounds1 = components.player.sprite.getBounds()
@@ -96,7 +96,11 @@ export class BonusItem extends SmartContainer {
     //if no collision exit early
     if (!collided) return
 
-    if (this.itemType >= 1 && this.itemType <= 10 && components.player.weapon < 3) {
+    if (
+      this.itemType >= 1 &&
+      this.itemType <= 10 &&
+      components.player.weapon < 3
+    ) {
       components.player.incrementWeaponType()
       this.collected = true
     }
@@ -126,9 +130,9 @@ export class BonusItem extends SmartContainer {
       this.collected = true
     }
 
-    if(this.collected){
+    if (this.collected) {
       this.stopTween()
-      this.bonusCollectedSound.play()
+      BonusItem.bonusCollectedSound.play()
       this.destroy()
     }
   }

@@ -26,10 +26,17 @@ import { getRandomNumber } from "../utils"
 export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
-  explosionSound: Howl
+  static explosionSound: Howl
   private variety: number
   private damage: number
   private maxDamage: number = 1
+  static {
+    this.explosionSound = new Howl({
+      src: [soundSource.invaderExplosion],
+      volume: 0.5,
+      loop: false,
+    })
+  }
   constructor(position: { x: number; y: number }, variety: number) {
     super()
     this.variety = variety
@@ -79,12 +86,6 @@ export class Invader extends SmartContainer {
     this.explosionSprite.anchor.set(0.5)
     this.explosionSprite.animationSpeed = 0.3
     this.addChild(this.explosionSprite)
-
-    this.explosionSound = new Howl({
-      src: [soundSource.invaderExplosion],
-      volume: 0.5,
-      loop: false,
-    })
   }
 
   shoot() {
@@ -105,7 +106,7 @@ export class Invader extends SmartContainer {
     }
     state.addInvaderProjectile(projectile)
     components.foreground.container.addChild(projectile)
-    projectile.shootSound.play()
+    InvaderProjectile.shootSound.play()
     projectile.moveTo(
       destX,
       stageHeight + 50,
@@ -133,7 +134,7 @@ export class Invader extends SmartContainer {
     )
 
     components.foreground.container.addChild(bonus)
-    bonus.bonusCreatedSound.play()
+    BonusItem.bonusCreatedSound.play()
     bonus.moveTo(bonus.x, stageHeight + 50, undefined, () => {
       if (!bonus.collected) {
         bonus.destroy()
@@ -297,6 +298,4 @@ export class Invader extends SmartContainer {
 
     return { x: absoluteX, y: absoluteY }
   }
-
-  updateLayout(width: number, height: number) {}
 }

@@ -174,7 +174,7 @@ export class SoloInvader extends Invader {
 
     state.addInvaderProjectile(projectile)
     components.foreground.container.addChild(projectile)
-    projectile.shootSound.play()
+    InvaderProjectile.shootSound.play()
 
     return projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
       const i = state.invaderProjectiles.findIndex((el) => el === projectile)

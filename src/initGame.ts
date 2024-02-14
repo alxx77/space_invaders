@@ -21,7 +21,6 @@ export async function initGame() {
     height: window.innerHeight,
     resolution: window.devicePixelRatio,
     autoDensity: true,
-    //antialias: true
   })
 
   //save layout & renderer
@@ -37,15 +36,9 @@ export async function initGame() {
   const ticker = new Ticker()
   ticker.start()
 
-  let counter = 0
-
   const cb = function () {
     renderer.render(layout)
     TWEEN.update()
-    if (counter % 2 === 0) {
-      components.layout.crtfilter.seed = getRandomNumber() * 0.7
-    }
-    counter++
   }
 
   ticker.add(cb)

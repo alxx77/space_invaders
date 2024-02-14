@@ -83,8 +83,10 @@ export class Foreground extends Container {
       ? `Tap to Start`
       : `Press SPACE to Start`
     this.startText = new Text(startText, fontStyles.startText)
-    this.startText.scale.set(1.85)
+    //this.startText.scale.set(1.85)
     this.startText.anchor.set(0.5)
+    this.startText.width = stageWidth * 0.6
+    this.startText.scale.y = this.startText.scale.x
     this.startText.x = stageWidth / 2 + 10
     this.startText.y = stageHeight / 2
     this.startText.visible = false

@@ -389,8 +389,8 @@ export class Invaders extends SmartContainer {
     invader.explosionSprite.tint = getRandomWebColor()
     invader.explosionSprite.visible = true
     invader.explosionSprite.play()
-    invader.explosionSound.volume(0.05 + Math.random() * 0.1)
-    invader.explosionSound.play()
+    Invader.explosionSound.volume(0.05 + Math.random() * 0.1)
+    Invader.explosionSound.play()
     invader.explosionSprite.onComplete = () => {
       invader.destroy()
     }

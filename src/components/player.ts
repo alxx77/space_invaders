@@ -56,8 +56,21 @@ export class Player extends SmartContainer {
   private playerDirection: PlayerDirection
   private ticker: Ticker | undefined
   private disposerList: IReactionDisposer[]
-  private explosionSound: Howl
-  private engineSound: Howl
+  private static explosionSound: Howl
+  private static engineSound: Howl
+  static {
+    this.explosionSound = new Howl({
+      src: [soundSource.playerExplosion],
+      volume: 0.5,
+      loop: false,
+    })
+
+    this.engineSound = new Howl({
+      src: [soundSource.playerEngine],
+      volume: 0.25,
+      loop: true,
+    })
+  }
   weapon: number
   private damage: number
   private shieldText: Text
@@ -186,13 +199,13 @@ export class Player extends SmartContainer {
           this.disengageShield()
           this.stop()
           this.sprite.visible = false
-          this.engineSound.stop()
+          Player.engineSound.stop()
           for (const disposer of this.disposerList) {
             disposer()
           }
           this.explosionSprite.visible = true
           this.explosionSprite.play()
-          this.explosionSound.play()
+          Player.explosionSound.play()
           state.setLivesCounter(state.livesCounter - 1)
           this.explosionSprite.onComplete = () => {
             state.triggerPlayerDestructionCompleted()
@@ -211,9 +224,9 @@ export class Player extends SmartContainer {
       () => state.playerActive,
       (newVal) => {
         if (newVal === true) {
-          this.engineSound.play()
+          Player.engineSound.play()
         } else {
-          this.engineSound.stop()
+          Player.engineSound.stop()
         }
       }
     )
@@ -228,18 +241,6 @@ export class Player extends SmartContainer {
 
     //set player alive
     state.setPlayerAlive(true)
-
-    this.explosionSound = new Howl({
-      src: [soundSource.playerExplosion],
-      volume: 0.5,
-      loop: false,
-    })
-
-    this.engineSound = new Howl({
-      src: [soundSource.playerEngine],
-      volume: 0.25,
-      loop: true,
-    })
 
     this.healthText.text = this.percentageToAsterisks(
       this.getHealthPercentage()

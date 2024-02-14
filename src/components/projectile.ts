@@ -4,18 +4,32 @@ import { SmartContainer } from "./smartContainer"
 import { Howl } from "howler"
 import { soundSource } from "../settings"
 import { InvaderProjectile } from "./invaderProjectile"
+import { getRandomNumber } from "../utils"
 
 //root container
 export class Projectile extends SmartContainer {
   private sprite: Sprite
   speed: number
-  shootSound: Howl
+  static shootSound: Howl
+  static {
+    this.shootSound = new Howl({
+      src: [soundSource.playerProjectile],
+      volume: 0.5,
+      loop: false,
+      onplay: () => this.shootSound.volume(0.2 + getRandomNumber() * 0.4),
+    })
+  }
   private projectileType: number
   indestructible = false
   lethality = 1
   //creation timestamp
   createdAt: number
-  constructor(position: { x: number; y: number }, speed: number, type: number, emitSound:boolean ) {
+  constructor(
+    position: { x: number; y: number },
+    speed: number,
+    type: number,
+    emitSound: boolean
+  ) {
     super()
     this.projectileType = type
     this.sprite = new Sprite(
@@ -35,15 +49,8 @@ export class Projectile extends SmartContainer {
 
     this.cbOnTweenUpdate = this.collisionTestWithInvadersAndInvadersProjectiles
 
-    this.shootSound = new Howl({
-      src: [soundSource.playerProjectile],
-      volume: 0.5,
-      loop: false,
-    })
-    this.shootSound.volume(0.2 + Math.random() * 0.4)
-
-    if(emitSound){
-      this.shootSound.play()
+    if (emitSound) {
+      Projectile.shootSound.play()
     }
 
     this.createdAt = Date.now()

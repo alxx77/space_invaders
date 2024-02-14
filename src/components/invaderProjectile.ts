@@ -16,8 +16,21 @@ import Timeout from "smart-timeout"
 export class InvaderProjectile extends SmartContainer {
   sprite: Sprite
   speed: number
-  shootSound: Howl
-  explosionSound: Howl
+  static shootSound: Howl
+  static explosionSound: Howl
+  static {
+    this.shootSound = new Howl({
+      src: [soundSource.invaderProjectile],
+      volume: 0.5,
+      loop: false,
+      onplay: () => this.shootSound.volume(0.1 + getRandomNumber() * 0.1),
+    })
+    this.explosionSound = new Howl({
+      src: [soundSource.invaderExplosion],
+      volume: 0.1,
+      loop: false,
+    })
+  }
   explosionSprite: AnimatedSprite
   damage: number
   //how much damage can sustain
@@ -104,19 +117,6 @@ export class InvaderProjectile extends SmartContainer {
 
     this.addChild(this.sprite)
     this.addChild(this.explosionSprite)
-
-    this.shootSound = new Howl({
-      src: [soundSource.invaderProjectile],
-      volume: 0.5,
-      loop: false,
-    })
-    this.shootSound.volume(0.1 + getRandomNumber() * 0.1)
-
-    this.explosionSound = new Howl({
-      src: [soundSource.invaderExplosion],
-      volume: 0.1,
-      loop: false,
-    })
   }
 
   static async removeProjectile(
@@ -140,7 +140,7 @@ export class InvaderProjectile extends SmartContainer {
     projectile.explosionSprite.visible = true
     projectile.explosionSprite.tint = getRandomWebColor()
     projectile.explosionSprite.play()
-    if (playSound) projectile.explosionSound.play()
+    if (playSound) InvaderProjectile.explosionSound.play()
     return new Promise<void>((resolve) => {
       projectile.explosionSprite.onComplete = () => {
         projectile.stopTween()
@@ -223,5 +223,4 @@ export class InvaderProjectile extends SmartContainer {
       }
     }
   }
-
 }
