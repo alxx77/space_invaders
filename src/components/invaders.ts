@@ -445,6 +445,7 @@ export class Invaders extends SmartContainer {
         state.setInvadersActive(false)
         state.setPlayerAlive(false)
         this.removeInvader(invader)
+        state.setInvaderDestroyed(invader.constructor.name === "SoloInvader" ? 'S' : 'I')
         return
       }
     }

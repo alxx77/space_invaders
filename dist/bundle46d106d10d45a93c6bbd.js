@@ -14325,26 +14325,26 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.addChild(mask);
         this.mask = mask;
         //score
-        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`SCORE: 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
-        this.scoreText.scale.set(2);
-        this.scoreText.x = 115;
+        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`Score 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.scoreText.scale.set(1.75);
+        this.scoreText.x = 125;
         this.scoreText.y = 40;
-        this.scoreText.alpha = 0.7;
+        this.scoreText.alpha = 1;
         this.container.addChild(this.scoreText);
         //lives
-        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`CREDIT: 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
-        this.livesText.scale.set(2);
-        this.livesText.x = 668;
+        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`Credit 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.livesText.scale.set(1.75);
+        this.livesText.x = 715;
         this.livesText.y = 40;
-        this.livesText.alpha = 0.7;
+        this.livesText.alpha = 1;
         this.container.addChild(this.livesText);
         //level
-        this.levelText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`LEVEL 1`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
-        this.levelText.scale.set(1.9);
+        this.levelText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`Level 1`, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.levelText);
+        this.levelText.scale.set(1.75);
         this.levelText.anchor.set(0.5);
-        this.levelText.x = _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth * 0.85;
+        this.levelText.x = 870;
         this.levelText.y = _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.97;
-        this.levelText.alpha = 0.4;
+        this.levelText.alpha = 0.85;
         this.container.addChild(this.levelText);
         //press space to play
         const startText = _state__WEBPACK_IMPORTED_MODULE_1__.state.mobileDevice
@@ -14455,13 +14455,13 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         });
     }
     updateScoreText(score) {
-        this.scoreText.text = `SCORE: ${score} `;
+        this.scoreText.text = `Score ${score} `;
     }
     updateLivesText(lives) {
-        this.livesText.text = `CREDIT: ${lives} `;
+        this.livesText.text = `Credit ${lives} `;
     }
     updateLevelText(level) {
-        this.levelText.text = `LEVEL: ${level} `;
+        this.levelText.text = `Level ${level} `;
     }
     async showPressSpaceToPlayText() {
         const self = this;
@@ -15367,6 +15367,7 @@ class Invaders extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartContain
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.setInvadersActive(false);
                 _state__WEBPACK_IMPORTED_MODULE_1__.state.setPlayerAlive(false);
                 this.removeInvader(invader);
+                _state__WEBPACK_IMPORTED_MODULE_1__.state.setInvaderDestroyed(invader.constructor.name === "SoloInvader" ? 'S' : 'I');
                 return;
             }
         }
@@ -16078,7 +16079,7 @@ class Projectile extends _smartContainer__WEBPACK_IMPORTED_MODULE_2__.SmartConta
                 if (invader.isTotallyDamaged()) {
                     _state__WEBPACK_IMPORTED_MODULE_1__.components.invaders.removeInvader(invader);
                     invader.awardBonus();
-                    _state__WEBPACK_IMPORTED_MODULE_1__.state.triggerInvaderDestroyed();
+                    _state__WEBPACK_IMPORTED_MODULE_1__.state.setInvaderDestroyed(invader.constructor.name === "SoloInvader" ? 'S' : 'I');
                 }
                 //if not indestructible projectile is immediately destroyed
                 if (!this.indestructible) {
@@ -16255,7 +16256,15 @@ class SoloInvader extends _invader__WEBPACK_IMPORTED_MODULE_5__.Invader {
     async startMoving() {
         while (this.active) {
             const x = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getRandomNumber)() * _settings__WEBPACK_IMPORTED_MODULE_2__.stageWidth;
-            const y = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getRandomNumber)() * _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * 0.2;
+            let y = 0;
+            let f = 0;
+            if ((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getRandomNumber)() <= 0.2) {
+                f = 0.6;
+            }
+            else {
+                f = 0.4;
+            }
+            y = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getRandomNumber)() * _settings__WEBPACK_IMPORTED_MODULE_2__.stageHeight * (_state__WEBPACK_IMPORTED_MODULE_3__.state.gameLevel / _settings__WEBPACK_IMPORTED_MODULE_2__.finalLevel) * f;
             await new Promise((resolve) => {
                 smart_timeout__WEBPACK_IMPORTED_MODULE_0___default().instantiate(() => resolve(), this.movePause);
             });
@@ -16559,10 +16568,14 @@ class Game {
             }
         });
         //score count
-        (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal, oldVal) => {
-            if (newVal > oldVal) {
-                _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 100);
+        (0,mobx__WEBPACK_IMPORTED_MODULE_10__.reaction)(() => _state__WEBPACK_IMPORTED_MODULE_0__.state.invaderDestroyed, (newVal) => {
+            if (newVal === "S") {
+                _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 50);
             }
+            if (newVal === "I") {
+                _state__WEBPACK_IMPORTED_MODULE_0__.state.setScoreCounter(_state__WEBPACK_IMPORTED_MODULE_0__.state.scoreCounter + 10);
+            }
+            _state__WEBPACK_IMPORTED_MODULE_0__.state.setInvaderDestroyed("");
         });
         // reaction(
         //   () => state.toggleTWEEN,
@@ -17194,10 +17207,12 @@ const fontStyles = {
     scoreText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
         fontFamily: "Arcade",
         fontSize: "36px",
-        fill: "#d69b33",
-        dropShadow: false,
-        dropShadowColor: "red",
-        dropShadowDistance: 5,
+        fill: "#32f555",
+    }),
+    levelText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
+        fontFamily: "Arcade",
+        fontSize: "36px",
+        fill: "orange",
     }),
     startText: new pixi_js__WEBPACK_IMPORTED_MODULE_0__.TextStyle({
         fontFamily: "Arcade",
@@ -17313,7 +17328,7 @@ class Store {
         this._invandersActive = false;
         this._scoreCounter = 0;
         this._livesCounter = 0;
-        this._invaderDestroyed = 0;
+        this._invaderDestroyed = "";
         this._currentLevelCompleted = false;
         this._waitingForGameStart = false;
         this._playerDestructionCompletedTrigger = 0;
@@ -17469,8 +17484,8 @@ class Store {
     get gameLevel() {
         return this._gameLevel;
     }
-    triggerInvaderDestroyed() {
-        this._invaderDestroyed++;
+    setInvaderDestroyed(value) {
+        this._invaderDestroyed = value;
     }
     get invaderDestroyed() {
         return this._invaderDestroyed;
@@ -17634,7 +17649,7 @@ __decorate([
 ], Store.prototype, "gameLevel", null);
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.action
-], Store.prototype, "triggerInvaderDestroyed", null);
+], Store.prototype, "setInvaderDestroyed", null);
 __decorate([
     mobx__WEBPACK_IMPORTED_MODULE_0__.computed
 ], Store.prototype, "invaderDestroyed", null);
@@ -50629,4 +50644,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundlebade570f381105fc334d.js.map
+//# sourceMappingURL=bundle46d106d10d45a93c6bbd.js.map

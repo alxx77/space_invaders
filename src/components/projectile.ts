@@ -80,7 +80,7 @@ export class Projectile extends SmartContainer {
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
           invader.awardBonus()
-          state.triggerInvaderDestroyed()
+          state.setInvaderDestroyed(invader.constructor.name === "SoloInvader" ? 'S' : 'I')
         }
         //if not indestructible projectile is immediately destroyed
         if (!this.indestructible) {

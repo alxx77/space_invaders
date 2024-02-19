@@ -91,10 +91,12 @@ export const fontStyles = {
   scoreText: new TextStyle({
     fontFamily: "Arcade",
     fontSize: "36px",
-    fill: "#d69b33",
-    dropShadow: false,
-    dropShadowColor: "red",
-    dropShadowDistance: 5,
+    fill: "#32f555",
+  }),
+  levelText: new TextStyle({
+    fontFamily: "Arcade",
+    fontSize: "36px",
+    fill: "orange",
   }),
   startText: new TextStyle({
     fontFamily: "Arcade",

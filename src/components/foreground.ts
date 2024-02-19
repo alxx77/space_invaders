@@ -51,30 +51,30 @@ export class Foreground extends Container {
     this.mask = mask
 
     //score
-    this.scoreText = new Text(`SCORE: 0 `, fontStyles.scoreText)
-    this.scoreText.scale.set(2)
-    this.scoreText.x = 115
+    this.scoreText = new Text(`Score 0 `, fontStyles.scoreText)
+    this.scoreText.scale.set(1.75)
+    this.scoreText.x = 125
     this.scoreText.y = 40
-    this.scoreText.alpha = 0.7
+    this.scoreText.alpha = 1
 
     this.container.addChild(this.scoreText)
 
     //lives
-    this.livesText = new Text(`CREDIT: 0 `, fontStyles.scoreText)
-    this.livesText.scale.set(2)
-    this.livesText.x = 668
+    this.livesText = new Text(`Credit 0 `, fontStyles.scoreText)
+    this.livesText.scale.set(1.75)
+    this.livesText.x = 715
     this.livesText.y = 40
-    this.livesText.alpha = 0.7
+    this.livesText.alpha = 1
 
     this.container.addChild(this.livesText)
 
     //level
-    this.levelText = new Text(`LEVEL 1`, fontStyles.scoreText)
-    this.levelText.scale.set(1.9)
+    this.levelText = new Text(`Level 1`, fontStyles.levelText)
+    this.levelText.scale.set(1.75)
     this.levelText.anchor.set(0.5)
-    this.levelText.x = stageWidth * 0.85
+    this.levelText.x = 870
     this.levelText.y = stageHeight * 0.97
-    this.levelText.alpha = 0.4
+    this.levelText.alpha = 0.85
 
     this.container.addChild(this.levelText)
 
@@ -227,15 +227,15 @@ export class Foreground extends Container {
   }
 
   updateScoreText(score: number) {
-    this.scoreText.text = `SCORE: ${score} `
+    this.scoreText.text = `Score ${score} `
   }
 
   updateLivesText(lives: number) {
-    this.livesText.text = `CREDIT: ${lives} `
+    this.livesText.text = `Credit ${lives} `
   }
 
   updateLevelText(level: number) {
-    this.levelText.text = `LEVEL: ${level} `
+    this.levelText.text = `Level ${level} `
   }
 
   async showPressSpaceToPlayText() {

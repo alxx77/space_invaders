@@ -136,10 +136,16 @@ export class Game {
     //score count
     reaction(
       () => state.invaderDestroyed,
-      (newVal, oldVal) => {
-        if (newVal > oldVal) {
-          state.setScoreCounter(state.scoreCounter + 100)
+      (newVal) => {
+        if (newVal === "S") {
+          state.setScoreCounter(state.scoreCounter + 50)
         }
+
+        if (newVal === "I") {
+          state.setScoreCounter(state.scoreCounter + 10)
+        }
+
+        state.setInvaderDestroyed("")
       }
     )
 

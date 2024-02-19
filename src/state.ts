@@ -29,7 +29,7 @@ class Store {
   _invandersActive: boolean
   _scoreCounter: number
   _livesCounter: number
-  _invaderDestroyed: number
+  _invaderDestroyed: string
   _currentLevelCompleted: boolean
   _waitingForGameStart: boolean
   _waitingForLevelCompletedTextToClose: boolean
@@ -55,7 +55,7 @@ class Store {
     this._invandersActive = false
     this._scoreCounter = 0
     this._livesCounter = 0
-    this._invaderDestroyed = 0
+    this._invaderDestroyed = ""
     this._currentLevelCompleted = false
     this._waitingForGameStart = false
     this._playerDestructionCompletedTrigger = 0
@@ -288,8 +288,8 @@ class Store {
   }
 
   @action
-  triggerInvaderDestroyed() {
-    this._invaderDestroyed++
+  setInvaderDestroyed(value: string) {
+    this._invaderDestroyed = value
   }
 
   @computed

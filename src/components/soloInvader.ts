@@ -1,9 +1,6 @@
 import Timeout from "smart-timeout"
 import * as TWEEN from "@tweenjs/tween.js"
-import {
-  stageHeight,
-  stageWidth,
-} from "../settings"
+import { finalLevel, stageHeight, stageWidth } from "../settings"
 import { components, state } from "../state"
 import { getRandomNumber } from "../utils"
 import { Invader } from "./invader"
@@ -11,10 +8,16 @@ import { InvaderProjectile } from "./invaderProjectile"
 
 export class SoloInvader extends Invader {
   public active: boolean
-  private projectileSpeed:number
+  private projectileSpeed: number
   private speed: number
   private movePause
-  constructor(position: { x: number; y: number }, variety: number, projectileSpeed:number, speed:number, movePause: number) {
+  constructor(
+    position: { x: number; y: number },
+    variety: number,
+    projectileSpeed: number,
+    speed: number,
+    movePause: number
+  ) {
     super({ x: position.x, y: position.y }, variety)
     this.active = true
     this.setEasingFunction(TWEEN.Easing.Quadratic.InOut)
@@ -27,21 +30,24 @@ export class SoloInvader extends Invader {
   async startMoving() {
     while (this.active) {
       const x = getRandomNumber() * stageWidth
-      const y = getRandomNumber() * stageHeight * 0.2
+
+      let y = 0
+      let f = 0
+
+      if (getRandomNumber() <= 0.2) {
+        f = 0.6
+      } else {
+        f = 0.4
+      }
+
+      y = getRandomNumber() * stageHeight * (state.gameLevel / finalLevel) * f
 
       await new Promise<void>((resolve) => {
-        Timeout.instantiate(
-          () => resolve(),
-          this.movePause
-        )
+        Timeout.instantiate(() => resolve(), this.movePause)
       })
 
       if (this.active) {
-        await this.moveTo(
-          x,
-          y,
-          this.speed
-        )
+        await this.moveTo(x, y, this.speed)
       } else {
         break
       }
@@ -176,13 +182,18 @@ export class SoloInvader extends Invader {
     components.foreground.container.addChild(projectile)
     InvaderProjectile.shootSound.play()
 
-    return projectile.moveTo(thirdPoint.x, thirdPoint.y, projectile.speed, () => {
-      const i = state.invaderProjectiles.findIndex((el) => el === projectile)
-      //if allready removed - return
-      if (i < 0) return
-      state.removeInvaderProjectile(i)
-      projectile.destroy()
-      InvaderProjectile.projectileCompleted++
-    })
+    return projectile.moveTo(
+      thirdPoint.x,
+      thirdPoint.y,
+      projectile.speed,
+      () => {
+        const i = state.invaderProjectiles.findIndex((el) => el === projectile)
+        //if allready removed - return
+        if (i < 0) return
+        state.removeInvaderProjectile(i)
+        projectile.destroy()
+        InvaderProjectile.projectileCompleted++
+      }
+    )
   }
 }
