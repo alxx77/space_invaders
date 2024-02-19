@@ -14325,14 +14325,14 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         this.addChild(mask);
         this.mask = mask;
         //score
-        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`Score 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.scoreText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`SCORE 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
         this.scoreText.scale.set(1.75);
         this.scoreText.x = 125;
         this.scoreText.y = 40;
         this.scoreText.alpha = 1;
         this.container.addChild(this.scoreText);
         //lives
-        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`Credit 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
+        this.livesText = new pixi_js__WEBPACK_IMPORTED_MODULE_0__.Text(`CREDIT 0 `, _settings__WEBPACK_IMPORTED_MODULE_2__.fontStyles.scoreText);
         this.livesText.scale.set(1.75);
         this.livesText.x = 715;
         this.livesText.y = 40;
@@ -14455,10 +14455,10 @@ class Foreground extends pixi_js__WEBPACK_IMPORTED_MODULE_0__.Container {
         });
     }
     updateScoreText(score) {
-        this.scoreText.text = `Score ${score} `;
+        this.scoreText.text = `SCORE ${score} `;
     }
     updateLivesText(lives) {
-        this.livesText.text = `Credit ${lives} `;
+        this.livesText.text = `CREDIT ${lives} `;
     }
     updateLevelText(level) {
         this.levelText.text = `Level ${level} `;
@@ -50644,4 +50644,4 @@ const waitForSpacebarKeyPress = async () => {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle46d106d10d45a93c6bbd.js.map
+//# sourceMappingURL=bundled9b4e7ec40feef045d15.js.map

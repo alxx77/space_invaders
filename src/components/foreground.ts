@@ -51,7 +51,7 @@ export class Foreground extends Container {
     this.mask = mask
 
     //score
-    this.scoreText = new Text(`Score 0 `, fontStyles.scoreText)
+    this.scoreText = new Text(`SCORE 0 `, fontStyles.scoreText)
     this.scoreText.scale.set(1.75)
     this.scoreText.x = 125
     this.scoreText.y = 40
@@ -60,7 +60,7 @@ export class Foreground extends Container {
     this.container.addChild(this.scoreText)
 
     //lives
-    this.livesText = new Text(`Credit 0 `, fontStyles.scoreText)
+    this.livesText = new Text(`CREDIT 0 `, fontStyles.scoreText)
     this.livesText.scale.set(1.75)
     this.livesText.x = 715
     this.livesText.y = 40
@@ -227,11 +227,11 @@ export class Foreground extends Container {
   }
 
   updateScoreText(score: number) {
-    this.scoreText.text = `Score ${score} `
+    this.scoreText.text = `SCORE ${score} `
   }
 
   updateLivesText(lives: number) {
-    this.livesText.text = `Credit ${lives} `
+    this.livesText.text = `CREDIT ${lives} `
   }
 
   updateLevelText(level: number) {
