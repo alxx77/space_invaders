@@ -19,7 +19,6 @@ import {
 } from "../settings"
 import { Howl } from "howler"
 import { BonusItem } from "./bonusItem"
-import Timeout from "smart-timeout"
 import { getRandomNumber } from "../utils"
 
 //root container
@@ -27,7 +26,7 @@ export class Invader extends SmartContainer {
   sprite: Sprite
   explosionSprite: AnimatedSprite
   static explosionSound: Howl
-  private variety: number
+  variety: number
   private damage: number
   private maxDamage: number = 1
   static {
@@ -267,16 +266,8 @@ export class Invader extends SmartContainer {
     }
   }
 
-  blink() {
-    this.sprite.tint = "#771111"
-    Timeout.instantiate(() => {
-      this.sprite.tint = "#FFFFFF"
-    }, 50)
-  }
-
   takeHit(h: number) {
     this.damage += h
-    this.blink()
   }
 
   isTotallyDamaged() {

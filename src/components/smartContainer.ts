@@ -9,6 +9,7 @@ export class SmartContainer extends Container {
   public skipFeatureRequested: boolean
   public cbOnTweenUpdate: Function | undefined
   public easingFunction: any
+  elapsed = 0
   constructor() {
     super()
     this.finalPosition = {} as FinalPosition
@@ -44,7 +45,8 @@ export class SmartContainer extends Container {
         .dynamic(true) //allow dynamic tween
         .onUpdate(function(a,elapsed){
           if(self.cbOnTweenUpdate){
-            self.cbOnTweenUpdate(self,elapsed)
+            self.cbOnTweenUpdate()
+            self.elapsed = elapsed
           }
         })
         .onComplete(() => {

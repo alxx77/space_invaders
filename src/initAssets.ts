@@ -60,24 +60,6 @@ async function loadAssets() {
           },
         ],
       },
-      // {
-      //   name: "buttons",
-      //   assets: [
-      //     { alias: "spin_button", src: "assets/spin_button.png" },
-      //     { alias: "plus_button", src: "assets/plus_button.png" },
-      //     { alias: "minus_button", src: "assets/minus_button.png" },
-      //   ],
-      // },
-
-      // {
-      //   name: "background",
-      //   assets: [
-      //     {
-      //       alias: "main_background",
-      //       src: "assets/dark-wood-grain-texture_HD.jpg",
-      //     },
-      //   ],
-      // },
       {
         name: "fonts",
         assets: [

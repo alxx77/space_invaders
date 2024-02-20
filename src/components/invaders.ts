@@ -215,7 +215,11 @@ export class Invaders extends SmartContainer {
       )
 
       for (const solo of soloList) {
-        if (getRandomNumber() < 0.5) {
+        let treshold = 0.5
+        if(solo.variety === 7) {
+          treshold = 1
+        }
+        if (getRandomNumber() < treshold) {
           Timeout.instantiate(
             "shoot",
             () => (solo as SoloInvader).shootSolo(),
@@ -420,7 +424,7 @@ export class Invaders extends SmartContainer {
     }
   }
 
-  collisionTestWithPlayer(c: SmartContainer) {
+  collisionTestWithPlayer() {
     if (state.invadersActive === false) return
 
     //first check if invaders are out of screen

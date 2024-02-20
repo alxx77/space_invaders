@@ -1,14 +1,22 @@
-import { Sprite, utils } from "pixi.js"
+import {
+  AnimatedSprite,
+  Assets,
+  Resource,
+  Sprite,
+  Texture,
+  utils,
+} from "pixi.js"
 import { components, state } from "../state"
 import { SmartContainer } from "./smartContainer"
 import { Howl } from "howler"
 import { soundSource } from "../settings"
 import { InvaderProjectile } from "./invaderProjectile"
-import { getRandomNumber } from "../utils"
+import { getRandomNumber, getRandomWebColor } from "../utils"
 
 //root container
 export class Projectile extends SmartContainer {
   private sprite: Sprite
+  explosionSprite: AnimatedSprite
   speed: number
   static shootSound: Howl
   static {
@@ -24,6 +32,7 @@ export class Projectile extends SmartContainer {
   lethality = 1
   //creation timestamp
   createdAt: number
+  projectileDestroyed = false
   constructor(
     position: { x: number; y: number },
     speed: number,
@@ -47,6 +56,19 @@ export class Projectile extends SmartContainer {
     this.x = position.x
     this.y = position.y
 
+    const sheet = Assets.cache.get("invader_explosion")
+    const textures: Texture<Resource>[] = Object.values(sheet.textures)
+    this.explosionSprite = new AnimatedSprite(textures)
+    this.explosionSprite.visible = false
+    this.explosionSprite.loop = false
+
+    this.explosionSprite.x = this.width / 2
+    this.explosionSprite.y = this.height / 2
+    this.explosionSprite.anchor.set(0.5)
+    this.explosionSprite.animationSpeed = 0.5
+
+    this.addChild(this.explosionSprite)
+
     this.cbOnTweenUpdate = this.collisionTestWithInvadersAndInvadersProjectiles
 
     if (emitSound) {
@@ -60,10 +82,24 @@ export class Projectile extends SmartContainer {
     this.sprite.angle = deg
   }
 
-  collisionTestWithInvadersAndInvadersProjectiles(
-    c: SmartContainer,
-    elapsed: number
-  ) {
+  async playExplosion(cb: Function | undefined, projectile?: Projectile ) {
+    this.explosionSprite.visible = true
+    this.explosionSprite.tint = getRandomWebColor()
+    this.explosionSprite.play()
+    this.explosionSprite.onComplete = () => {
+      if (cb) cb(projectile)
+    }
+  }
+
+  static removeProjectile(projectile: Projectile) {
+    const i = state.projectiles.findIndex((el) => el === projectile)
+    state.removeProjectile(i)
+    projectile.stopTween()
+    projectile.destroy()
+  }
+
+  collisionTestWithInvadersAndInvadersProjectiles() {
+    if (this.destroyed || this.projectileDestroyed) return
     const bounds1 = this.sprite.getBounds()
     //colision with invaders
     for (const invader of state.invaders) {
@@ -80,15 +116,19 @@ export class Projectile extends SmartContainer {
         if (invader.isTotallyDamaged()) {
           components.invaders.removeInvader(invader)
           invader.awardBonus()
-          state.setInvaderDestroyed(invader.constructor.name === "SoloInvader" ? 'S' : 'I')
+          state.setInvaderDestroyed(
+            invader.constructor.name === "SoloInvader" ? "S" : "I"
+          )
         }
+
         //if not indestructible projectile is immediately destroyed
         if (!this.indestructible) {
-          const i = state.projectiles.findIndex((el) => el === this)
-          state.removeProjectile(i)
-          c.stopTween()
-          this.destroy()
+          this.projectileDestroyed = true
+          this.stopTween()
+          this.playExplosion(Projectile.removeProjectile, this)
           return
+        } else {
+          this.playExplosion(undefined)
         }
       }
     }
@@ -113,11 +153,12 @@ export class Projectile extends SmartContainer {
 
         //if not indestructible projectile is immediately destroyed
         if (!this.indestructible) {
-          const i = state.projectiles.findIndex((el) => el === this)
-          state.removeProjectile(i)
-          c.stopTween()
-          this.destroy()
+          this.projectileDestroyed = true
+          this.stopTween()
+          this.playExplosion(Projectile.removeProjectile, this)
           return
+        } else {
+          this.playExplosion(undefined)
         }
       }
     }

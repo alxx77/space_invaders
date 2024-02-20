@@ -81,8 +81,8 @@ export class BonusItem extends SmartContainer {
     super.moveTo(xPos, yPos, this.speed, onEnd)
   }
 
-  collisionTestPlayerWithBonusWeapon(c: SmartContainer) {
-    if (!state.playerAlive) return
+  collisionTestPlayerWithBonusWeapon() {
+    if (!state.playerAlive || this.destroyed) return
 
     const bounds1 = components.player.sprite.getBounds()
     const bounds2 = this.sprite.getBounds()

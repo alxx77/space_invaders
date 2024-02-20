@@ -10,7 +10,7 @@ import { SmartContainer } from "./smartContainer"
 import { components, state } from "../state"
 import { Howl } from "howler"
 import { soundSource } from "../settings"
-import { changeSpriteTint, getRandomNumber, getRandomWebColor } from "../utils"
+import { getRandomNumber, getRandomWebColor } from "../utils"
 import Timeout from "smart-timeout"
 
 export class InvaderProjectile extends SmartContainer {
@@ -154,18 +154,10 @@ export class InvaderProjectile extends SmartContainer {
     })
   }
 
-  async blink() {
-    this.sprite.tint = "#771111"
-    await changeSpriteTint("#FFFFFF", 50, this.sprite)
-    await changeSpriteTint("#771111", 50, this.sprite)
-    await changeSpriteTint("#FFFFFF", 50, this.sprite)
-  }
-
   takeHit(h: number) {
     this.damage += h
     this.lethalFactor -= 0.75
     if (this.lethalFactor < 0) this.lethalFactor = 0
-    this.blink()
   }
 
   isTotallyDamaged() {
@@ -183,9 +175,9 @@ export class InvaderProjectile extends SmartContainer {
     }
   }
 
-  collisionTestWithPlayer(c: SmartContainer, elapsed: number) {
-    this.onTweenUpdate(elapsed)
-    if (!state.playerAlive) return
+  collisionTestWithPlayer() {
+    this.onTweenUpdate(this.elapsed)
+    if (!state.playerAlive || this.destroyed) return
     const bPl = components.player.sprite.getBounds()
 
     const bSpr = this.sprite.getBounds()
